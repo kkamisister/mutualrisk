@@ -1,0 +1,5 @@
+### IntelliJ IDEA ###
+.idea
+
+### ignore macOS file ###
+.DS_Store
