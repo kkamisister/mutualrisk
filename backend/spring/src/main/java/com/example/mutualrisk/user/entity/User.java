@@ -1,10 +1,17 @@
 package com.example.mutualrisk.user.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.example.mutualrisk.asset.entity.InterestAsset;
+import com.example.mutualrisk.portfolio.entity.Portfolio;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -34,5 +41,11 @@ public class User {
 
 	@Column(name = "image")
 	private String image;
+
+	@OneToMany(mappedBy = "user")
+	private List<InterestAsset> interestAssetList;
+
+	@OneToMany(mappedBy = "user")
+	private List<Portfolio> portfolioList;
 
 }
