@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: mutualrisk
+
+  datasource:
+    url: jdbc:h2:tcp://localhost/~/mutualrisk
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+  devtools:
+    restart:
+      additional-paths: .
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  logging.level:
+    org.hibernate.SQL: debug
+
+  jwt:
+    secret-key: Z29nby10bS1zZXJ2ZXItZGxyamVvYW9yb3JodG9kZ290c3Atam9vbmdhbmduaW0teWVvbHNpbWhpaGFswvuqoxyve
+
+  oauth:
+    kakao:
+      client-id: ddd1cb07e0545f2d743ebe394aae68fa
+      redirect_uri : http://localhost:8080/api/v1/oauth/kakao/callback
+      auth: https://kauth.kakao.com
+      api: https://kapi.kakao.com
+      client-secret: ZlyVJxR6mF3RnLWh0kEDHazxeuQdiQe3
+      scope: profile_nickname,profile_image, account_email
