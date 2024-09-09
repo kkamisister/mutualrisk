@@ -2,9 +2,6 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.3'
     id 'io.spring.dependency-management' version '1.1.6'
-
-    //querydsl 플러그인 추가
-    id "com.ewerk.gradle.plugins.querydsl" version "1.0.10"
 }
 
 group = 'com.example'
@@ -60,21 +57,4 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
-}
-
-// queryDSL 추가 : QueryDSL 빌드 옵션
-def querydslDir = "src/main/generated/querydsl"
-
-querydsl {
-    jpa = true
-    querydslSourcesDir = querydslDir
-}
-sourceSets {
-    main.java.srcDir querydslDir
-}
-configurations {
-    querydsl.extendsFrom compileClasspath
-}
-compileQuerydsl {
-    options.annotationProcessorPath = configurations.querydsl
 }
