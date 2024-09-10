@@ -10,11 +10,11 @@ const SidebarItem = ({ title, Icon, move, clicked, hover }) => {
     <Stack
       direction="row"
       sx={{
-        justifyContent: hover ? "flex-center" : "center",
+        justifyContent: "flex-center",
         alignItems: "center",
-        width: hover ? "155px" : "31px",
+        width: hover ? "155px" : "30px",
         height: "31px",
-        padding: "8px 8px 8px 8px",
+        padding: "7px 7px 7px 10px",
         margin: "5px",
         cursor: "pointer",
         fontWeight: clicked ? "bold" : "normal",
