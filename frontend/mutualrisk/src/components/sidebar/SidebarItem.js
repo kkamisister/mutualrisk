@@ -1,12 +1,45 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 import { colors } from "constants/colors";
-const SidebarItem = ({ title, Icon, move }) => {
-  console.log(colors.text.icon);
+import { useNavigate } from "react-router-dom";
+const SidebarItem = ({ title, Icon, move, clicked, hover }) => {
+  const navigate = useNavigate();
+
   return (
-    <Box sx={{ width: "42px", height: "42px", padding: "8px" }}>
-      <Icon sx={{ width: "100%", height: "100%", color: colors.text.icon }} />
-    </Box>
+    <Stack
+      direction="row"
+      sx={{
+        justifyContent: hover ? "flex-center" : "center",
+        alignItems: "center",
+        width: hover ? "155px" : "31px",
+        height: "31px",
+        padding: "8px 8px 8px 8px",
+        margin: "5px",
+        cursor: "pointer",
+        fontWeight: clicked ? "bold" : "normal",
+        color: clicked ? colors.main.primary2 : colors.text.main,
+        backgroundColor: clicked ? colors.main.sub : "",
+        transition:
+          "background-color 0.3s ease, color 0.3s ease, width 0.3s ease", // 부드러운 애니메이션
+        overflow: "hidden", // 텍스트가 넘칠 때 숨김 처리
+        whiteSpace: "nowrap", // 텍스트를 한 줄로 유지
+        "&:hover": clicked
+          ? {
+              backgroundColor: colors.main.primary,
+            }
+          : {
+              backgroundColor: colors.background.box,
+            },
+        borderRadius: "10px",
+      }}
+      onClick={() => {
+        navigate(move);
+      }}
+    >
+      <Icon sx={{ width: "24px", height: "24px" }} />
+      {hover && <Box>&nbsp;&nbsp;{title}</Box>}
+    </Stack>
   );
 };
 

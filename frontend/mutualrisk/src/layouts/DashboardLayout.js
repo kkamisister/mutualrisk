@@ -4,19 +4,18 @@ import Stack from "@mui/material/Stack";
 import Sidebar from "components/sidebar/Sidebar";
 import { colors } from "constants/colors";
 
-const DashboardLayout = () => {
+const DashboardLayout = ({ children }) => {
   return (
-    <Box
+    <Stack
+      direction="row"
       sx={{
         width: "100vw",
-        height: "100vh",
-        background: `${colors.background.primary}`,
+        height: "calc(100vh - 20px)",
       }}
     >
-      <Stack direction="row">
-        <Sidebar></Sidebar>
-      </Stack>
-    </Box>
+      <Sidebar></Sidebar>
+      {children}
+    </Stack>
   );
 };
 
