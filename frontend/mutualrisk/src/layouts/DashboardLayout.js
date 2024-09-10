@@ -8,12 +8,9 @@ const DashboardLayout = ({ children }) => {
   return (
     <Stack
       direction="row"
-      sx={{
-        width: "100vw",
-        height: "calc(100vh - 20px)",
-      }}
+      sx={{ width: "100vw", height: "calc(100vh - 20px)" }}
     >
-      <Sidebar></Sidebar>
+      <Sidebar />
       {children}
     </Stack>
   );

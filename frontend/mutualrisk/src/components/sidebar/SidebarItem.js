@@ -15,7 +15,7 @@ const SidebarItem = ({ title, Icon, move, clicked, hover }) => {
         width: hover ? "155px" : "30px",
         height: "31px",
         padding: "7px 7px 7px 10px",
-        margin: "5px",
+        margin: "5px 3px 5px 3px",
         cursor: "pointer",
         fontWeight: clicked ? "bold" : "normal",
         color: clicked ? colors.main.primary2 : colors.text.main,
@@ -32,6 +32,7 @@ const SidebarItem = ({ title, Icon, move, clicked, hover }) => {
               backgroundColor: colors.background.box,
             },
         borderRadius: "10px",
+        userSelect: "none",
       }}
       onClick={() => {
         navigate(move);
