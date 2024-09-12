@@ -3,19 +3,34 @@ import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { colors } from 'constants/colors';
-const FundManagerListItem = ({ name, capital, imagePath }) => {
-	console.log(name, capital, imagePath);
+import { useNavigate } from 'react-router-dom';
+
+const FundManagerListItem = ({ id, name, capital, imagePath, clicked }) => {
+	const navigate = useNavigate();
 	return (
 		<Stack
 			sx={{
-				backgroundColor: colors.background.white,
 				width: '100px',
 				height: '140px',
 				borderRadius: '20px',
-				border: 'solid 1px',
-				borderColor: colors.point.stroke,
-				color: colors.text.main,
-				fontWeight: 'bold',
+				marginRight: '5px',
+				cursor: 'pointer',
+				fontWeight: clicked ? 'bold' : 'bold',
+				color: clicked ? colors.text.main : colors.text.sub1, // 폰트 및 이미지 컬러
+				backgroundColor: clicked
+					? colors.background.box
+					: colors.background.white, // 배경
+
+				transition:
+					'background-color 0.3s ease, color 0.3s ease, width 0.3s ease', // 부드러운 애니메이션
+
+				'&:hover': {
+					backgroundColor: colors.background.box, // hover시 일괄적으로 회색 유지
+				},
+				userSelect: 'none',
+			}}
+			onClick={() => {
+				navigate(`/fund/detail/${id}`);
 			}}>
 			<Stack
 				sx={{
