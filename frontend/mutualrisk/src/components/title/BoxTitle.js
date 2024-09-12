@@ -9,7 +9,7 @@ const BoxTitle = ({ title }) => {
 				sx={{
 					fontSize: '20px',
 					fontWeight: 'bold',
-					color: colors.text.sub1,
+					color: colors.text.main,
 				}}>
 				<Box>{title}</Box>
 				<Divider sx={{ borderColor: colors.text.sub1 }} />
