@@ -21,7 +21,11 @@ export const colors = {
 		sub1: '#64B5F6',
 		sub2: '#BBDEFB',
 	},
-	background: { primary: '#F6F7F9', box: '#E5E8EB', white: '#FFFFFF' },
+	background: {
+		primary: '#F6F7F9',
+		box: '#E5E8EB',
+		white: '#FFFFFF',
+	},
 	point: {
 		yellow: '#D7C500',
 		red: '#F04251',
