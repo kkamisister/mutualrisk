@@ -14,16 +14,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
-@RestControllerAdvice(
-        basePackages = {
-                "com.example.mutualrisk.test.controller",
-                "com.example.mutualrisk.common.oauth.controller"
-        }
-)
+@RestControllerAdvice
 public class ResponseHandler<T> implements ResponseBodyAdvice<T> {
     /**
      *
-     * @param e : 발생한 사용자 정의 예외(BuiltInException)
+     * @param e : 발생한 사용자 정의 예외(MutualRiskException)
      * @return ErrorResponse 객체 반환
      */
     @ExceptionHandler(MutualRiskException.class)
