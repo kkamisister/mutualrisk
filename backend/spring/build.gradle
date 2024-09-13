@@ -39,7 +39,8 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok:1.18.24'  // 테스트 코드에서 Lombok 사용
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'  // 테스트 코드에서 어노테이션 처리
 
-    runtimeOnly 'com.h2database:h2'
+//    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.mysql:mysql-connector-j'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
