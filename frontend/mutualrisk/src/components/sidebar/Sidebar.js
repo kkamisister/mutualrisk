@@ -15,59 +15,85 @@ const SidebarItemInfoArray = [
 		title: '내 포트폴리오',
 		icon: SpaceDashboardIcon,
 		move: '/portfolio/detail',
+		sub: ['/portfolio/detail'],
 		clicked: true,
 	},
 	{
 		title: '리밸런싱',
 		icon: InsightsIcon,
 		move: '/portfolio/rebalance',
+		sub: ['/portfolio/rebalance'],
 		clicked: false,
 	},
 	{
 		title: '포트폴리오 제작',
 		icon: AddchartIcon,
 		move: '/portfolio/create',
+		sub: ['/portfolio/create'],
 		clicked: false,
 	},
 	{
 		title: '관심 종목',
 		icon: BookmarkIcon,
 		move: '/stock/bookmark',
+		sub: ['/stock/bookmark'],
 		clicked: false,
 	},
 	{
 		title: '펀드 투자 목록',
 		icon: QueryStatsIcon,
 		move: '/fund/list',
+		sub: ['/fund/list', '/fund/detail'],
 		clicked: false,
 	},
 ];
 
-const Sidebar = () => {
+const Sidebar = ({ onHoverChange }) => {
 	const location = useLocation();
-	const [hover, setHover] = useState(false); // hover 상태 관리
+	const [hover, setHover] = useState(false);
 
+	// hover 상태를 상위 컴포넌트로 전달
+	const handleMouseEnter = () => {
+		setHover(true);
+		onHoverChange(true); // 상위 컴포넌트로 hover 상태 전달
+	};
+
+	const handleMouseLeave = () => {
+		setHover(false);
+		onHoverChange(false); // 상위 컴포넌트로 hover 상태 전달
+	};
 	return (
 		<Stack
 			sx={{
+				position: 'fixed',
+				top: 0,
+				left: 0,
 				borderRight: 'solid 1px',
 				borderColor: `${colors.point.stroke}`,
-				height: 'auto',
+				backgroundColor: colors.background.primary,
 				justifyContent: 'flex-start',
 				transition: 'width 0.3s ease',
 				alignItems: 'center',
-				padding: '10px',
+				width: hover ? '200px' : '73px', // hover 시 Sidebar의 너비 변경
+				height: '100%',
+				zIndex: '1',
 			}}
-			onMouseEnter={() => setHover(true)}
-			onMouseLeave={() => setHover(false)}>
-			<Stack>
+			onMouseEnter={handleMouseEnter}
+			onMouseLeave={handleMouseLeave}>
+			<Stack
+				sx={{
+					padding: '10px',
+				}}>
 				{SidebarItemInfoArray.map(info => {
+					console.log(location.pathname, info.move);
 					return (
 						<SidebarItem
 							title={info.title}
 							Icon={info.icon}
 							move={info.move}
-							clicked={location.pathname === info.move}
+							clicked={info.sub.some(subPath =>
+								location.pathname.includes(subPath)
+							)}
 							hover={hover}
 							key={info.move}
 						/>
