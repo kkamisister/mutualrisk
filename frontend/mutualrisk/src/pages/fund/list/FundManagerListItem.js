@@ -28,6 +28,7 @@ const FundManagerListItem = ({ id, name, capital, imagePath, clicked }) => {
 					backgroundColor: colors.background.box, // hover시 일괄적으로 회색 유지
 				},
 				userSelect: 'none',
+				border: `solid 1px ${colors.point.stroke}`,
 			}}
 			onClick={() => {
 				navigate(`/fund/detail/${id}`);
