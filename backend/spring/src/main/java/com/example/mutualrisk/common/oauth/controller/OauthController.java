@@ -1,5 +1,7 @@
 package com.example.mutualrisk.common.oauth.controller;
 
+import static com.example.mutualrisk.common.dto.CommonResponse.*;
+
 import java.io.IOException;
 
 import org.springframework.http.HttpStatus;
@@ -9,10 +11,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.mutualrisk.common.dto.CommonResponse;
 import com.example.mutualrisk.common.oauth.dto.AuthToken;
 import com.example.mutualrisk.common.oauth.service.OauthLoginService;
 import com.example.mutualrisk.common.oauth.util.OauthProvider;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +42,19 @@ public class OauthController {
 		AuthToken authToken = oAuthLoginService.login(OauthProvider.KAKAO, code);
 		return new ResponseEntity<>(authToken, HttpStatus.OK);
 	}
+
+	@GetMapping("/kakao/logout")
+	public ResponseEntity<?> kakaoLogout(HttpServletRequest request){
+
+		String authorization = request.getHeader("Authorization");
+		log.warn("userId = {}",authorization);
+
+		ResponseWithMessage resultMessage = oAuthLoginService.logout(authorization);
+
+		return new ResponseEntity<>(resultMessage,HttpStatus.OK);
+	}
+
+
 
 
 }

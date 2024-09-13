@@ -18,7 +18,7 @@ public class TokenServiceImpl implements TokenService{
 
 	@Override
 	public void saveOrUpdate(String accessToken, String refreshToken) {
-		log.warn("accessToken : {} refreshToken : {} ",refreshToken, accessToken);
+		log.warn("accessToken : {} refreshToken : {} ",accessToken, refreshToken);
 
 		// redis의 만료시간은 refreshToken의 만료기한으로 설정
 		redisHashRepository.saveHashData("jwt",accessToken,refreshToken,60*24*7);

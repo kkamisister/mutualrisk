@@ -54,7 +54,7 @@ public class TokenProvider {
 
 	public void generateRefreshToken(String subject,Date expiredDate,String accessToken){
 		String refreshToken = generateToken(subject,expiredDate);
-		tokenService.saveOrUpdate(refreshToken,accessToken);
+		tokenService.saveOrUpdate(accessToken,refreshToken);
 	}
 
 	private String generateToken(String subject, Date expiredDate){
