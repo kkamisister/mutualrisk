@@ -65,12 +65,18 @@ const Sidebar = ({ onHoverChange }) => {
 	return (
 		<Stack
 			sx={{
+				position: 'fixed',
+				top: 0,
+				left: 0,
 				borderRight: 'solid 1px',
 				borderColor: `${colors.point.stroke}`,
+				backgroundColor: colors.background.primary,
 				justifyContent: 'flex-start',
 				transition: 'width 0.3s ease',
 				alignItems: 'center',
 				width: hover ? '200px' : '73px', // hover 시 Sidebar의 너비 변경
+				height: '100%',
+				zIndex: '1',
 			}}
 			onMouseEnter={handleMouseEnter}
 			onMouseLeave={handleMouseLeave}>
