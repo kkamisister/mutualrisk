@@ -1,5 +1,5 @@
-import LoginPage from './pages/login/LoginPage';
-import LoginCallbackPage from './pages/login/LoginCallbackPage';
+import LoginPage from './pages/home/login/LoginPage';
+import LoginCallbackPage from './pages/home/login/LoginCallbackPage';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import StockDetailPage from 'pages/stock/detail/StockDetailPage';
 import StockBookmarkPage from 'pages/stock/bookmark/StockBookmarkPage';
