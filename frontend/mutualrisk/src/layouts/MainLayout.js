@@ -33,7 +33,7 @@ const MainLayout = () => {
           width: '100%',
           backgroundColor: colors.background.primary,
           borderBottom: 'solid 1px',
-          padding: '10px 20px',
+          padding: '10px 80px',
           alignItems: 'center',
           justifyContent: 'space-between',
           zIndex: 1000,
@@ -49,7 +49,7 @@ const MainLayout = () => {
 						height: '30px', 
 						width: 'auto', 
 						cursor: 'pointer',
-						padding: '5px',
+						padding: '8px',
 					}}
           onClick={() => navigate('/')}
         />
@@ -65,11 +65,11 @@ const MainLayout = () => {
               fontWeight: 'bold',
               color: colors.text.sub1,
               transition: 'background-color 0.3s ease, color 0.3s ease',
+              whiteSpace: 'nowrap',
               '&:hover': {
                 backgroundColor: colors.background.box,
                 color: colors.main.primary400,
               },
-              // marginRight: '20px',
             }}
             onClick={() => navigate('/login')}
           >
