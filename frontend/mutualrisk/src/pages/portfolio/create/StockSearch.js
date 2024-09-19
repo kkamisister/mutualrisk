@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Button, List, ListItem } from '@mui/material';
-import StockSearchItems from 'pages/portfolio/create/StockSearchItems';
+import StockList from 'pages/portfolio/create/StockList';
+import StockSearchBar from 'pages/portfolio/create/StockSearchBar';
 
 const StockSearch = ({ onConfirm }) => {
 	const mockData = {
@@ -142,23 +143,15 @@ const StockSearch = ({ onConfirm }) => {
 	};
 	return (
 		<Box>
-			<Box>종목 검색</Box>
-			<List
+			<StockList
+				assets={mockData.assets}
 				sx={{
 					display: 'flex',
 					flexDirection: 'row',
 					overflowX: 'auto',
 					whiteSpace: 'nowrap',
-				}}>
-				{mockData.assets.map(asset => (
-					<ListItem key={asset.assetId}>
-						<StockSearchItems
-							name={asset.name}
-							imagePath={asset.imagePath}
-						/>
-					</ListItem>
-				))}
-			</List>
+				}}
+			/>
 			<Button
 				variant="contained"
 				onClick={onConfirm}
