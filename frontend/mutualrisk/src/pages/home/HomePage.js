@@ -2,6 +2,7 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import CustomButton from 'components/button/BasicButton';
+import { useNavigate } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
 import { colors } from 'constants/colors';
 import IconImage from './IconImage';
@@ -10,22 +11,13 @@ import scaleImage from 'assets/images/scale.png';
 import billImage from 'assets/images/bill.png';
 
 const HomePage = () => {
+	const navigate = useNavigate();
+
 	return (
-		// <Box
-		//   sx={{
-		//     backgroundColor: colors.background.primary,
-		//     display: 'flex',
-		//     justifyContent: 'center',
-		//     alignItems: 'center',
-		//     minHeight: '100vh',
-		//     padding: '40px 20px',
-		//   }}
-		// >
 		<Stack
 			direction="row"
 			sx={{
-				width: '100%',
-				height: '100%', // 화면 높이를 100%로 설정
+				// height: '100%', // 화면 높이를 100%로 설정
 				justifyContent: 'space-around',
 				alignItems: 'center',
 				padding: { xs: '20px', md: '40px' }, // 화면 크기에 따라 패딩 조정
@@ -69,7 +61,7 @@ const HomePage = () => {
 						},
 						marginBottom: '40px',
 					}}
-					onClick={() => console.log('포트폴리오 제작')}>
+					onClick={() => navigate('/login')}>
 					포트폴리오 제작
 				</CustomButton>
 			</Stack>
@@ -86,7 +78,6 @@ const HomePage = () => {
 				<IconImage src={billImage} alt="bill" />
 			</Box>
 		</Stack>
-		// </Box>
 	);
 };
 

@@ -21,7 +21,14 @@ const MainLayout = () => {
 	}, []);
 
 	return (
-		<>
+		<Stack
+			direction="row"
+			sx={{
+				width: '100%',
+				height: '100vh',
+				backgroundColor: colors.background.primary,
+			}}>
+			{/* 헤더 */}
 			<Stack
 				direction="row"
 				ref={headerRef} // ref를 Stack에 연결
@@ -30,13 +37,13 @@ const MainLayout = () => {
 					top: 0,
 					left: 0,
 					width: '100%',
-					backgroundColor: colors.background.primary,
 					borderBottom: 'solid 1px',
 					padding: '10px 80px',
 					alignItems: 'center',
 					justifyContent: 'space-between',
 					zIndex: 1000,
 					boxSizing: 'border-box',
+					backgroundColor: colors.background.primary,
 				}}>
 				{/* 로고 */}
 				<Box
@@ -84,7 +91,7 @@ const MainLayout = () => {
 				}}>
 				<Outlet />
 			</Box>
-		</>
+		</Stack>
 	);
 };
 
