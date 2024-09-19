@@ -8,7 +8,7 @@ const IconImage = ({ src, alt }) => {
 			src={src}
 			alt={alt}
 			sx={{
-				width: { xs: '60px', sm: '80px', md: '100px', lg: '150px' }, // 반응형 너비
+				width: '200px',
 				height: 'auto',
 			}}
 		/>

@@ -86,9 +86,13 @@ const MainLayout = () => {
 			<Box
 				sx={{
 					width: '100%',
-					height: '100%',
-					padding: `${headerHeight + 20}px 20px 20px 20px`,
+					height: `calc(100vh - ${headerHeight}px)`,
+					padding: `${headerHeight}px 20px 20px 20px`,
+					alignItems: 'center',
+					justifyContent: 'center',
 					backgroundColor: colors.background.primary,
+
+					display: 'flex',
 				}}>
 				<Outlet />
 			</Box>
