@@ -27,6 +27,7 @@ const MainLayout = () => {
 				width: '100%',
 				height: '100vh',
 				backgroundColor: colors.background.primary,
+				overflow: 'hidden',
 			}}>
 			{/* 헤더 */}
 			<Stack
