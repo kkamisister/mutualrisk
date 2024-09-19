@@ -16,16 +16,17 @@ const HomePage = () => {
 	return (
 		<Stack
 			direction="row"
+			spacing={1}
 			sx={{
-				// height: '100%', // 화면 높이를 100%로 설정
-				justifyContent: 'space-around',
+				width: '100%',
+				justifyContent: 'space-evenly',
 				alignItems: 'center',
-				padding: { xs: '20px', md: '40px' }, // 화면 크기에 따라 패딩 조정
 			}}>
 			<Stack
 				spacing={2}
 				sx={{
-					maxWidth: '50%',
+					// maxWidth: '50%',
+					Width: '50%',
 					justifyContent: 'center',
 					alignItems: 'flex-start',
 				}}>
@@ -33,12 +34,13 @@ const HomePage = () => {
 					variant="h3"
 					sx={{
 						fontWeight: 'bold',
-						color: colors.text.main,
+						color: colors.text.sub1,
 						textAlign: 'left', // 좌측 정렬
 						maxWidth: '100%', // 최대 너비 설정
-						fontSize: { xs: '16px', sm: '20px', md: '24px', lg: '28px' }, // 반응형 폰트 크기
+						fontSize: '30px',
 						lineHeight: '1.5', // 줄 간격 설정
 						whiteSpace: 'nowrap',
+						letterSpacing: '-2px',
 					}}>
 					빅데이터 기반 리밸런싱으로 <br /> 완벽한 리스크 관리
 				</Typography>
@@ -47,13 +49,13 @@ const HomePage = () => {
 				<CustomButton
 					variant="contained"
 					sx={{
-						width: '240px',
-						height: '50px',
+						width: '180px',
+						height: '45px',
 						backgroundColor: '#6495ED',
 						color: '#FFFFFF',
 						padding: '10px 20px',
-						fontSize: '18px',
-						fontWeight: 'semiBold',
+						fontSize: '16px',
+						fontWeight: 'bold',
 						borderRadius: '5px',
 						textAlign: 'left', // 버튼 텍스트 좌측 정렬
 						'&:hover': {
@@ -71,7 +73,6 @@ const HomePage = () => {
 					flexDirection: 'column',
 					justifyContent: 'center',
 					alignItems: 'center',
-					gap: '20px',
 				}}>
 				<IconImage src={coinImage} alt="coin" />
 				<IconImage src={scaleImage} alt="scale" />
