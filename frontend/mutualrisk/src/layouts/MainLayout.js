@@ -22,7 +22,6 @@ const MainLayout = () => {
 
   return (
     <>
-      {/* 상단 헤더 */}
       <Stack
         direction="row"
         ref={headerRef} // ref를 Stack에 연결
@@ -79,9 +78,12 @@ const MainLayout = () => {
       </Stack>
 
       <Box 
-				sx={{ 
-					padding: `${headerHeight + 20}px 20px 20px 20px` 
-				}}> {/* 실제 헤더 높이만큼 패딩 추가 */}
+				sx={{
+          width: '100%',
+          height: '100%',
+					padding: `${headerHeight + 20}px 20px 20px 20px`,
+          backgroundColor: colors.background.primary,
+				}}>
 				<Outlet />
       </Box>
     </>
