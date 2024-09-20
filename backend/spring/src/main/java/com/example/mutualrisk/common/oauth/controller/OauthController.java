@@ -37,7 +37,7 @@ public class OauthController {
 	}
 
 	@GetMapping("/kakao/callback")
-	public ResponseEntity<AuthToken> kakaoLogin(@RequestParam String code) {
+	public ResponseEntity<AuthToken> kakaoLogin(@RequestParam("code") String code) {
 		log.warn("code = {}",code);
 		AuthToken authToken = oAuthLoginService.login(OauthProvider.KAKAO, code);
 		return new ResponseEntity<>(authToken, HttpStatus.OK);
