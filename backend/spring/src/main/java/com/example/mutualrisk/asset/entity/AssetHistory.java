@@ -3,6 +3,7 @@ package com.example.mutualrisk.asset.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Table(name = "asset_history")
@@ -24,5 +25,5 @@ public class AssetHistory {
     private LocalDateTime date;
 
     @Column(name = "price", nullable = false)
-    private Integer price;
+    private Double price;
 }

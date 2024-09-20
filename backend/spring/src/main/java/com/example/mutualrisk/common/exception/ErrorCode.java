@@ -16,6 +16,9 @@ public enum ErrorCode {
     // 정상적인 응답인 경우
     NORMAL_RESPONSE(HttpStatus.OK, "정상 응답 반환"),
 
+    // asset_history table에 주어진 날짜에 해당하는 자산 가격 정보가 존재하지 않을 시 발생하는 에러
+    ASSET_HISTORY_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "주어진 날짜에 해당하는 자산 가격 정보가 존재하지 않습니다"),
+
     // 테스트용 에러
     SOME_ERROR_RESPONSE(HttpStatus.INTERNAL_SERVER_ERROR, "에러에러")
     ;

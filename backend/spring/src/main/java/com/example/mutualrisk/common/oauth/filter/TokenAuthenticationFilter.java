@@ -47,7 +47,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 		try{
 			if(tokenProvider.validateToken(accessToken)){
 				String userId = tokenProvider.extractSubject(accessToken);
-
 				request.setAttribute("userId",userId);
 			}
 		}catch(MalformedJwtException | IllegalArgumentException e){
@@ -72,7 +71,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
 		}
 
-		// filterChain.doFilter(request,response);
+		 filterChain.doFilter(request,response);
 	}
 
 	@Override
@@ -85,7 +84,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 		// /api/v1/oauth/{anything} 경로와 /swagger 경로, test용 api 필터링 제외
 		return pathMatcher.match("/api/v1/oauth/**", path)
 			|| pathMatcher.match("/swagger/**", path)
-				|| pathMatcher.match("/api/v1/test/**", path)
+			|| pathMatcher.match("/api/v1/test/**", path)
 				;
 	}
 
