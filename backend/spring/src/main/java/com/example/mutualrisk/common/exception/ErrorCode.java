@@ -20,7 +20,10 @@ public enum ErrorCode {
     ASSET_HISTORY_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "주어진 날짜에 해당하는 자산 가격 정보가 존재하지 않습니다"),
 
     // 테스트용 에러
-    SOME_ERROR_RESPONSE(HttpStatus.INTERNAL_SERVER_ERROR, "에러에러")
+    SOME_ERROR_RESPONSE(HttpStatus.INTERNAL_SERVER_ERROR, "에러에러"),
+    USER_NOT_FOUND(HttpStatus.BAD_REQUEST,"해당하는 유저가 존재하지 않습니다"),
+    ASSET_NOT_FOUND(HttpStatus.BAD_REQUEST,"해당 자산이 존재하지 않습니다"),
+    ASSET_NOT_FOUND_IN_USER_LIST(HttpStatus.BAD_REQUEST,"유저 관심종목에 해당 자산이 없습니다"),
     ;
 
     private final HttpStatus httpStatus;
