@@ -19,6 +19,7 @@ const StockListItem = ({ name, imagePath, imageName, clicked }) => {
 				marginRight: '5px',
 				cursor: 'pointer',
 				fontWeight: 'bold',
+				alignItems: 'center',
 				color: isClicked ? colors.text.main : colors.text.sub1,
 				backgroundColor: isClicked
 					? colors.background.box
@@ -38,7 +39,6 @@ const StockListItem = ({ name, imagePath, imageName, clicked }) => {
 				sx={{
 					width: '64px',
 					height: '64px',
-					marginX: '20px',
 					marginTop: '10px',
 				}}
 				spacing={0.75}
