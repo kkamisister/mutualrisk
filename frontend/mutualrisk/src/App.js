@@ -4,8 +4,7 @@ import LoginCallbackPage from './pages/home/login/LoginCallbackPage';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import StockDetailPage from 'pages/stock/detail/StockDetailPage';
 import StockBookmarkPage from 'pages/stock/bookmark/StockBookmarkPage';
-import FundListPage from 'pages/fund/list/FundListPage';
-import FundDetailPage from 'pages/fund/detail/FundDetailPage';
+import FundPage from 'pages/fund/FundPage';
 import PortfolioCreatePage from 'pages/portfolio/create/PortfolioCreatePage';
 import PortfolioDetailPage from 'pages/portfolio/detail/PortfolioDetailPage';
 import DashboardLayout from 'layouts/DashboardLayout';
@@ -39,10 +38,8 @@ const App = () => {
 						<Route
 							path="/stock/detail/:id"
 							element={<StockDetailPage />}></Route>
-						<Route path="/fund/list" element={<FundListPage />}></Route>
-						<Route
-							path="/fund/detail/:id"
-							element={<FundDetailPage />}></Route>
+						<Route path="/fund/list" element={<FundPage />}></Route>
+						<Route path="/fund/detail/:id" element={<FundPage />}></Route>
 					</Route>
 				</Routes>
 			</BrowserRouter>
