@@ -25,9 +25,12 @@ export const colors = {
 		primary: '#F6F7F9',
 		box: '#E5E8EB',
 		white: '#FFFFFF',
+		green: '#02B15A50',
+		red: '#F04251A50',
 	},
 	point: {
 		yellow: '#D7C500',
+		green: '#2E7D32',
 		red: '#F04251',
 		blue: '#1D66FA',
 		stroke: '#DDE1E6',
