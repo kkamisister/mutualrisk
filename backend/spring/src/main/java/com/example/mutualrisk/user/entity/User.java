@@ -43,9 +43,11 @@ public class User {
 	private String image;
 
 	@OneToMany(mappedBy = "user")
-	private List<InterestAsset> interestAssetList;
+	@Builder.Default
+	private List<InterestAsset> interestAssetList = new ArrayList<>();
 
 	@OneToMany(mappedBy = "user")
-	private List<Portfolio> portfolioList;
+	@Builder.Default
+	private List<Portfolio> portfolioList = new ArrayList<>();
 
 }
