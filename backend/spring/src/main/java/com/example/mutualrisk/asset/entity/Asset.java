@@ -30,9 +30,19 @@ public class Asset {
 	private Region region;
 
 	@Column(name = "expected_return" ,nullable = false)
-	private int expectedReturn;
+	private Double expectedReturn;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "industry_id")
 	private Industry industry;
+
+	@Override
+	public String toString() {
+		return "Asset{" +
+			"id=" + id +
+			", name='" + name + '\'' +
+			", code='" + code + '\'' +
+			", region=" + region +
+			", expectedReturn=" + expectedReturn;
+	}
 }
