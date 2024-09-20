@@ -17,4 +17,11 @@ public record AssetRequest() {
     )  {
 
     }
+
+    @Schema(name = "관심자산 추가 데이터",description = "유저가 관심자산으로 추가한 데이터")
+    public record InterestAssetInfo(
+        Integer assetId
+    ){
+
+    }
 }
