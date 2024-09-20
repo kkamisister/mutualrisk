@@ -3,10 +3,9 @@ import { Input, Box } from '@mui/material';
 
 const StockSearchBar = () => {
 	return (
-		<Box>
-			<Input>
-				<SearchIcon />
-			</Input>
+		<Box sx={{ width: '100%', display: 'flex' }}>
+			<Input></Input>
+			<SearchIcon />
 		</Box>
 	);
 };

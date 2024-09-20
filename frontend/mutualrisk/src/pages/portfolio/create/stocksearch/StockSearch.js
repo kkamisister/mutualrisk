@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Button, List, ListItem } from '@mui/material';
-import StockList from 'pages/portfolio/create/StockList';
-import StockSearchBar from 'pages/portfolio/create/StockSearchBar';
+import StockList from 'pages/portfolio/create/stocksearch/StockList';
+import StockSearchBar from 'pages/portfolio/create/stocksearch/StockSearchBar';
 
 const StockSearch = ({ onConfirm }) => {
 	const mockData = {

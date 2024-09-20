@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Stack } from '@mui/material';
 import BoxTitle from 'components/title/BoxTitle';
-import StockSearch from 'pages/portfolio/create/StockSearch';
-import SelectedStockItems from 'pages/portfolio/create/SelectedStockitems';
-import ConditionSetting from 'pages/portfolio/create/CondtionSetting';
+import StockSearch from 'pages/portfolio/create/stocksearch/StockSearch';
+import StockListItem from 'pages/portfolio/create/stocksearch/StockListItem';
+import ConditionSetting from 'pages/portfolio/create/ConditionSetting';
 
 const PortfolioCreatePage = () => {
 	const [showSelectedItems, setShowSelectedItems] = useState(false);
@@ -27,7 +27,7 @@ const PortfolioCreatePage = () => {
 			</Stack>
 			{showSelectedItems && (
 				<Stack>
-					<SelectedStockItems onConfirm={handleItemsConfirm} />
+					<StockListItem onConfirm={handleItemsConfirm} />
 				</Stack>
 			)}
 			{showConditionSetting && (
