@@ -3,7 +3,7 @@ import { colors } from 'constants/colors';
 import StockSearchBar from 'pages/portfolio/create/stocksearch/StockSearchBar';
 import StockListItem from 'pages/portfolio/create/stocksearch/StockListItem';
 
-const StockList = ({ assets }) => {
+const StockList = ({ assets, selectedStocks, onStockSelect }) => {
 	return (
 		<Box>
 			<Box
@@ -26,6 +26,10 @@ const StockList = ({ assets }) => {
 						name={asset.name}
 						imagePath={asset.imagePath}
 						imageName={asset.imageName}
+						clicked={selectedStocks.some(
+							selected => selected.assetId === asset.assetId
+						)}
+						onClick={() => onStockSelect(asset)}
 					/>
 				))}
 			</List>

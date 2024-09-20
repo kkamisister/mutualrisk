@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Button, List, ListItem } from '@mui/material';
 import StockList from 'pages/portfolio/create/stocksearch/StockList';
 import StockSearchBar from 'pages/portfolio/create/stocksearch/StockSearchBar';
 
-const StockSearch = ({ onConfirm }) => {
+const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
 	const mockData = {
 		assetNum: 10,
 		assets: [
@@ -145,6 +145,8 @@ const StockSearch = ({ onConfirm }) => {
 		<Box>
 			<StockList
 				assets={mockData.assets}
+				selectedStocks={selectedStocks}
+				onStockSelect={onStockSelect}
 				sx={{
 					display: 'flex',
 					flexDirection: 'row',

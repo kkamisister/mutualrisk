@@ -2,16 +2,10 @@ import React, { useState } from 'react';
 import { Stack, Box, Avatar } from '@mui/material';
 import { colors } from 'constants/colors';
 
-const StockListItem = ({ name, imagePath, imageName, clicked }) => {
-	const [isClicked, setIsClicked] = useState(false);
-
-	const handleClick = () => {
-		setIsClicked(prev => !prev);
-	};
-
+const StockListItem = ({ name, imagePath, clicked, onClick }) => {
 	return (
 		<Stack
-			onClick={handleClick}
+			onClick={onClick}
 			sx={{
 				width: '100px',
 				height: '140px',
@@ -20,8 +14,8 @@ const StockListItem = ({ name, imagePath, imageName, clicked }) => {
 				cursor: 'pointer',
 				fontWeight: 'bold',
 				alignItems: 'center',
-				color: isClicked ? colors.text.main : colors.text.sub1,
-				backgroundColor: isClicked
+				color: clicked ? colors.text.main : colors.text.sub1,
+				backgroundColor: clicked
 					? colors.background.box
 					: colors.background.white,
 				userSelect: 'none',
