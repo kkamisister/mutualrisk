@@ -3,8 +3,9 @@ package com.example.mutualrisk.asset.repository;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
-import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.asset.entity.InterestAsset;
@@ -21,6 +23,8 @@ import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.user.entity.User;
 import com.example.mutualrisk.user.repository.UserRepository;
+
+import jakarta.persistence.EntityManager;
 
 @ActiveProfiles("test")
 @DataJpaTest
@@ -34,6 +38,18 @@ class InterestAssetRepositoryTest {
 	private InterestAssetRepository interestAssetRepository;
 	@Autowired
 	private AssetRepository assetRepository;
+	@Autowired
+	private EntityManager em;
+
+	@BeforeEach
+	void setUp(){
+		interestAssetRepository.deleteAllInBatch();
+		userRepository.deleteAllInBatch();
+		assetRepository.deleteAllInBatch();
+
+		em.flush();
+		em.clear();
+	}
 
 
 	@Test
@@ -42,7 +58,7 @@ class InterestAssetRepositoryTest {
 
 		//given
 		User user = User.builder()
-			.id(1)
+			// .id(1)
 			.nickname("조용수")
 			.oauthId("12345-KAKAO")
 			.email("sujipark2009@gmail.com")
@@ -51,14 +67,14 @@ class InterestAssetRepositoryTest {
 		userRepository.save(user);
 
 		Asset asset1 = Asset.builder()
-			.id(1)
+			// .id(1)
 			.name("삼성전자")
 			.code("005930")
 			.region(Region.US)
 			.expectedReturn(1.1)
 			.build();
 		Asset asset2 = Asset.builder()
-			.id(2)
+			// .id(2)
 			.name("LG전자")
 			.code("123456")
 			.region(Region.KR)
@@ -69,13 +85,13 @@ class InterestAssetRepositoryTest {
 		assetRepository.save(asset2);
 
 		InterestAsset ia1 = InterestAsset.builder()
-			.id(1)
+			// .id(1)
 			.asset(asset1)
 			.user(user)
 			.build();
 
 		InterestAsset ia2 = InterestAsset.builder()
-			.id(2)
+			// .id(2)
 			.asset(asset2)
 			.user(user)
 			.build();
@@ -103,7 +119,7 @@ class InterestAssetRepositoryTest {
 	void findInterestAssetNotExist(){
 		//given
 		User user = User.builder()
-			.id(1)
+			// .id(1)
 			.nickname("조용수")
 			.oauthId("12345-KAKAO")
 			.email("sujipark2009@gmail.com")
@@ -112,14 +128,14 @@ class InterestAssetRepositoryTest {
 		userRepository.save(user);
 
 		Asset asset1 = Asset.builder()
-			.id(1)
+			// .id(1)
 			.name("삼성전자")
 			.code("005930")
 			.region(Region.US)
 			.expectedReturn(1.1)
 			.build();
 		Asset asset2 = Asset.builder()
-			.id(2)
+			// .id(2)
 			.name("LG전자")
 			.code("123456")
 			.region(Region.KR)
@@ -127,7 +143,7 @@ class InterestAssetRepositoryTest {
 			.build();
 
 		Asset asset3 = Asset.builder()
-			.id(3)
+			// .id(3)
 			.name("SKC&C")
 			.code("366633")
 			.region(Region.KR)
@@ -136,15 +152,16 @@ class InterestAssetRepositoryTest {
 
 		assetRepository.save(asset1);
 		assetRepository.save(asset2);
+		assetRepository.save(asset3);
 
 		InterestAsset ia1 = InterestAsset.builder()
-			.id(1)
+			// .id(1)
 			.asset(asset1)
 			.user(user)
 			.build();
 
 		InterestAsset ia2 = InterestAsset.builder()
-			.id(2)
+			// .id(2)
 			.asset(asset2)
 			.user(user)
 			.build();
@@ -165,7 +182,7 @@ class InterestAssetRepositoryTest {
 	void findInterestAssetByAsset(){
 		//given
 		User user = User.builder()
-			.id(1)
+			// .id(1)
 			.nickname("조용수")
 			.oauthId("12345-KAKAO")
 			.email("sujipark2009@gmail.com")
@@ -174,14 +191,14 @@ class InterestAssetRepositoryTest {
 		userRepository.save(user);
 
 		Asset asset1 = Asset.builder()
-			.id(1)
+			// .id(1)
 			.name("삼성전자")
 			.code("005930")
 			.region(Region.US)
 			.expectedReturn(1.1)
 			.build();
 		Asset asset2 = Asset.builder()
-			.id(2)
+			// .id(2)
 			.name("LG전자")
 			.code("123456")
 			.region(Region.KR)
@@ -189,7 +206,7 @@ class InterestAssetRepositoryTest {
 			.build();
 
 		Asset asset3 = Asset.builder()
-			.id(3)
+			// .id(3)
 			.name("SKC&C")
 			.code("366633")
 			.region(Region.KR)
@@ -200,13 +217,13 @@ class InterestAssetRepositoryTest {
 		assetRepository.save(asset2);
 
 		InterestAsset ia1 = InterestAsset.builder()
-			.id(1)
+			// .id(1)
 			.asset(asset1)
 			.user(user)
 			.build();
 
 		InterestAsset ia2 = InterestAsset.builder()
-			.id(2)
+			// .id(2)
 			.asset(asset2)
 			.user(user)
 			.build();
@@ -228,7 +245,7 @@ class InterestAssetRepositoryTest {
 	void interestAssetDelete(){
 		//given
 		User user = User.builder()
-			.id(1)
+			// .id(1)
 			.nickname("조용수")
 			.oauthId("12345-KAKAO")
 			.email("sujipark2009@gmail.com")
@@ -237,14 +254,14 @@ class InterestAssetRepositoryTest {
 		userRepository.save(user);
 
 		Asset asset1 = Asset.builder()
-			.id(1)
+			// .id(1)
 			.name("삼성전자")
 			.code("005930")
 			.region(Region.US)
 			.expectedReturn(1.1)
 			.build();
 		Asset asset2 = Asset.builder()
-			.id(2)
+			// .id(2)
 			.name("LG전자")
 			.code("123456")
 			.region(Region.KR)
@@ -255,13 +272,13 @@ class InterestAssetRepositoryTest {
 		assetRepository.save(asset2);
 
 		InterestAsset ia1 = InterestAsset.builder()
-			.id(1)
+			// .id(1)
 			.asset(asset1)
 			.user(user)
 			.build();
 
 		InterestAsset ia2 = InterestAsset.builder()
-			.id(2)
+			// .id(2)
 			.asset(asset2)
 			.user(user)
 			.build();
