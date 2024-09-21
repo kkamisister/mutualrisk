@@ -22,7 +22,10 @@ const PortfolioCreatePage = () => {
 		}
 	};
 
-	const handleSearchConfirm = () => {};
+	const handleSearchConfirm = selectedItems => {
+		setSelectedStocks(selectedItems);
+		setShowSelectedItems(true);
+	};
 	const handleItemsConfirm = () => {
 		setShowConditionSetting(true);
 	};
@@ -44,6 +47,7 @@ const PortfolioCreatePage = () => {
 					<StockList
 						selectedStocks={selectedStocks}
 						onStockSelect={handleStockSelect}
+						showSearchBar={false}
 					/>
 				</Stack>
 			)}
