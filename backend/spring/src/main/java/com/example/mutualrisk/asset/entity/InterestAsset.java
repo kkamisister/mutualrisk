@@ -2,6 +2,7 @@ package com.example.mutualrisk.asset.entity;
 
 import org.apache.logging.log4j.util.Lazy;
 
+import com.example.mutualrisk.common.entity.BaseEntity;
 import com.example.mutualrisk.user.entity.User;
 
 import jakarta.persistence.Entity;
@@ -22,7 +23,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
-public class InterestAsset {
+public class InterestAsset extends BaseEntity {
 
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;

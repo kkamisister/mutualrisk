@@ -1,9 +1,11 @@
 package com.example.mutualrisk.portfolio.entity;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import com.example.mutualrisk.asset.entity.RecommendAsset;
+import com.example.mutualrisk.common.entity.BaseEntity;
 import com.example.mutualrisk.user.entity.User;
 
 import jakarta.persistence.Entity;
@@ -23,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class Portfolio {
+public class Portfolio extends BaseEntity {
 
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;

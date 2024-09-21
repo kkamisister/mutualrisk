@@ -1,5 +1,6 @@
 package com.example.mutualrisk.asset.entity;
 
+import com.example.mutualrisk.common.entity.BaseEntity;
 import com.example.mutualrisk.industry.entity.Industry;
 
 import jakarta.persistence.*;
@@ -14,7 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
-public class Asset {
+public class Asset extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
