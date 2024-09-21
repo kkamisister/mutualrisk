@@ -14,16 +14,25 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.example.mutualrisk.common.config.QuerydslConfig;
 import com.example.mutualrisk.user.entity.User;
+
+import jakarta.persistence.EntityManager;
+import lombok.extern.slf4j.Slf4j;
 
 @ActiveProfiles("test")
 @DataJpaTest
+@Import({QuerydslConfig.class})
+@Slf4j
 class UserRepositoryTest {
 
 	@Autowired
 	private UserRepository userRepository;
+	@Autowired
+	private EntityManager em;
 
 	@BeforeEach
 	void setUp(){
@@ -37,7 +46,6 @@ class UserRepositoryTest {
 		List<User> users = new ArrayList<>();
 
 		User user1 = User.builder()
-			.id(1)
 			.email("kim@gmail.com")
 			.oauthId("12345-KAKAO")
 			.nickname("김영표")
@@ -45,12 +53,12 @@ class UserRepositoryTest {
 			.build();
 
 		User user2 = User.builder()
-			.id(2)
 			.email("jo@gmail.com")
 			.oauthId("54321-KAKAO")
 			.nickname("조용")
 			.image("testimage")
 			.build();
+
 
 		users.add(user1);
 		users.add(user2);
@@ -69,7 +77,18 @@ class UserRepositoryTest {
 
 	}
 
+	@Test
+	@DisplayName("유저 id 테스트")
+	void simpleText(){
 
+		User user1 = User.builder()
+			.email("kim@gmail.com")
+			.oauthId("12345-KAKAO")
+			.nickname("김영표")
+			.image("testimage")
+			.build();
 
+		userRepository.save(user1);
 
+	}
 }
