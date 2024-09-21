@@ -36,6 +36,12 @@ public class Asset {
 	@JoinColumn(name = "industry_id")
 	private Industry industry;
 
+	@Column(name = "image_path")
+	private String imagePath;
+
+	@Column(name = "image_name")
+	private String imageName;
+
 	@Override
 	public String toString() {
 		return "Asset{" +

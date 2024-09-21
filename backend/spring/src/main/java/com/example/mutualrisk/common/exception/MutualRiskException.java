@@ -10,7 +10,12 @@ import lombok.RequiredArgsConstructor;
  */
 
 @Getter
-@RequiredArgsConstructor
 public class MutualRiskException extends RuntimeException {
     private final ErrorCode errorCode;
+
+    public MutualRiskException(ErrorCode errorCode){
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
+    }
+
 }

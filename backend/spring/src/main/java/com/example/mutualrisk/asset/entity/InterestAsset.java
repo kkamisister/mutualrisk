@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 public class InterestAsset {
 
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,6 +43,14 @@ public class InterestAsset {
 	public void setUser(User user){
 		this.user = user;
 		user.getInterestAssetList().add(this);
+	}
+
+	public static InterestAsset of(User user,Asset asset){
+		return InterestAsset.builder()
+			.user(user)
+			.asset(asset)
+			.build();
+
 	}
 
 }
