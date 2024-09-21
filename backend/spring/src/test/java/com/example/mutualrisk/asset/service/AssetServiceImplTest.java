@@ -108,14 +108,12 @@ class AssetServiceImplTest {
             .build();
 
         Asset asset1 = Asset.builder()
-            .id(1)
             .name("삼성전자")
             .code("005930")
             .region(Region.US)
             .expectedReturn(0.41)
             .build();
         Asset asset2 = Asset.builder()
-            .id(2)
             .name("LG전자")
             .code("123456")
             .region(Region.KR)
@@ -123,7 +121,6 @@ class AssetServiceImplTest {
             .build();
 
         Asset asset3 = Asset.builder()
-            .id(3)
             .name("애플")
             .code("AAPL")
             .region(Region.US)
@@ -132,19 +129,16 @@ class AssetServiceImplTest {
 
         List<InterestAsset> userInterestAsset = new ArrayList<>();
         InterestAsset ia1 = InterestAsset.builder()
-            .id(1)
             .asset(asset1)
             .user(user)
             .build();
 
         InterestAsset ia2 = InterestAsset.builder()
-            .id(2)
             .asset(asset2)
             .user(user)
             .build();
 
         InterestAsset ia3 = InterestAsset.builder()
-            .id(3)
             .asset(asset3)
             .user(user)
             .build();
@@ -154,21 +148,18 @@ class AssetServiceImplTest {
         userInterestAsset.add(ia3);
 
         AssetHistory assetHistory1 = AssetHistory.builder()
-            .id(1)
             .asset(asset1)
             .date(now())
             .price(1.1111)
             .build();
 
         AssetHistory assetHistory2 = AssetHistory.builder()
-            .id(2)
             .asset(asset2)
             .date(now())
             .price(123.45)
             .build();
 
         AssetHistory assetHistory3 = AssetHistory.builder()
-            .id(3)
             .asset(asset3)
             .date(now())
             .price(150.00)
@@ -274,7 +265,6 @@ class AssetServiceImplTest {
 
         List<InterestAsset> userInterestAsset = new ArrayList<>();
         InterestAsset ia1 = InterestAsset.builder()
-            .id(1)
             .asset(asset1)
             .user(user)
             .build();
@@ -287,7 +277,7 @@ class AssetServiceImplTest {
         when(assetRepository.findById(anyInt()))
             .thenReturn(Optional.of(asset1));
 
-        AssetRequest.InterestAssetInfo assetInfo = new AssetRequest.InterestAssetInfo(1);
+        AssetRequest.InterestAssetInfo assetInfo = new AssetRequest.InterestAssetInfo(-1);
 
         //when
         ResponseWithMessage res = assetService.addInterestAsset(user.getId(), assetInfo);

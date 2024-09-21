@@ -46,7 +46,6 @@ class UserRepositoryTest {
 		List<User> users = new ArrayList<>();
 
 		User user1 = User.builder()
-			// .id(1)
 			.email("kim@gmail.com")
 			.oauthId("12345-KAKAO")
 			.nickname("김영표")
@@ -54,12 +53,12 @@ class UserRepositoryTest {
 			.build();
 
 		User user2 = User.builder()
-			// .id(2)
 			.email("jo@gmail.com")
 			.oauthId("54321-KAKAO")
 			.nickname("조용")
 			.image("testimage")
 			.build();
+
 
 		users.add(user1);
 		users.add(user2);
@@ -83,7 +82,6 @@ class UserRepositoryTest {
 	void simpleText(){
 
 		User user1 = User.builder()
-			// .id(1)
 			.email("kim@gmail.com")
 			.oauthId("12345-KAKAO")
 			.nickname("김영표")
