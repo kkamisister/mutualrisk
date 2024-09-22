@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.example.mutualrisk.common.entity.BaseEntity;
+import com.example.mutualrisk.common.util.UnixTimestampConverter;
 
 @Table(name = "asset_history")
 @Entity
@@ -24,6 +25,7 @@ public class AssetHistory extends BaseEntity {
     private Asset asset;
 
     @Column(name = "date")
+    @Convert(converter = UnixTimestampConverter.class)
     private LocalDateTime date;
 
     @Column(name = "price", nullable = false)
