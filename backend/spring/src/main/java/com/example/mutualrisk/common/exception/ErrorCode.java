@@ -13,6 +13,9 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
     // 사용할 HttpStatus + Message 조합을 작성
 
+    // 토큰 관련 에러
+    TOKEN_REISSUE_FAIL(HttpStatus.BAD_REQUEST,"토큰 재발급에 문제가 발생했습니다"),
+
     // 정상적인 응답인 경우
     NORMAL_RESPONSE(HttpStatus.OK, "정상 응답 반환"),
 
