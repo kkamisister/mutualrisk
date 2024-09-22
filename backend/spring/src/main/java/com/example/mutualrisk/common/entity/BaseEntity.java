@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
     @Column(nullable = false, name = "status")
-    private Status status;
+    private Boolean status;
 
     @CreatedDate
     @Column(updatable = false, nullable = false, name = "created_at")
@@ -32,6 +32,6 @@ public abstract class BaseEntity {
 
     @PrePersist
     public void prePersist() {
-        this.status = Status.ACTIVE;
+        this.status = true;
     }
 }
