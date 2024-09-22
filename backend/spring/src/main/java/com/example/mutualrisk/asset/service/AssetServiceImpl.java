@@ -143,6 +143,13 @@ public class AssetServiceImpl implements AssetService{
         return new ResponseWithMessage(HttpStatus.OK.value(),"관심종목에 등록하였습니다");
     }
 
+    /**
+     * 유저의 관심종목에서 입력받은 종목을 삭제한다
+     *
+     * @param userId
+     * @param asset
+     * @return
+     */
     @Override
     public ResponseWithMessage deleteInterestAsset(Integer userId, InterestAssetInfo asset) {
 
@@ -164,6 +171,15 @@ public class AssetServiceImpl implements AssetService{
         return new ResponseWithMessage(HttpStatus.OK.value(),"관심종목에서 삭제되었습니다.");
     }
 
+    /**
+     * 입력받은 정렬 기준에 따라 정렬하는 내부메서드
+     *
+     * @param orderCondition
+     * @param order
+     * @param a1
+     * @param a2
+     * @return
+     */
     private static int sorting(String orderCondition, String order, AssetInfo a1, AssetInfo a2) {
         // orderCondition의 기본값을 name, order의 기본값을 asc로 설정
         String sortBy = (orderCondition != null) ? orderCondition : "name";
@@ -192,6 +208,12 @@ public class AssetServiceImpl implements AssetService{
         return comparisonResult;
     }
 
+    /**
+     * 입력받은 자산의 가장 최근 종가를 가지고 온다
+     *
+     * @param asset
+     * @return
+     */
     private AssetInfo getAssetInfo(Asset asset) {
         // 자산의 price를 찾기 위해 가장 최근의 종가를 가지고온다
         AssetHistory recentAssetHistory = assetHistoryRepository.findRecentAssetHistory(asset)
