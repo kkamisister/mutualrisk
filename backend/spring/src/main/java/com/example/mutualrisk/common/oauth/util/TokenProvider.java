@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.example.mutualrisk.common.exception.ErrorCode;
+import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.oauth.dto.AuthToken;
 import com.example.mutualrisk.common.oauth.service.TokenService;
 
@@ -31,8 +33,11 @@ public class TokenProvider {
 
 	// 1시간
 	private static final long ACCESS_TOKEN_VALIDITY_SECONDS = 1000 * 60 * 60L;
+	// private static final long ACCESS_TOKEN_VALIDITY_SECONDS = 1000 * 60;
 	// 일주일
 	private static final long REFRESH_TOKEN_VALIDITY_SECONDS = 1000 * 60 * 60 * 24L * 7;
+	// private static final long REFRESH_TOKEN_VALIDITY_SECONDS = 1000 * 60;
+
 
 	// private final TokenService tokenService;
 	@Autowired
@@ -69,6 +74,8 @@ public class TokenProvider {
 	public boolean validateToken(String token){
 
 		Claims claims = parseClaims(token);
+		log.warn("현재 토큰 : {}",token);
+		log.warn("토큰 만료시간 : {}",claims.getExpiration());
 		return claims.getExpiration().after(new Date());
 	}
 
@@ -78,15 +85,10 @@ public class TokenProvider {
 	}
 
 	private Claims parseClaims(String accessToken){
-		try{
-			return Jwts.parser().verifyWith(secretKey).build()
-				.parseSignedClaims(accessToken)
-				.getPayload();
 
-		}catch(ExpiredJwtException e){
-			log.warn("만료된 토큰입니다");
-			return e.getClaims();
-		}
+		return Jwts.parser().verifyWith(secretKey).build()
+			.parseSignedClaims(accessToken)
+			.getPayload();
 	}
 	public AuthToken generate(Integer userId){
 
@@ -110,13 +112,16 @@ public class TokenProvider {
 			// 해커가 토큰을 탈취하고 재발급을 받았다면, 내가 가진 토큰과는 다르므로 찾지 못할것임
 			// 그때 예외가 발생
 			String refreshToken = tokenService.findByAccessToken(accessToken)
-				.orElseThrow(() -> new RuntimeException("토큰 재발급에 문제가 발생하였습니다."));
+				.orElseThrow(() -> new MutualRiskException(ErrorCode.TOKEN_REISSUE_FAIL));
 
 			log.warn("발견한 리프레시 토큰 : {}",refreshToken);
 
 			// refreshToken이 아직 유효하다면, accessToken을 재발급 받는다
-			if(validateToken(refreshToken)){
-				String subject = extractSubject(accessToken);
+
+			// 단, 리프레시 토큰이 Redis에 존재하여 Null이 아닐 경우에만 유효성을 검증해야한다
+			if(!StringUtils.hasText(refreshToken) && validateToken(refreshToken)){
+				log.warn("유효한 리프레시 토큰");
+				String subject = extractSubject(refreshToken);
 				AuthToken authToken = generate(Integer.parseInt(subject));
 				log.warn("재발급 된 엑세스 토큰 : {}",authToken.accessToken());
 				return authToken.accessToken();

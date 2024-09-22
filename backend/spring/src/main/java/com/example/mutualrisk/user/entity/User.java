@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.example.mutualrisk.asset.entity.InterestAsset;
+import com.example.mutualrisk.common.entity.BaseEntity;
 import com.example.mutualrisk.portfolio.entity.Portfolio;
 
 import jakarta.persistence.Column;
@@ -25,7 +26,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "member")
-public class User {
+public class User extends BaseEntity {
 
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;

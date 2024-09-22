@@ -61,14 +61,16 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 			// - reissue-token 헤더가 있는지 확인해보고 있으면 유저의 accessToken을 갱신하면 된다
 			// - 헤더가 없다면? => refresh도 만료되었거나 탈취당해서 재발급된 상태이므로 다시 로그인 해야한다
 			String reissuedToken = tokenProvider.reissueToken(accessToken);
+
+			log.info("재발급된 토큰 : {}", reissuedToken);
 			if(StringUtils.hasText(reissuedToken)){
 				response.setHeader("reissue-token",reissuedToken);
-				response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+				response.sendError(HttpServletResponse.SC_UNAUTHORIZED,"토큰을 재발급하였습니다.");
 			}
 			else{
 				response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증에 실패했습니다.");
 			}
-
+			return;
 		}
 
 		 filterChain.doFilter(request,response);

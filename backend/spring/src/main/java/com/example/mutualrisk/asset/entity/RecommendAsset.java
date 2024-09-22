@@ -1,5 +1,6 @@
 package com.example.mutualrisk.asset.entity;
 
+import com.example.mutualrisk.common.entity.BaseEntity;
 import com.example.mutualrisk.portfolio.entity.Portfolio;
 import com.example.mutualrisk.user.entity.User;
 
@@ -20,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class RecommendAsset {
+public class RecommendAsset extends BaseEntity {
 
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
