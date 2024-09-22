@@ -36,6 +36,8 @@ public class TokenProvider {
 	// private static final long ACCESS_TOKEN_VALIDITY_SECONDS = 1000 * 60;
 	// 일주일
 	private static final long REFRESH_TOKEN_VALIDITY_SECONDS = 1000 * 60 * 60 * 24L * 7;
+	// private static final long REFRESH_TOKEN_VALIDITY_SECONDS = 1000 * 60;
+
 
 	// private final TokenService tokenService;
 	@Autowired
@@ -72,6 +74,8 @@ public class TokenProvider {
 	public boolean validateToken(String token){
 
 		Claims claims = parseClaims(token);
+		log.warn("현재 토큰 : {}",token);
+		log.warn("토큰 만료시간 : {}",claims.getExpiration());
 		return claims.getExpiration().after(new Date());
 	}
 
@@ -85,17 +89,6 @@ public class TokenProvider {
 		return Jwts.parser().verifyWith(secretKey).build()
 			.parseSignedClaims(accessToken)
 			.getPayload();
-		// try{
-		// 	return Jwts.parser().verifyWith(secretKey).build()
-		// 		.parseSignedClaims(accessToken)
-		// 		.getPayload();
-		//
-		// }catch(ExpiredJwtException e){
-		// 	log.warn("만료된 토큰입니다");
-		// 	log.warn("e.getMessage() : {}",e.getMessage());
-		// 	log.warn(String.valueOf(e.getClaims()));
-		// 	return e.getClaims();
-		// }
 	}
 	public AuthToken generate(Integer userId){
 
@@ -124,7 +117,10 @@ public class TokenProvider {
 			log.warn("발견한 리프레시 토큰 : {}",refreshToken);
 
 			// refreshToken이 아직 유효하다면, accessToken을 재발급 받는다
-			if(validateToken(refreshToken)){
+
+			// 단, 리프레시 토큰이 Redis에 존재하여 Null이 아닐 경우에만 유효성을 검증해야한다
+			if(!StringUtils.hasText(refreshToken) && validateToken(refreshToken)){
+				log.warn("유효한 리프레시 토큰");
 				String subject = extractSubject(refreshToken);
 				AuthToken authToken = generate(Integer.parseInt(subject));
 				log.warn("재발급 된 엑세스 토큰 : {}",authToken.accessToken());
