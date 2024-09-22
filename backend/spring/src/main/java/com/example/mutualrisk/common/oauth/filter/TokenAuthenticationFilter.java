@@ -44,36 +44,44 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
 		String accessToken = resolveToken(request);
 
-		try{
-			if(tokenProvider.validateToken(accessToken)){
-				String userId = tokenProvider.extractSubject(accessToken);
-				request.setAttribute("userId",userId);
-			}
-		}catch(MalformedJwtException | IllegalArgumentException e){
-			log.info("유효하지 않은 구성의 JWT 토큰 입니다.");
-			request.setAttribute("exception",new RuntimeException("유효하지 않은 구성의 JWT 토큰입니다."));
-
-		}catch(ExpiredJwtException e){
-			log.info("만료된 JWT 토큰입니다.");
-
-			// 리프레시 토큰을 가지고와서 재발급 시도
-			// 유저가 토큰을 가지고 api를 호출했는데 401이 터진다면 
-			// - reissue-token 헤더가 있는지 확인해보고 있으면 유저의 accessToken을 갱신하면 된다
-			// - 헤더가 없다면? => refresh도 만료되었거나 탈취당해서 재발급된 상태이므로 다시 로그인 해야한다
-			String reissuedToken = tokenProvider.reissueToken(accessToken);
-
-			log.info("재발급된 토큰 : {}", reissuedToken);
-			if(StringUtils.hasText(reissuedToken)){
-				response.setHeader("reissue-token",reissuedToken);
-				response.sendError(HttpServletResponse.SC_UNAUTHORIZED,"토큰을 재발급하였습니다.");
-			}
-			else{
-				response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증에 실패했습니다.");
-			}
-			return;
+		// 개발 편의를 위한 임시 로직
+		// Bearer token에 "dummyAccessToken"을 입력하면, dummy user 정보로 인증된 후 넘어감
+		if (accessToken.equals("dummyAccessToken")) {
+			request.setAttribute("userId",1);
+			filterChain.doFilter(request, response);
 		}
+		else {
+			try{
+				if(tokenProvider.validateToken(accessToken)){
+					String userId = tokenProvider.extractSubject(accessToken);
+					request.setAttribute("userId",userId);
+				}
+			}catch(MalformedJwtException | IllegalArgumentException e){
+				log.info("유효하지 않은 구성의 JWT 토큰 입니다.");
+				request.setAttribute("exception",new RuntimeException("유효하지 않은 구성의 JWT 토큰입니다."));
 
-		 filterChain.doFilter(request,response);
+			}catch(ExpiredJwtException e){
+				log.info("만료된 JWT 토큰입니다.");
+
+				// 리프레시 토큰을 가지고와서 재발급 시도
+				// 유저가 토큰을 가지고 api를 호출했는데 401이 터진다면
+				// - reissue-token 헤더가 있는지 확인해보고 있으면 유저의 accessToken을 갱신하면 된다
+				// - 헤더가 없다면? => refresh도 만료되었거나 탈취당해서 재발급된 상태이므로 다시 로그인 해야한다
+				String reissuedToken = tokenProvider.reissueToken(accessToken);
+
+				log.info("재발급된 토큰 : {}", reissuedToken);
+				if(StringUtils.hasText(reissuedToken)){
+					response.setHeader("reissue-token",reissuedToken);
+					response.sendError(HttpServletResponse.SC_UNAUTHORIZED,"토큰을 재발급하였습니다.");
+				}
+				else{
+					response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증에 실패했습니다.");
+				}
+				return;
+			}
+
+			filterChain.doFilter(request,response);
+		}
 	}
 
 	@Override
@@ -85,9 +93,9 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 		// jwt 토큰 확인 로직에서 제외시킬 api path 설정
 		// /api/v1/oauth/{anything} 경로와 /swagger 경로, test용 api 필터링 제외
 		return pathMatcher.match("/api/v1/oauth/**", path)
-			|| pathMatcher.match("/swagger/**", path)
-			|| pathMatcher.match("/api/v1/test/**", path)
-				;
+			|| pathMatcher.match("/api/v1/swagger-ui/**", path)		// swagger ui 실행시 동작하는 api
+			|| pathMatcher.match("/v3/api-docs/**", path)			// swagger ui 실행시 동작하는 api
+			|| pathMatcher.match("/api/v1/test/**", path);
 	}
 
 	/**
