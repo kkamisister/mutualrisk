@@ -7,6 +7,7 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -65,7 +66,12 @@ public class TokenProviderTest {
 
 		// 만료된 토큰 생성
 		String expiredToken = tokenProvider.generateAccessToken(subject, new Date(System.currentTimeMillis() - 3600000)); // 이미 만료된 토큰
-		assertFalse(tokenProvider.validateToken(expiredToken)); // 만료된 토큰인지 확인
+
+		// 만료된 토큰인지 확인
+		// 확인 과정에서 ExpiredJwtException이 발생해야 함
+		assertThrows(ExpiredJwtException.class, () -> {
+			tokenProvider.validateToken(expiredToken);
+		});
 	}
 
 	@Test
