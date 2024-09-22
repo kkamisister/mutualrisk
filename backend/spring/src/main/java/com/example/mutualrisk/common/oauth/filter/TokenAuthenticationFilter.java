@@ -89,13 +89,12 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 		String path = request.getRequestURI();
 		AntPathMatcher pathMatcher = new AntPathMatcher();
 
-		log.warn("path: {}", path);
 
 		// jwt 토큰 확인 로직에서 제외시킬 api path 설정
 		// /api/v1/oauth/{anything} 경로와 /swagger 경로, test용 api 필터링 제외
 		return pathMatcher.match("/api/v1/oauth/**", path)
-			|| pathMatcher.match("/api/v1/swagger-ui/**", path)
-			|| pathMatcher.match("/v3/api-docs/**", path)
+			|| pathMatcher.match("/api/v1/swagger-ui/**", path)		// swagger ui 실행시 동작하는 api
+			|| pathMatcher.match("/v3/api-docs/**", path)			// swagger ui 실행시 동작하는 api
 			|| pathMatcher.match("/api/v1/test/**", path);
 	}
 

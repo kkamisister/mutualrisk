@@ -1,3 +1,4 @@
+# nginx에서 제대로 매핑할 수 있게 하기 위해, swagger api 역시 /api/v1 하에서 동작해야 한다
 springdoc:
   swagger-ui:
     path: /api/v1/swagger-ui
