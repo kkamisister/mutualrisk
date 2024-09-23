@@ -5,12 +5,17 @@ import static com.example.mutualrisk.common.dto.CommonResponse.*;
 
 import com.example.mutualrisk.asset.dto.AssetRequest;
 import com.example.mutualrisk.asset.service.AssetService;
+import com.example.mutualrisk.common.enums.Order;
+import com.example.mutualrisk.common.enums.OrderCondition;
+import com.example.mutualrisk.common.exception.ErrorCode;
+import com.example.mutualrisk.common.exception.MutualRiskException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,11 +44,20 @@ public class AssetController {
         @ApiResponse(responseCode = "200", description = "유저 관심종목 조회 완료"),
     })
     @GetMapping("/interest")
-    public ResponseEntity<ResponseWithData<AssetResultDto>> getUserInterestAssets(@RequestParam("orderCondition") String orderCondition,
-        @RequestParam("sortOrder") String order,
+    public ResponseEntity<ResponseWithData<AssetResultDto>> getUserInterestAssets(@RequestParam(value = "orderCondition", required = false, defaultValue = "name") String orderConditionString,
+        @RequestParam(value = "sortOrder", required = false, defaultValue = "asc") String orderString,
         HttpServletRequest request){
 
         Integer userId = (Integer)request.getAttribute("userId");
+
+        OrderCondition orderCondition;
+        Order order;
+        try {
+            orderCondition = OrderCondition.valueOf(orderConditionString);
+            order = Order.valueOf(orderString);
+        } catch (IllegalArgumentException e) {
+            throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
+        }
 
         ResponseWithData<AssetResultDto> userInterestAssets = assetService.getUserInterestAssets(userId, orderCondition,
             order);
