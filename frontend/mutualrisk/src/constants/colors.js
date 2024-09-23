@@ -25,8 +25,8 @@ export const colors = {
 		primary: '#F6F7F9',
 		box: '#E5E8EB',
 		white: '#FFFFFF',
-		green: '#02B15A50',
-		red: '#F04251A50',
+		green: 'rgba(46, 125, 50, 0.2)',
+		red: 'rgba(240, 66, 81, 0.2)',
 	},
 	point: {
 		yellow: '#D7C500',

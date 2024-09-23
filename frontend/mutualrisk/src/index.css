@@ -134,3 +134,7 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
+/* 웹킷 기반 브라우저 (크롬, 사파리 등) */
+html {
+	overflow: overlay; /* 스크롤바를 콘텐츠 위에 덮는 설정 (구형 브라우저에서만 작동) */
+}

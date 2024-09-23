@@ -20,10 +20,10 @@ const DashboardLayout = () => {
 			<Box
 				sx={{
 					padding: '20px 20px 20px 20px',
-					transition: 'max-width 0.3s ease, left 0.3s ease',
+					transition: 'width 0.3s ease, left 0.3s ease',
 					position: `absolute`,
 					left: isSidebarHovered ? 200 : 73,
-					maxWidth: `calc(100% - ${isSidebarHovered ? 200 : 73}px - 40px)`, // Sidebar의 hover 상태에 따라 Box의 너비 변경
+					width: `calc(100% - ${isSidebarHovered ? 200 : 73}px - 40px)`, // Sidebar의 hover 상태에 따라 Box의 너비 변경
 					backgroundColor: colors.background.primary,
 				}}>
 				<Outlet />
