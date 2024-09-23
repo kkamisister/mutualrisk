@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import BoxTitle from 'components/title/BoxTitle';
 import StockSearch from 'pages/portfolio/create/stocksearch/StockSearch';
+import StockListItem from './stocksearch/StockListItem';
 import StockList from 'pages/portfolio/create/stocksearch/StockList';
 import ConditionSetting from 'pages/portfolio/create/ConditionSetting';
+import { colors } from 'constants/colors';
 
 const PortfolioCreatePage = () => {
 	const [showSelectedItems, setShowSelectedItems] = useState(false);
@@ -43,13 +45,24 @@ const PortfolioCreatePage = () => {
 				/>
 			</Stack>
 			{showSelectedItems && (
-				<Stack>
+				<Box
+					sx={{
+						backgroundColor: colors.background.box,
+					}}>
+					<Box
+						sx={{
+							fontSize: '20px',
+							fontWeight: 'bold',
+							color: colors.text.main,
+						}}>
+						{'담은 종목'}
+					</Box>
 					<StockList
+						assets={selectedStocks}
 						selectedStocks={selectedStocks}
 						onStockSelect={handleStockSelect}
-						showSearchBar={false}
 					/>
-				</Stack>
+				</Box>
 			)}
 			{showConditionSetting && (
 				<Stack>
