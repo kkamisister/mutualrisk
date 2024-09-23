@@ -1,8 +1,6 @@
 import { Stack } from '@mui/material';
 import Grid from '@mui/material/Grid';
-import { colors } from 'constants/colors';
 import TitleDivider from 'components/title/TitleDivider';
-import { useLocation } from 'react-router-dom';
 import StockBookmarkList from './StockBookmarkList';
 import StockNewsList from './StockNewsList';
 const StockBookmarkPage = () => {
