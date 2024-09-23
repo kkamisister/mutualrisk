@@ -5,6 +5,8 @@ import com.example.mutualrisk.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,4 +26,10 @@ public class News extends BaseEntity {
 
     @Column(name = "link")
     private String link;
+
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
+
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
 }

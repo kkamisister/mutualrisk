@@ -5,6 +5,7 @@ import com.example.mutualrisk.asset.entity.Region;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.example.mutualrisk.asset.entity.Asset;
@@ -16,7 +17,9 @@ public record AssetResponse() {
         + "종목 검색 결과 반환 및 유저 관심종목 추가에 대한 응답으로 사용")
     public record AssetResultDto(
         Integer assetNum,
-        List<AssetInfo> assets
+        List<AssetInfo> assets,
+        Integer newsNum,
+        List<NewsInfo> news
     ) {
 
     }
@@ -60,6 +63,19 @@ public record AssetResponse() {
 
 
         }
+    }
+
+    @Builder
+    @Schema(name = "뉴스 상세 데이터", description = "종목 검색시 함께 보여줄 뉴스 데이터")
+    public record NewsInfo (
+        Integer newsId,
+        String title,
+        String link,
+        String thumbnailUrl,
+        LocalDateTime publishedAt,
+        List<AssetInfo> relatedAssets
+    ) {
+
     }
 
 
