@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { Modal, Box, Button, Typography } from '@mui/material';
-import BasicButton from 'components/button/basicbutton';
+import BasicButton from 'components/button/BasicButton';
 
 const CreateModal = () => {
 	const [step, setStep] = useState(1);
