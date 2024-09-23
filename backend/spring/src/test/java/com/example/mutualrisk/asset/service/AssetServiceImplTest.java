@@ -17,6 +17,7 @@ import com.example.mutualrisk.asset.entity.AssetHistory;
 import com.example.mutualrisk.asset.entity.InterestAsset;
 import com.example.mutualrisk.asset.entity.Region;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
+import com.example.mutualrisk.asset.repository.AssetNewsRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
 import com.example.mutualrisk.asset.repository.InterestAssetRepository;
 import com.example.mutualrisk.common.config.QuerydslConfig;
@@ -51,6 +52,8 @@ class AssetServiceImplTest {
     private InterestAssetRepository interestAssetRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private AssetNewsRepository assetNewsRepository;
 
     @Test
     void searchByKeyword() {
@@ -201,6 +204,9 @@ class AssetServiceImplTest {
 
         when(assetHistoryRepository.findRecentTwoAssetHistory(asset3))
             .thenReturn(Arrays.asList(mostRecentAssetHistory3, secondMostAssetHistory3));
+
+        when(assetNewsRepository.findByAssetIn(any(List.class)))
+            .thenReturn(new ArrayList());
 
         // when : 기본 정렬 (디폴트 점검)
         ResponseWithData<AssetResultDto> userInterestAssetsByDefault = assetService.getUserInterestAssets(
