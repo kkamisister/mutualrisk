@@ -14,14 +14,12 @@ public class UnixTimestampConverter implements AttributeConverter<LocalDateTime,
 
 	@Override
 	public Integer convertToDatabaseColumn(LocalDateTime attribute) {
-		log.info("여기1");
 		// LocalDateTime을 int로 변환 (UNIX timestamp)
 		return (attribute == null) ? null : (int) attribute.atZone(ZoneId.systemDefault()).toEpochSecond();
 	}
 
 	@Override
 	public LocalDateTime convertToEntityAttribute(Integer dbData) {
-		log.info("여기2");
 		// int (UNIX timestamp)를 LocalDateTime으로 변환
 		return (dbData == null) ? null : LocalDateTime.ofInstant(Instant.ofEpochSecond(dbData), ZoneId.systemDefault());
 	}

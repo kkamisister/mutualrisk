@@ -1,12 +1,13 @@
 package com.example.mutualrisk.asset.dto;
 
+import com.example.mutualrisk.asset.entity.AssetHistory;
+import com.example.mutualrisk.asset.entity.Region;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
 import java.util.List;
 
 import com.example.mutualrisk.asset.entity.Asset;
-import com.example.mutualrisk.asset.entity.AssetHistory;
 
 public record AssetResponse() {
 
@@ -30,19 +31,31 @@ public record AssetResponse() {
             String imageName,
             Double price,
             String region,
-            Double returns
+            Double expectedReturn,
+            Double dailyPriceChangeRate,
+            Double dailyPriceChange
     ) {
 
-        public static AssetInfo of(Asset asset, AssetHistory assetHistory){
+        public static AssetInfo of(Asset asset, List<AssetHistory> recentAssetHistoryList){
+            String imageName = asset.getRegion().equals(Region.KR) ? asset.getCode() + ".svg" : asset.getCode() + ".png";
+
+            AssetHistory mostRecentAssetHistory = recentAssetHistoryList.get(0);
+            AssetHistory secondRecentAssetHistory = recentAssetHistoryList.get(1);
+
+            double dailyPriceChange = mostRecentAssetHistory.getPrice() - secondRecentAssetHistory.getPrice();
+            double dailyPriceChangeRate = dailyPriceChange / secondRecentAssetHistory.getPrice();
+
             return AssetInfo.builder()
                 .assetId(asset.getId())
                 .name(asset.getName())
                 .code(asset.getCode())
                 .imagePath(asset.getImagePath())
-                .imageName(asset.getImageName())
-                .price(assetHistory.getPrice())
+                .imageName(imageName)
+                .price(mostRecentAssetHistory.getPrice())
                 .region(asset.getRegion().name())
-                .returns(asset.getExpectedReturn())
+                .expectedReturn(asset.getExpectedReturn())
+                .dailyPriceChangeRate(Math.round(dailyPriceChangeRate * 10000) / 100.0)
+                .dailyPriceChange(Math.round(dailyPriceChange * 100) / 100.0)
                 .build();
 
 
