@@ -4,10 +4,9 @@ import static com.example.mutualrisk.asset.dto.AssetRequest.*;
 import static com.example.mutualrisk.asset.dto.AssetResponse.*;
 
 import com.example.mutualrisk.asset.dto.AssetResponse.AssetResultDto;
-import com.example.mutualrisk.asset.entity.Asset;
-import com.example.mutualrisk.asset.entity.AssetHistory;
-import com.example.mutualrisk.asset.entity.InterestAsset;
+import com.example.mutualrisk.asset.entity.*;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
+import com.example.mutualrisk.asset.repository.AssetNewsRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
 import com.example.mutualrisk.asset.repository.InterestAssetRepository;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
@@ -36,6 +35,7 @@ public class AssetServiceImpl implements AssetService{
     private final AssetHistoryRepository assetHistoryRepository;
     private final UserRepository userRepository;
     private final InterestAssetRepository interestAssetRepository;
+    private final AssetNewsRepository assetNewsRepository;
 
     @Override
     @Transactional
@@ -74,22 +74,57 @@ public class AssetServiceImpl implements AssetService{
             .orElseThrow(()-> new MutualRiskException(ErrorCode.USER_NOT_FOUND));
 
         // 유저의 관심자산 목록을 조건에 맞춰 가지고 온다
-        List<InterestAsset> userInterestAsset = interestAssetRepository.findUserInterestAssets(user);
+        List<Asset> userInterestAssetList = interestAssetRepository.findUserInterestAssets(user).stream()
+            .map(InterestAsset::getAsset)
+            .toList();
 
         // 조건에 맞춰 정렬한다
-        List<AssetInfo> userInterestAssets = userInterestAsset.stream()
-            .map(InterestAsset::getAsset)
+        List<AssetInfo> userInterestAssetInfoList = userInterestAssetList.stream()
             .map(this::getAssetInfo)
             .sorted((a1, a2) -> sorting(orderCondition, order, a1, a2))
             .toList();
 
+        List<NewsInfo> relatedNewsList = getRelatedNewsList(userInterestAssetList);
+
         // 결과를 DTO에 담아 반환한다
         AssetResultDto result = AssetResultDto.builder()
-            .assetNum(userInterestAssets.size())
-            .assets(userInterestAssets)
+            .assetNum(userInterestAssetInfoList.size())
+            .assets(userInterestAssetInfoList)
+            .newsNum(relatedNewsList.size())
+            .news(relatedNewsList)
             .build();
 
         return new ResponseWithData<>(HttpStatus.OK.value(),"유저 관심종목 조회 성공",result);
+    }
+
+    private List<NewsInfo> getRelatedNewsList(List<Asset> userInterestAssetList) {
+        List<AssetNews> relatedAssetNews = assetNewsRepository.findByAssetIn(userInterestAssetList);
+
+        return relatedAssetNews.stream()
+            .map(AssetNews::getNews)
+            .map(this::getNewsInfo)
+            .toList();
+    }
+
+    private NewsInfo getNewsInfo(News news) {
+        List<AssetInfo> relatedAssetInfoList = getRelatedAsset(news);
+
+        return NewsInfo.builder()
+            .newsId(news.getId())
+            .link(news.getLink())
+            .title(news.getTitle())
+            .thumbnailUrl(news.getThumbnailUrl())
+            .publishedAt(news.getPublishedAt())
+            .relatedAssets(relatedAssetInfoList)
+            .build();
+    }
+
+    private List<AssetInfo> getRelatedAsset(News news) {
+        List<AssetNews> assetNewsList = assetNewsRepository.findAllByNews(news);
+        return assetNewsList.stream()
+            .map(AssetNews::getAsset)
+            .map(this::getAssetInfo)
+            .toList();
     }
 
     /**
