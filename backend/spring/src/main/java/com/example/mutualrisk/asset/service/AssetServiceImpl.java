@@ -109,14 +109,27 @@ public class AssetServiceImpl implements AssetService{
     private NewsInfo getNewsInfo(News news) {
         List<AssetInfo> relatedAssetInfoList = getRelatedAsset(news);
 
+        String cleanedTitle = getCleanedTitle(news.getTitle());
+
         return NewsInfo.builder()
             .newsId(news.getId())
             .link(news.getLink())
-            .title(news.getTitle())
+            .title(cleanedTitle)
             .thumbnailUrl(news.getThumbnailUrl())
             .publishedAt(news.getPublishedAt())
             .relatedAssets(relatedAssetInfoList)
             .build();
+    }
+
+    private String getCleanedTitle(String title) {
+        // 1. HTML 태그(<b>, </b>) 제거
+        String withoutTags = title.replaceAll("<.*?>", "");
+
+        // 2. HTML 엔티티(&quot;) 제거
+        String cleanText = withoutTags.replaceAll("&quot;", "'");
+
+        // 결과 출력
+        return cleanText;
     }
 
     private List<AssetInfo> getRelatedAsset(News news) {
