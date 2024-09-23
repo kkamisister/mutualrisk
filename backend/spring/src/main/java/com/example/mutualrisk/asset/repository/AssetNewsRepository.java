@@ -9,8 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface AssetNewsRepository extends JpaRepository<AssetNews, Integer> {
+public interface AssetNewsRepository extends JpaRepository<AssetNews, Integer>, AssetNewsRepositoryCustom {
     List<AssetNews> findAllByAsset(Asset asset);
     List<AssetNews> findAllByNews(News news);
-    List<AssetNews> findByAssetIn(List<Asset> userInterestAssetList);
 }
