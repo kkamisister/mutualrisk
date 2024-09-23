@@ -13,7 +13,7 @@ const SidebarItem = ({ title, Icon, move, clicked, hover }) => {
 				alignItems: 'center',
 				width: hover ? '155px' : '30px',
 				height: '31px',
-				padding: '7px 7px 7px 10px',
+				padding: '7px 5px 7px 11px',
 				margin: '5px 3px 5px 3px',
 				cursor: 'pointer',
 				fontWeight: clicked ? 'bold' : 'normal',

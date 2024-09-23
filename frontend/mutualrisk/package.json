@@ -17,6 +17,7 @@
 		"react-query": "^3.39.3",
 		"react-router-dom": "^6.26.2",
 		"react-scripts": "5.0.1",
+		"react-select": "^5.8.1",
 		"recharts": "^2.12.7",
 		"semver": "^7.6.3",
 		"styled-components": "^6.1.13",
