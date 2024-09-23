@@ -44,8 +44,8 @@ public class AssetController {
         @ApiResponse(responseCode = "200", description = "유저 관심종목 조회 완료"),
     })
     @GetMapping("/interest")
-    public ResponseEntity<ResponseWithData<AssetResultDto>> getUserInterestAssets(@RequestParam(value = "orderCondition", required = false, defaultValue = "name") String orderConditionString,
-        @RequestParam(value = "sortOrder", required = false, defaultValue = "asc") String orderString,
+    public ResponseEntity<ResponseWithData<AssetResultDto>> getUserInterestAssets(@RequestParam(value = "orderCondition", required = false, defaultValue = "NAME") String orderConditionString,
+        @RequestParam(value = "sortOrder", required = false, defaultValue = "ASC") String orderString,
         HttpServletRequest request){
 
         Integer userId = (Integer)request.getAttribute("userId");
@@ -53,8 +53,8 @@ public class AssetController {
         OrderCondition orderCondition;
         Order order;
         try {
-            orderCondition = OrderCondition.valueOf(orderConditionString);
-            order = Order.valueOf(orderString);
+            orderCondition = OrderCondition.valueOf(orderConditionString.toUpperCase());
+            order = Order.valueOf(orderString.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
         }
