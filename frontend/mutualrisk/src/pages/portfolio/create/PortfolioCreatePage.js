@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Box, Stack, List } from '@mui/material';
 import BoxTitle from 'components/title/BoxTitle';
 import StockSearch from 'pages/portfolio/create/stocksearch/StockSearch';
-import ConditionSetting from 'pages/portfolio/create/ConditionSetting';
+import ConditionSetting from 'pages/portfolio/create/condition/ConditionSetting';
 import { colors } from 'constants/colors';
 import SelectedList from 'pages/portfolio/create/selectedstock/SelectedList';
+import BasicButton from 'components/button/BasicButton';
 
 const PortfolioCreatePage = () => {
 	const [showSelectedItems, setShowSelectedItems] = useState(false);
@@ -60,6 +61,9 @@ const PortfolioCreatePage = () => {
 						assets={selectedStocks}
 						onStockSelect={handleStockSelect}
 					/>
+					<BasicButton onClick={handleItemsConfirm}>
+						포트폴리오 제작
+					</BasicButton>
 				</Box>
 			)}
 			{showConditionSetting && (
