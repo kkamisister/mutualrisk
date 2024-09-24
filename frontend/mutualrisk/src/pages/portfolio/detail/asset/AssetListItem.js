@@ -5,6 +5,7 @@ const AssetListItem = ({ asset }) => {
 	return (
 		<Box
 			sx={{
+				// width: '100%',
 				display: 'flex',
 				justifyContent: 'space-between',
 				alignItems: 'center',

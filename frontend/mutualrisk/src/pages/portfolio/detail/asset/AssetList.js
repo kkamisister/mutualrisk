@@ -41,7 +41,7 @@ const AssetList = () => {
 	];
 
 	return (
-		<Box sx={{ marginTop: '20px' }}>
+		<Box sx={{ marginTop: '20px', minWidth: 0, flex: 1 }}>
 			{assets.map((asset, index) => (
 				<AssetListItem key={index} asset={asset} />
 			))}
