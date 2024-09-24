@@ -31,7 +31,8 @@ spring:
       port: 6379
 
     mongodb:
-      uri: mongodb://j11a607.p.ssafy.io:27017/product
+      uri: mongodb://j11a607.p.ssafy.io:27017/
+      database: product
 
 
   logging.level:
