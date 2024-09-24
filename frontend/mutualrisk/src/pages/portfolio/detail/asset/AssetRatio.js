@@ -10,7 +10,7 @@ const AssetRatio = () => {
 			direction="row"
 			sx={{
 				width: '100%',
-				minWidth: '1200px',
+				minWidth: '1000px',
 				height: '100%',
 				maxHeight: '100%',
 				alignItems: 'stretch',

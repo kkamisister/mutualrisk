@@ -23,7 +23,7 @@ const AssetRatioPieChart = () => {
 		<div
 			style={{
 				width: '100%',
-				minWidth: '400px', // 최소 너비 설정
+				minWidth: '350px', // 최소 너비 설정
 				height: '100%',
 				// minHeight: '400px',
 				flex: 1,
