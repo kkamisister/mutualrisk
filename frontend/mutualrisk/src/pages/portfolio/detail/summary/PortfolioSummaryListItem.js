@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 
-const PortfolioSummaryBox = ({ title, children }) => {
+const PortfolioSummaryListItem = ({ title, children }) => {
 	return (
 		<Box
 			sx={{
@@ -32,4 +32,4 @@ const PortfolioSummaryBox = ({ title, children }) => {
 	);
 };
 
-export default PortfolioSummaryBox;
+export default PortfolioSummaryListItem;
