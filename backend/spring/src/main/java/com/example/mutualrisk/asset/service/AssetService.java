@@ -6,11 +6,13 @@ import com.example.mutualrisk.asset.dto.AssetResponse.AssetResultDto;
 import com.example.mutualrisk.common.dto.CommonResponse;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
+import com.example.mutualrisk.common.enums.Order;
+import com.example.mutualrisk.common.enums.OrderCondition;
 
 public interface AssetService {
     ResponseWithData<AssetResultDto> searchByKeyword(String keyword);
 
-    ResponseWithData<AssetResultDto> getUserInterestAssets(Integer userId,String orderCondition,String order);
+    ResponseWithData<AssetResultDto> getUserInterestAssets(Integer userId, OrderCondition orderCondition, Order order);
 
     ResponseWithMessage addInterestAsset(Integer userId,InterestAssetInfo asset);
 

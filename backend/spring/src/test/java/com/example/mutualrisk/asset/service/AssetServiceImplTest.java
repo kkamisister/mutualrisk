@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,11 +17,14 @@ import com.example.mutualrisk.asset.entity.AssetHistory;
 import com.example.mutualrisk.asset.entity.InterestAsset;
 import com.example.mutualrisk.asset.entity.Region;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
+import com.example.mutualrisk.asset.repository.AssetNewsRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
 import com.example.mutualrisk.asset.repository.InterestAssetRepository;
 import com.example.mutualrisk.common.config.QuerydslConfig;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
+import com.example.mutualrisk.common.enums.Order;
+import com.example.mutualrisk.common.enums.OrderCondition;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.user.entity.User;
@@ -48,6 +52,8 @@ class AssetServiceImplTest {
     private InterestAssetRepository interestAssetRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private AssetNewsRepository assetNewsRepository;
 
     @Test
     void searchByKeyword() {
@@ -64,10 +70,9 @@ class AssetServiceImplTest {
 
         //when,then
         assertThatThrownBy(
-            () -> assetService.getUserInterestAssets(0,"",""))
+            () -> assetService.getUserInterestAssets(0, OrderCondition.NAME, Order.ASC))
             .isInstanceOf(MutualRiskException.class)
             .hasMessage(ErrorCode.USER_NOT_FOUND.getMessage());
-
     }
 
     @Test
@@ -147,22 +152,41 @@ class AssetServiceImplTest {
         userInterestAsset.add(ia2);
         userInterestAsset.add(ia3);
 
-        AssetHistory assetHistory1 = AssetHistory.builder()
+        AssetHistory mostRecentAssetHistory1 = AssetHistory.builder()
             .asset(asset1)
             .date(now())
             .price(1.1111)
             .build();
 
-        AssetHistory assetHistory2 = AssetHistory.builder()
+        AssetHistory secondMostAssetHistory1 = AssetHistory.builder()
+            .asset(asset1)
+            .date(now().minusDays(1))
+            .price(1.023)
+            .build();
+
+
+        AssetHistory mostRecentAssetHistory2 = AssetHistory.builder()
             .asset(asset2)
             .date(now())
             .price(123.45)
             .build();
 
-        AssetHistory assetHistory3 = AssetHistory.builder()
+        AssetHistory secondMostAssetHistory2 = AssetHistory.builder()
+            .asset(asset2)
+            .date(now().minusDays(1))
+            .price(134.63)
+            .build();
+
+        AssetHistory mostRecentAssetHistory3 = AssetHistory.builder()
             .asset(asset3)
             .date(now())
             .price(150.00)
+            .build();
+
+        AssetHistory secondMostAssetHistory3 = AssetHistory.builder()
+            .asset(asset2)
+            .date(now().minusDays(1))
+            .price(101.34)
             .build();
 
         // Mock 설정
@@ -172,18 +196,21 @@ class AssetServiceImplTest {
         when(interestAssetRepository.findUserInterestAssets(any()))
             .thenReturn(userInterestAsset);
 
-        when(assetHistoryRepository.findRecentAssetHistory(asset1))
-            .thenReturn(Optional.of(assetHistory1));
+        when(assetHistoryRepository.findRecentTwoAssetHistory(asset1))
+            .thenReturn(Arrays.asList(mostRecentAssetHistory1, secondMostAssetHistory1));
 
-        when(assetHistoryRepository.findRecentAssetHistory(asset2))
-            .thenReturn(Optional.of(assetHistory2));
+        when(assetHistoryRepository.findRecentTwoAssetHistory(asset2))
+            .thenReturn(Arrays.asList(mostRecentAssetHistory2, secondMostAssetHistory2));
 
-        when(assetHistoryRepository.findRecentAssetHistory(asset3))
-            .thenReturn(Optional.of(assetHistory3));
+        when(assetHistoryRepository.findRecentTwoAssetHistory(asset3))
+            .thenReturn(Arrays.asList(mostRecentAssetHistory3, secondMostAssetHistory3));
+
+        when(assetNewsRepository.findByAssetIn(any(List.class)))
+            .thenReturn(new ArrayList());
 
         // when : 기본 정렬 (디폴트 점검)
         ResponseWithData<AssetResultDto> userInterestAssetsByDefault = assetService.getUserInterestAssets(
-            user.getId(), "", "");
+            user.getId(), OrderCondition.NAME, Order.ASC);
 
         // then
         assertThat(userInterestAssetsByDefault.data().assets())
@@ -195,7 +222,7 @@ class AssetServiceImplTest {
 
         // when : 이름 순 정렬 (내림차순)
         ResponseWithData<AssetResultDto> userInterestAssetsByNameDesc = assetService.getUserInterestAssets(
-            user.getId(), "", "DESC");
+            user.getId(), OrderCondition.NAME, Order.DESC);
 
         assertThat(userInterestAssetsByNameDesc.data().assets())
             .extracting(AssetInfo::name)
@@ -207,17 +234,17 @@ class AssetServiceImplTest {
 
         // when : 수익률 순 정렬 (오름차순)
         ResponseWithData<AssetResultDto> userInterestAssetsByReturnsAsc = assetService.getUserInterestAssets(
-            user.getId(), "returns", "");
+            user.getId(), OrderCondition.RETURN, Order.ASC);
 
         assertThat(userInterestAssetsByReturnsAsc.data().assets())
-            .extracting(AssetInfo::returns)
+            .extracting(AssetInfo::expectedReturn)
             .containsExactly(
                 0.15,0.21,0.41
             );
 
         // when : 정렬 (name 순)
         ResponseWithData<AssetResultDto> userInterestAssets = assetService.getUserInterestAssets(
-            user.getId(), "name", "ASC");
+            user.getId(), OrderCondition.NAME, Order.ASC);
 
         // then
         assertThat(userInterestAssets.data().assetNum())
@@ -233,7 +260,7 @@ class AssetServiceImplTest {
 
         // when : 가격순 정렬 (내림차순)
         ResponseWithData<AssetResultDto> userInterestAssetsByPriceDesc = assetService.getUserInterestAssets(
-            user.getId(), "price", "DESC");
+            user.getId(), OrderCondition.PRICE, Order.DESC);
 
         assertThat(userInterestAssetsByPriceDesc.data().assets())
             .extracting(AssetInfo::name)

@@ -4,15 +4,15 @@ import static com.example.mutualrisk.asset.dto.AssetRequest.*;
 import static com.example.mutualrisk.asset.dto.AssetResponse.*;
 
 import com.example.mutualrisk.asset.dto.AssetResponse.AssetResultDto;
-import com.example.mutualrisk.asset.entity.Asset;
-import com.example.mutualrisk.asset.entity.AssetHistory;
-import com.example.mutualrisk.asset.entity.InterestAsset;
-import com.example.mutualrisk.asset.entity.Region;
+import com.example.mutualrisk.asset.entity.*;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
+import com.example.mutualrisk.asset.repository.AssetNewsRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
 import com.example.mutualrisk.asset.repository.InterestAssetRepository;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
+import com.example.mutualrisk.common.enums.Order;
+import com.example.mutualrisk.common.enums.OrderCondition;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.user.entity.User;
@@ -24,9 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -37,36 +35,15 @@ public class AssetServiceImpl implements AssetService{
     private final AssetHistoryRepository assetHistoryRepository;
     private final UserRepository userRepository;
     private final InterestAssetRepository interestAssetRepository;
+    private final AssetNewsRepository assetNewsRepository;
 
     @Override
     @Transactional
     public ResponseWithData<AssetResultDto> searchByKeyword(String keyword) {
         List<Asset> assets = assetRepository.searchByKeyword(keyword);
-        LocalDate now = LocalDate.now();
 
         List<AssetInfo> assetInfos = assets.stream()
-            .map(
-                asset -> {
-                    log.info("asset : {}", asset);
-                    AssetHistory recentAssetHistory = assetHistoryRepository.findRecentAssetHistory(asset)
-                        .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
-
-                    LocalDate recentDate = LocalDate.from(recentAssetHistory.getDate());
-                    // Todo: recentDate와 now 비교 로직 추가
-
-                    String imageName = asset.getRegion().equals(Region.KR)? asset.getCode() + ".svg": asset.getCode() + ".png";
-
-                    return AssetInfo.builder()
-                        .assetId(asset.getId())
-                        .name(asset.getName())
-                        .code(asset.getCode())
-                        .imagePath("/stockImage")
-                        .imageName(imageName)
-                        .returns(asset.getExpectedReturn())
-                        .price(recentAssetHistory.getPrice())
-                        .build();
-                }
-            )
+            .map(this::getAssetInfo)
             .toList();
 
         AssetResultDto assetSearchResultDto = AssetResultDto.builder()
@@ -77,9 +54,11 @@ public class AssetServiceImpl implements AssetService{
         return new ResponseWithData<>(HttpStatus.OK.value(), "종목 검색 결과 불러오기에 성공하였습니다", assetSearchResultDto);
     }
 
+
+
     /**
      * 유저가 추가한 관심자산을 조회하는 메서드
-     * orderCondition(name,returns,price)과 order(ASC,DESC) 의 정렬기준에 따라 결과를 반환한다
+     * orderCondition(name,expectedReturn,price)과 order(ASC,DESC) 의 정렬기준에 따라 결과를 반환한다
      *
      * @param userId
      * @param orderCondition
@@ -88,29 +67,77 @@ public class AssetServiceImpl implements AssetService{
      */
     @Override
     @Transactional
-    public ResponseWithData<AssetResultDto> getUserInterestAssets(Integer userId, String orderCondition, String order) {
+    public ResponseWithData<AssetResultDto> getUserInterestAssets(Integer userId, OrderCondition orderCondition, Order order) {
 
         // 해당하는 유저가 존재하는지 찾는다
         User user = userRepository.findById(userId)
             .orElseThrow(()-> new MutualRiskException(ErrorCode.USER_NOT_FOUND));
 
         // 유저의 관심자산 목록을 조건에 맞춰 가지고 온다
-        List<InterestAsset> userInterestAsset = interestAssetRepository.findUserInterestAssets(user);
+        List<Asset> userInterestAssetList = interestAssetRepository.findUserInterestAssets(user).stream()
+            .map(InterestAsset::getAsset)
+            .toList();
 
         // 조건에 맞춰 정렬한다
-        List<AssetInfo> userInterestAssets = userInterestAsset.stream()
-            .map(InterestAsset::getAsset)
+        List<AssetInfo> userInterestAssetInfoList = userInterestAssetList.stream()
             .map(this::getAssetInfo)
             .sorted((a1, a2) -> sorting(orderCondition, order, a1, a2))
             .toList();
 
+        List<NewsInfo> relatedNewsList = getRelatedNewsList(userInterestAssetList);
+
         // 결과를 DTO에 담아 반환한다
         AssetResultDto result = AssetResultDto.builder()
-            .assetNum(userInterestAssets.size())
-            .assets(userInterestAssets)
+            .assetNum(userInterestAssetInfoList.size())
+            .assets(userInterestAssetInfoList)
+            .newsNum(relatedNewsList.size())
+            .news(relatedNewsList)
             .build();
 
         return new ResponseWithData<>(HttpStatus.OK.value(),"유저 관심종목 조회 성공",result);
+    }
+
+    private List<NewsInfo> getRelatedNewsList(List<Asset> userInterestAssetList) {
+        List<AssetNews> relatedAssetNews = assetNewsRepository.findByAssetIn(userInterestAssetList);
+
+        return relatedAssetNews.stream()
+            .map(AssetNews::getNews)
+            .map(this::getNewsInfo)
+            .toList();
+    }
+
+    private NewsInfo getNewsInfo(News news) {
+        List<AssetInfo> relatedAssetInfoList = getRelatedAsset(news);
+
+        String cleanedTitle = getCleanedTitle(news.getTitle());
+
+        return NewsInfo.builder()
+            .newsId(news.getId())
+            .link(news.getLink())
+            .title(cleanedTitle)
+            .thumbnailUrl(news.getThumbnailUrl())
+            .publishedAt(news.getPublishedAt())
+            .relatedAssets(relatedAssetInfoList)
+            .build();
+    }
+
+    private String getCleanedTitle(String title) {
+        // 1. HTML 태그(<b>, </b>) 제거
+        String withoutTags = title.replaceAll("<.*?>", "");
+
+        // 2. HTML 엔티티(&quot;) 제거
+        String cleanText = withoutTags.replaceAll("&quot;", "'");
+
+        // 결과 출력
+        return cleanText;
+    }
+
+    private List<AssetInfo> getRelatedAsset(News news) {
+        List<AssetNews> assetNewsList = assetNewsRepository.findAllByNews(news);
+        return assetNewsList.stream()
+            .map(AssetNews::getAsset)
+            .map(this::getAssetInfo)
+            .toList();
     }
 
     /**
@@ -180,28 +207,20 @@ public class AssetServiceImpl implements AssetService{
      * @param a2
      * @return
      */
-    private static int sorting(String orderCondition, String order, AssetInfo a1, AssetInfo a2) {
+    private static int sorting(OrderCondition orderCondition, Order order, AssetInfo a1, AssetInfo a2) {
         // orderCondition의 기본값을 name, order의 기본값을 asc로 설정
-        String sortBy = (orderCondition != null) ? orderCondition : "name";
-        String sortOrder = (order != null) ? order : "ASC";
-
         int comparisonResult = 0;
 
-        switch(sortBy){
-            case "price":
-                comparisonResult = a1.price().compareTo(a2.price());
-                break;
-            case "returns":
-                comparisonResult = a1.returns().compareTo(a2.returns());
-                break;
-            case "name":
-            default:
-                comparisonResult = a1.name().compareTo(a2.name());
-                break;
-
+        if (orderCondition == OrderCondition.NAME) {
+            comparisonResult = a1.name().compareTo(a2.name());
+        } else if (orderCondition == OrderCondition.PRICE) {
+            comparisonResult = a1.price().compareTo(a2.price());
+        }
+        else if (orderCondition == OrderCondition.RETURN) {
+            comparisonResult = a1.expectedReturn().compareTo(a2.expectedReturn());
         }
 
-        if("DESC".equals(sortOrder)){
+        if(order == Order.DESC){
             comparisonResult = -comparisonResult;
         }
 
@@ -215,12 +234,15 @@ public class AssetServiceImpl implements AssetService{
      * @return
      */
     private AssetInfo getAssetInfo(Asset asset) {
-        // 자산의 price를 찾기 위해 가장 최근의 종가를 가지고온다
-        AssetHistory recentAssetHistory = assetHistoryRepository.findRecentAssetHistory(asset)
-            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
+        List<AssetHistory> recentAssetHistoryList = assetHistoryRepository.findRecentTwoAssetHistory(asset);
+        if (recentAssetHistoryList.size() < 2) throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
 
-        // LocalDate recentData = LocalDate.from(recentAssetHistory.getDate());
-        return AssetInfo.of(asset,recentAssetHistory);
+        // Todo: recentDate와 now 비교 로직 추가
+//        LocalDate now = LocalDate.now();
+//        LocalDate recentDate = LocalDate.from(recentAssetHistoryList.getDate());
+
+
+        return AssetInfo.of(asset, recentAssetHistoryList);
     }
 
 }

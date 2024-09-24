@@ -9,7 +9,5 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface AssetRepository extends JpaRepository<Asset, Integer> {
-    @Query("SELECT a FROM Asset a WHERE a.name LIKE %:keyword% OR a.code LIKE %:keyword%")
-    List<Asset> searchByKeyword(@Param("keyword") String keyword);
+public interface AssetRepository extends JpaRepository<Asset, Integer>, AssetRepositoryCustom {
 }
