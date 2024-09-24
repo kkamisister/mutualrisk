@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.mutualrisk.common.oauth.util.TokenProvider;
@@ -41,6 +42,12 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
 		FilterChain filterChain) throws ServletException, IOException {
+
+		// Preflight 요청인 경우, 바로 200 응답반환
+		if(CorsUtils.isPreFlightRequest(request)){
+			response.setStatus(HttpServletResponse.SC_OK);
+			return;
+		}
 
 		String accessToken = resolveToken(request);
 
