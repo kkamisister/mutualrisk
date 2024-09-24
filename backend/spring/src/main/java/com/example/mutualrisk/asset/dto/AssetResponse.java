@@ -40,14 +40,34 @@ public record AssetResponse() {
         String dailyPriceChange
     ) {
 
-        public static AssetInfo of(Asset asset, List<AssetHistory> recentAssetHistoryList) {
-            String imageName = asset.getRegion().equals(Region.KR) ? asset.getCode() + ".svg" : asset.getCode() + ".png";
+        public static AssetInfo of(Asset asset, List<AssetHistory> recentAssetHistoryList, Double exchangeRate) {
 
+            // 서버에 저장된 이미지 이름. REGION별로 확장자가 다르다(kr : .svg, us: .png)
+            String imageName;
+            double price;    // 현재 주식의 가격(원화 기준)
+            double dailyPriceChange;    // 전일 대비 가격의 변화량(원화 기준)
+            double dailyPriceChangeRate;    // 전일 대비 가격의 변화율(원화 기준)
             AssetHistory mostRecentAssetHistory = recentAssetHistoryList.get(0);
             AssetHistory secondRecentAssetHistory = recentAssetHistoryList.get(1);
 
-            double dailyPriceChange = mostRecentAssetHistory.getPrice() - secondRecentAssetHistory.getPrice();
-            double dailyPriceChangeRate = dailyPriceChange / secondRecentAssetHistory.getPrice() * 100;
+            Double price1 = mostRecentAssetHistory.getPrice();
+            Double price2 = secondRecentAssetHistory.getPrice();
+
+            // 자산의 가격을 나타낼 때 원화 기준으로 나타내야 하고, imageName의 확장자가 다르므로 한국 주식일 때와 외국 주식을 나눠서 처리해야 한다
+            // 자산이 한국 자산일 때
+            if (asset.getRegion() == Region.KR) {
+                price = price1;
+                imageName = asset.getCode() + ".svg";
+                dailyPriceChange = price1 - price2;
+                dailyPriceChangeRate = (price1 - price2) / price2 * 100;
+            }
+            // 아닌 경우: 자산이 외국 자산일 때
+            else {
+                price = price1 * exchangeRate;
+                imageName = asset.getCode() + ".png";
+                dailyPriceChange = (price1 - price2) * exchangeRate;
+                dailyPriceChangeRate = (price1 - price2) / price2 * 100;
+            }
 
             return AssetInfo.builder()
                 .assetId(asset.getId())
@@ -56,7 +76,7 @@ public record AssetResponse() {
                 .imagePath(asset.getImagePath())
                 .imageName(imageName)
                 .market(asset.getMarket().name())
-                .price(mostRecentAssetHistory.getPrice())
+                .price(price)
                 .region(asset.getRegion().name())
                 .expectedReturn(asset.getExpectedReturn())
                 .dailyPriceChangeRate(dailyPriceChangeRate > 0
