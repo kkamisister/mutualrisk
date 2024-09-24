@@ -52,10 +52,14 @@ public class Asset extends BaseEntity {
 	@Override
 	public String toString() {
 		return "Asset{" +
-			"id=" + id +
-			", name='" + name + '\'' +
-			", code='" + code + '\'' +
+			"imageName='" + imageName + '\'' +
+			", imagePath='" + imagePath + '\'' +
+			", expectedReturn=" + expectedReturn +
 			", region=" + region +
-			", expectedReturn=" + expectedReturn;
+			", market=" + market +
+			", code='" + code + '\'' +
+			", name='" + name + '\'' +
+			", id=" + id +
+			'}';
 	}
 }
