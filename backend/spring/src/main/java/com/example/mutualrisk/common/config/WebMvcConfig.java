@@ -13,10 +13,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
 		registry.addMapping("/**")
 			.allowCredentials(true)
 			.allowedOrigins(
-				"http://localhost:3000","https://j11a607.p.ssafy.io"
+				"http://localhost:3000/","https://j11a607.p.ssafy.io/"
 			)
 			.allowedMethods("GET","POST","PUT","DELETE","OPTIONS")
 			.allowedHeaders("*")
-			.exposedHeaders("*");
+			.exposedHeaders("Access-Control-Allow-Headers")
+			.exposedHeaders("Authorization")
+			.maxAge(3600);
+
+		WebMvcConfigurer.super.addCorsMappings(registry);
 	}
 }
