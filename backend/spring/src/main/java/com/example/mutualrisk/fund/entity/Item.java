@@ -10,5 +10,5 @@ public class Item {
 	private String name;
 	private String region;
 	private Long valueOfHolding;
-
+	private Long changeValueOfHolding;
 }

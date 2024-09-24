@@ -12,27 +12,20 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Document(collection="13f")
-@Getter @Setter
+@Getter
 @NoArgsConstructor
 public class Fund {
 
 	@Id @Field(value = "_id",targetType = FieldType.OBJECT_ID)
 	private String id;
-	// @Field("type")
 	private String type;
-	// @Field("name")
 	private String name;
-	// @Field("company")
 	private String company;
 
 	private List<Item> asset;
-
 	private String submissionDate;
-
-	@Indexed
 	private long valueOfHoldings;
 
 }

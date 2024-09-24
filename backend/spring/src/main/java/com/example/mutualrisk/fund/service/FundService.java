@@ -1,11 +1,10 @@
 package com.example.mutualrisk.fund.service;
 
-import java.util.List;
-
-import com.example.mutualrisk.fund.entity.Fund;
+import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
+import com.example.mutualrisk.fund.dto.FundResponse.FundResultDto;
 
 public interface FundService {
 
-	List<Fund> getTop20Funds();
+	ResponseWithData<FundResultDto> getAllFunds();
 
 }
