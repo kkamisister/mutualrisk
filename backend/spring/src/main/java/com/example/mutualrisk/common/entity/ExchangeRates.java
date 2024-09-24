@@ -3,6 +3,8 @@ package com.example.mutualrisk.common.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -44,4 +46,7 @@ public class ExchangeRates extends BaseEntity {
 
     // Currency Name: 통화명
     private String curNm;
+
+    // 기준 날짜
+    private LocalDate exRateDate;
 }
