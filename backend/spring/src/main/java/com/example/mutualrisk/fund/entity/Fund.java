@@ -1,14 +1,13 @@
 package com.example.mutualrisk.fund.entity;
 
+
 import java.util.List;
 
-import org.hibernate.annotations.Index;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
+
 
 import jakarta.persistence.Id;
 import lombok.Getter;

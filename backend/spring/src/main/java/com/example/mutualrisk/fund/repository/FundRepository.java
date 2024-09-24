@@ -9,9 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.example.mutualrisk.fund.entity.Fund;
 
 @Repository
-public interface FundRepository extends MongoRepository<Fund,String> {
+public interface FundRepository{
 
-	// 특정 필드를 제외하고 쿼리 실행 (asset 필드를 제외)
-	// @Query(value = "{}", fields = "{'asset': 0}")
-	List<Fund> findTop20ByOrderByValueOfHoldingsDesc();
+	List<Fund> getTop20();
 }

@@ -19,13 +19,7 @@ public class FundServiceImpl implements FundService {
 
 	@Override
 	public List<Fund> getTop20Funds() {
-		List<Fund> funds = fundRepository.findTop20ByOrderByValueOfHoldingsDesc();
-		// for (Fund fund : funds) {
-		// 	if (fund.getAsset() != null && fund.getAsset().size() > 10) {
-		// 		// asset 리스트의 상위 10개 항목만 유지
-		// 		fund.setAsset(fund.getAsset().subList(0, 10));
-		// 	}
-		// }
+		List<Fund> funds = fundRepository.getTop20();
 		return funds;
 	}
 }
