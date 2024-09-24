@@ -36,7 +36,7 @@ const SidebarItemInfoArray = [
 		title: '관심 종목',
 		icon: BookmarkIcon,
 		move: '/stock/bookmark',
-		sub: ['/stock/bookmark'],
+		sub: ['/stock/bookmark', '/stock/detail'],
 		clicked: false,
 	},
 	{
