@@ -49,7 +49,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 
+		log.warn("요청 메서드 : {}",request.getMethod());
+
 		String accessToken = resolveToken(request);
+
+		log.warn("accessToken : {}", accessToken);
 
 		// 개발 편의를 위한 임시 로직
 		// Bearer token에 "dummyAccessToken"을 입력하면, dummy user 정보로 인증된 후 넘어감
