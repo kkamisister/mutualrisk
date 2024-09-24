@@ -23,10 +23,12 @@ import com.example.mutualrisk.asset.repository.InterestAssetRepository;
 import com.example.mutualrisk.common.config.QuerydslConfig;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
+import com.example.mutualrisk.common.enums.Market;
 import com.example.mutualrisk.common.enums.Order;
 import com.example.mutualrisk.common.enums.OrderCondition;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
+import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.user.entity.User;
 import com.example.mutualrisk.user.repository.UserRepository;
 
@@ -54,6 +56,8 @@ class AssetServiceImplTest {
     private UserRepository userRepository;
     @Mock
     private AssetNewsRepository assetNewsRepository;
+    @Mock
+    private ExchangeRatesRepository exchangeRatesRepository;
 
     @Test
     void searchByKeyword() {
@@ -115,13 +119,15 @@ class AssetServiceImplTest {
         Asset asset1 = Asset.builder()
             .name("삼성전자")
             .code("005930")
-            .region(Region.US)
+            .region(Region.KR)
+            .market(Market.KOSPI)
             .expectedReturn(0.41)
             .build();
         Asset asset2 = Asset.builder()
             .name("LG전자")
             .code("123456")
             .region(Region.KR)
+            .market(Market.KOSPI)
             .expectedReturn(0.21)
             .build();
 
@@ -129,6 +135,7 @@ class AssetServiceImplTest {
             .name("애플")
             .code("AAPL")
             .region(Region.US)
+            .market(Market.NASDAQ)
             .expectedReturn(0.15)
             .build();
 
@@ -207,6 +214,9 @@ class AssetServiceImplTest {
 
         when(assetNewsRepository.findByAssetIn(any(List.class)))
             .thenReturn(new ArrayList());
+
+        when(exchangeRatesRepository.getRecentExchangeRate())
+            .thenReturn(1300.0);
 
         // when : 기본 정렬 (디폴트 점검)
         ResponseWithData<AssetResultDto> userInterestAssetsByDefault = assetService.getUserInterestAssets(

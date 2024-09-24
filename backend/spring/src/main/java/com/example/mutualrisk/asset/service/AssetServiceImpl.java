@@ -15,6 +15,7 @@ import com.example.mutualrisk.common.enums.Order;
 import com.example.mutualrisk.common.enums.OrderCondition;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
+import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.user.entity.User;
 import com.example.mutualrisk.user.repository.UserRepository;
 
@@ -36,6 +37,7 @@ public class AssetServiceImpl implements AssetService{
     private final UserRepository userRepository;
     private final InterestAssetRepository interestAssetRepository;
     private final AssetNewsRepository assetNewsRepository;
+    private final ExchangeRatesRepository exchangeRatesRepository;
 
     @Override
     @Transactional
@@ -241,8 +243,9 @@ public class AssetServiceImpl implements AssetService{
 //        LocalDate now = LocalDate.now();
 //        LocalDate recentDate = LocalDate.from(recentAssetHistoryList.getDate());
 
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
-        return AssetInfo.of(asset, recentAssetHistoryList);
+        return AssetInfo.of(asset, recentAssetHistoryList, recentExchangeRate);
     }
 
 }
