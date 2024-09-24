@@ -43,11 +43,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
 		FilterChain filterChain) throws ServletException, IOException {
 
-		// Preflight 요청인 경우, 바로 200 응답반환
-		if(CorsUtils.isPreFlightRequest(request)){
-			response.setStatus(HttpServletResponse.SC_OK);
-			return;
-		}
+		// // Preflight 요청인 경우, 바로 200 응답반환
+		// if(CorsUtils.isPreFlightRequest(request)){
+		// 	response.setStatus(HttpServletResponse.SC_OK);
+		// 	return;
+		// }
 
 		log.warn("요청 메서드 : {}",request.getMethod());
 
@@ -97,6 +97,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+
+		if (request.getMethod().equals("OPTIONS")) {
+			return true;
+		}
+
 		String path = request.getRequestURI();
 		AntPathMatcher pathMatcher = new AntPathMatcher();
 
