@@ -30,8 +30,13 @@ spring:
       host: localhost
       port: 6379
 
+    mongodb:
+      uri: mongodb://j11a607.p.ssafy.io:27017/product
+
+
   logging.level:
     org.hibernate.SQL: debug
+    org.mongodb.driver: debug
 
   jwt:
     secret-key: Z29nby10bS1zZXJ2ZXItZGxyamVvYW9yb3JodG9kZ290c3Atam9vbmdhbmduaW0teWVvbHNpbWhpaGFswvuqoxyve
