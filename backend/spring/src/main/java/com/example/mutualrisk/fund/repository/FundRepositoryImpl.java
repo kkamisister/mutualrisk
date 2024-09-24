@@ -20,7 +20,7 @@ public class FundRepositoryImpl implements FundRepository {
 	private final MongoTemplate mongoTemplate;
 
 	@Override
-	public List<Fund> getTop20() {
+	public List<Fund> getAllfunds() {
 
 		Query query = new Query();
 

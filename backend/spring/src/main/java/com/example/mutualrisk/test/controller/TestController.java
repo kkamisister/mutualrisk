@@ -1,10 +1,12 @@
 package com.example.mutualrisk.test.controller;
 
-import java.util.List;
+import static com.example.mutualrisk.fund.dto.FundResponse.*;
 
+import com.example.mutualrisk.common.dto.CommonResponse;
+import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
-import com.example.mutualrisk.fund.entity.Fund;
+import com.example.mutualrisk.fund.dto.FundResponse;
 import com.example.mutualrisk.fund.service.FundService;
 
 import lombok.RequiredArgsConstructor;
@@ -30,7 +32,7 @@ public class TestController {
     }
 
     @GetMapping("/mongo")
-    public List<Fund> mongoTest(){
-        return fundService.getTop20Funds();
+    public ResponseWithData<FundResultDto> mongoTest(){
+        return fundService.getAllFunds();
     }
 }
