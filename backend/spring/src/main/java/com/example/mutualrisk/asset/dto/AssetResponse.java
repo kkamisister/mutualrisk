@@ -27,26 +27,27 @@ public record AssetResponse() {
     @Builder
     @Schema(name = "개별 종목 상세 데이터", description = "유저가 종목 검색시 보여줄 데이터")
     public record AssetInfo(
-            Integer assetId,
-            String name,
-            String code,
-            String imagePath,
-            String imageName,
-            Double price,
-            String region,
-            Double expectedReturn,
-            Double dailyPriceChangeRate,
-            Double dailyPriceChange
+        Integer assetId,
+        String name,
+        String code,
+        String imagePath,
+        String imageName,
+        String market,
+        Double price,
+        String region,
+        Double expectedReturn,
+        String dailyPriceChangeRate,
+        String dailyPriceChange
     ) {
 
-        public static AssetInfo of(Asset asset, List<AssetHistory> recentAssetHistoryList){
+        public static AssetInfo of(Asset asset, List<AssetHistory> recentAssetHistoryList) {
             String imageName = asset.getRegion().equals(Region.KR) ? asset.getCode() + ".svg" : asset.getCode() + ".png";
 
             AssetHistory mostRecentAssetHistory = recentAssetHistoryList.get(0);
             AssetHistory secondRecentAssetHistory = recentAssetHistoryList.get(1);
 
             double dailyPriceChange = mostRecentAssetHistory.getPrice() - secondRecentAssetHistory.getPrice();
-            double dailyPriceChangeRate = dailyPriceChange / secondRecentAssetHistory.getPrice();
+            double dailyPriceChangeRate = dailyPriceChange / secondRecentAssetHistory.getPrice() * 100;
 
             return AssetInfo.builder()
                 .assetId(asset.getId())
@@ -54,20 +55,24 @@ public record AssetResponse() {
                 .code(asset.getCode())
                 .imagePath(asset.getImagePath())
                 .imageName(imageName)
+                .market(asset.getMarket().name())
                 .price(mostRecentAssetHistory.getPrice())
                 .region(asset.getRegion().name())
                 .expectedReturn(asset.getExpectedReturn())
-                .dailyPriceChangeRate(Math.round(dailyPriceChangeRate * 10000) / 100.0)
-                .dailyPriceChange(Math.round(dailyPriceChange * 100) / 100.0)
+                .dailyPriceChangeRate(dailyPriceChangeRate > 0
+                    ? String.format("+%.2f", dailyPriceChangeRate)
+                    : String.format("%.2f", dailyPriceChangeRate))
+                .dailyPriceChange(dailyPriceChange > 0
+                    ? String.format("+%.2f", dailyPriceChange)
+                    : String.format("%.2f", dailyPriceChange))
                 .build();
-
-
         }
+
     }
 
     @Builder
     @Schema(name = "뉴스 상세 데이터", description = "종목 검색시 함께 보여줄 뉴스 데이터")
-    public record NewsInfo (
+    public record NewsInfo(
         Integer newsId,
         String title,
         String link,

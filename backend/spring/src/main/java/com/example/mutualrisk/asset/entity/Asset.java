@@ -1,6 +1,7 @@
 package com.example.mutualrisk.asset.entity;
 
 import com.example.mutualrisk.common.entity.BaseEntity;
+import com.example.mutualrisk.common.enums.Market;
 import com.example.mutualrisk.industry.entity.Industry;
 
 import jakarta.persistence.*;
@@ -28,6 +29,11 @@ public class Asset extends BaseEntity {
 	private String code;
 
 	@Enumerated(EnumType.STRING)
+	@Column(name = "market")
+	private Market market;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "region")
 	private Region region;
 
 	@Column(name = "expected_return" ,nullable = false)
