@@ -5,13 +5,12 @@ import { colors } from 'constants/colors';
 const AssetListItem = ({ asset }) => {
 	return (
 		<Stack
-			spacing={1}
 			direction="row"
 			sx={{
 				width: '700px',
 				maxWidth: '100%',
 				display: 'flex',
-				justifyContent: 'space-between',
+				justifyContent: 'space-evenly',
 				alignItems: 'center',
 				marginBottom: '18px',
 			}}>
@@ -23,7 +22,7 @@ const AssetListItem = ({ asset }) => {
 					backgroundColor: colors.background.box,
 					borderRadius: '20px',
 					padding: '15px',
-					marginBottom: '15px',
+					marginRight: '8px',
 					boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
 					flex: 1, // 부모 높이를 차지하게 설정
 					height: '80px',
@@ -87,6 +86,7 @@ const AssetListItem = ({ asset }) => {
 					height: '80px',
 					minHeight: '0', // 부모 높이에 따라 높이 제한
 					maxWidth: '30%',
+					boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
 					alignContent: 'center',
 				}}>
 				{asset.ratio}%
