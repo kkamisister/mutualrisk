@@ -1,7 +1,7 @@
 import React from 'react';
 
-const PortfolioRebalancePage = () => {
-	return <div>PortfolioRebalancePage</div>;
+const RebalanceMainPage = () => {
+	return <div>RebalanceMainPage</div>;
 };
 
-export default PortfolioRebalancePage;
+export default RebalanceMainPage;
