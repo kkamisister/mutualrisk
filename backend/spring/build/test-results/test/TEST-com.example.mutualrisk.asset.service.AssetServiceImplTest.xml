@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.mutualrisk.asset.service.AssetServiceImplTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2024-09-24T05:50:47" hostname="DESKTOP-MMCQPV1" time="0.935">
+  <properties/>
+  <testcase name="유저는 관심종목을 추가할 수 있다." classname="com.example.mutualrisk.asset.service.AssetServiceImplTest" time="0.884"/>
+  <testcase name="유저가 존재하지 않는 경우 예외를 반환한다" classname="com.example.mutualrisk.asset.service.AssetServiceImplTest" time="0.007"/>
+  <testcase name="searchByKeyword()" classname="com.example.mutualrisk.asset.service.AssetServiceImplTest" time="0.003"/>
+  <testcase name="유저의 관심자산을 정렬기준에 따라 조회할 수 있다" classname="com.example.mutualrisk.asset.service.AssetServiceImplTest" time="0.029"/>
+  <testcase name="유저가 선택한 자산이 존재하지 않는 경우 예외를 반환한다" classname="com.example.mutualrisk.asset.service.AssetServiceImplTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
