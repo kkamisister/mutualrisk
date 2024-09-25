@@ -4,33 +4,33 @@ import { colors } from 'constants/colors';
 
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
 
-const stockInfoSample = {
-	title: '엔비디아',
-	market: 'NASDAQ',
-	symbol: 'NVDA',
-	price: 13.55,
-	fluctuateRate: 3.2,
-	fluctuatePrice: 0.66,
-	imageURL:
-		'https://thumb.tossinvest.com/image/resized/96x0/https%3A%2F%2Fstatic.toss.im%2Fpng-icons%2Fsecurities%2Ficn-sec-fill-NAS00208X-E0.png',
-};
-
-const StockSearchListItem = () => {
+const StockSearchListItem = ({ data }) => {
 	return (
 		<Stack
 			direction="row"
-			sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+			sx={{
+				width: '100%',
+				alignItems: 'center',
+				justifyContent: 'space-between',
+			}}>
 			<Stack
 				direction="row"
 				spacing={0.5}
-				sx={{ alignItems: 'center', justifyItems: 'space-between' }}>
-				<Avatar alt="종목 이미지" src={stockInfoSample.imageURL} />
+				sx={{
+					alignItems: 'center',
+					justifyItems: 'space-between',
+					width: '100%',
+				}}>
+				<Avatar
+					alt={`${data.name} 종목 이미지`}
+					src={`http://j11a607.p.ssafy.io${data.imagePath}/${data.code}.png`}
+				/>
 				&nbsp;
-				<Box sx={{ fontWeight: 'bold' }}>{stockInfoSample.title}</Box>
+				<Box sx={{ fontWeight: 'bold' }}>{data.name}</Box>
 				<Box
 					sx={{
 						color: colors.text.sub2,
-					}}>{`${stockInfoSample.symbol}(${stockInfoSample.market})`}</Box>
+					}}>{`${data.code}(${data.market})`}</Box>
 			</Stack>
 			<StarOutlineIcon fontSize="large" sx={{ color: colors.text.main }} />
 		</Stack>
