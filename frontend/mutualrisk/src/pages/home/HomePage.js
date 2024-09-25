@@ -51,7 +51,8 @@ const HomePage = () => {
 					sx={{
 						width: '180px',
 						height: '45px',
-						backgroundColor: '#6495ED',
+						backgroundColor: colors.main.primary400,
+						border: 'none',
 						color: '#FFFFFF',
 						padding: '10px 20px',
 						fontSize: '16px',
@@ -59,7 +60,7 @@ const HomePage = () => {
 						borderRadius: '5px',
 						textAlign: 'left', // 버튼 텍스트 좌측 정렬
 						'&:hover': {
-							backgroundColor: '#4169E1',
+							backgroundColor: colors.main.primary200,
 						},
 						marginBottom: '40px',
 					}}
