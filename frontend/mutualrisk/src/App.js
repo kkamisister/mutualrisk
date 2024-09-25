@@ -9,10 +9,14 @@ import PortfolioCreatePage from 'pages/portfolio/create/PortfolioCreatePage';
 import PortfolioDetailPage from 'pages/portfolio/detail/PortfolioDetailPage';
 import DashboardLayout from 'layouts/DashboardLayout';
 import MainLayout from 'layouts/MainLayout';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
+const queryClient = new QueryClient();
 
 const App = () => {
 	return (
-		<>
+		<QueryClientProvider client={queryClient}>
 			<BrowserRouter>
 				<Routes>
 					<Route element={<MainLayout />}>
@@ -43,7 +47,8 @@ const App = () => {
 					</Route>
 				</Routes>
 			</BrowserRouter>
-		</>
+			<ReactQueryDevtools />
+		</QueryClientProvider>
 	);
 };
 
