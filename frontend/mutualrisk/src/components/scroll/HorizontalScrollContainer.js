@@ -46,6 +46,10 @@ const HorizontalScrollContainer = ({ children }) => {
 				scrollbarWidth: 'none', // 기본 스크롤바 숨기기 (Firefox)
 				'-ms-overflow-style': 'none', // 기본 스크롤바 숨기기 (IE/Edge)
 				'&::-webkit-scrollbar': { display: 'none' }, // 기본 스크롤바 숨기기 (Chrome/Safari)
+				'& > *': {
+					// 자식 요소에 flex-shrink: 0을 적용
+					flexShrink: 0,
+				},
 			}}>
 			{children}
 		</Box>
