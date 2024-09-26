@@ -2,6 +2,7 @@ package com.example.mutualrisk.asset.entity;
 
 import com.example.mutualrisk.common.entity.BaseEntity;
 import com.example.mutualrisk.common.enums.Market;
+import com.example.mutualrisk.common.enums.Region;
 import com.example.mutualrisk.industry.entity.Industry;
 
 import jakarta.persistence.*;
