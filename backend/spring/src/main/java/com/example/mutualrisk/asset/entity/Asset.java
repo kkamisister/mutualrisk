@@ -52,6 +52,15 @@ public class Asset extends BaseEntity {
 	@Column(name = "image_name")
 	private String imageName;
 
+	@Column(name = "summary")
+	private String summary;
+
+	@Column(name = "recent_price")
+	private Double recentPrice;
+
+	@Column(name = "oldest_price")
+	private Double oldestPrice;
+
 	@Override
 	public String toString() {
 		return "Asset{" +
