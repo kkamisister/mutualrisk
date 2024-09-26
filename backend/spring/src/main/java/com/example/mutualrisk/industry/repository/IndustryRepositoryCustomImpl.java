@@ -5,6 +5,9 @@ import com.example.mutualrisk.industry.entity.Industry;
 
 import static com.example.mutualrisk.industry.entity.QIndustry.industry;
 
+import org.springframework.stereotype.Repository;
+
+@Repository
 public class IndustryRepositoryCustomImpl extends Querydsl4RepositorySupport implements IndustryRepositoryCustom{
 
     @Override

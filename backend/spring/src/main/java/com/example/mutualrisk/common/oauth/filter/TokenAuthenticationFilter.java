@@ -55,6 +55,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
 		log.warn("accessToken : {}", accessToken);
 
+		if(StringUtils.isEmpty(accessToken)){
+			response.sendError(HttpServletResponse.SC_UNAUTHORIZED,"유효하지 않은 구성의 JWT 토큰입니다.");
+			return;
+		}
+
 		// 개발 편의를 위한 임시 로직
 		// Bearer token에 "dummyAccessToken"을 입력하면, dummy user 정보로 인증된 후 넘어감
 		if (accessToken.equals("dummyAccessToken")) {
@@ -69,8 +74,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 				}
 			}catch(MalformedJwtException | IllegalArgumentException e){
 				log.info("유효하지 않은 구성의 JWT 토큰 입니다.");
-				request.setAttribute("exception",new RuntimeException("유효하지 않은 구성의 JWT 토큰입니다."));
-
+				response.sendError(HttpServletResponse.SC_UNAUTHORIZED,"유효하지 않은 구성의 JWT 토큰 입니다.");
+				return;
 			}catch(ExpiredJwtException e){
 				log.info("만료된 JWT 토큰입니다.");
 
@@ -98,6 +103,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
 
+		// Preflight 요청의 경우, 필터를 통과하여 WebMvcConfigurer에 걸리도록 설정
 		if (request.getMethod().equals("OPTIONS")) {
 			return true;
 		}
