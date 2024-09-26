@@ -10,19 +10,15 @@ const AssetRatio = () => {
 			direction="row"
 			sx={{
 				width: '100%',
-				// minWidth: '1000psx',
 				height: '100%',
 				maxHeight: '100%',
 				display: 'flex',
-				justifyContent: 'space-between',
-				// alignItems: 'stretch',
+				justifyContent: 'space-evenly',
 				alignItems: 'center',
 				flexWrap: 'nowrap',
 			}}>
-			{/* <AssetRatioPieChart sx={{ flex: 1 }} /> */}
-			<AssetRatioPieChart sx={{ width: '50%' }} />
-			{/* <AssetList sx={{ flex: 1 }} /> */}
-			<AssetList sx={{ width: '50%' }} />
+			<AssetRatioPieChart sx={{ flex: 1 }} />
+			<AssetList sx={{ flex: 1 }} />
 		</Stack>
 	);
 };
