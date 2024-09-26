@@ -35,9 +35,9 @@ public class RecommendAsset extends BaseEntity {
 	@Column(name = "volatility_diff")
 	private Double volatilityDiff;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "portfolio_id")
-	private Portfolio portfolio;
+//	@ManyToOne(fetch = FetchType.LAZY)
+//	@JoinColumn(name = "portfolio_id")
+//	private Portfolio portfolio;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "asset_id")

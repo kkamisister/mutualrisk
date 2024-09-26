@@ -17,6 +17,7 @@ public class Portfolio {
 	@Id @Field(value = "_id",targetType = FieldType.OBJECT_ID)
 	private String id;
 	private String type;
+	@Field("userId")
 	private Integer userId;
 	private List<PortfolioAsset> asset;
 }

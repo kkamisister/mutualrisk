@@ -47,8 +47,8 @@ public class User extends BaseEntity {
 	@Builder.Default
 	private List<InterestAsset> interestAssetList = new ArrayList<>();
 
-	@OneToMany(mappedBy = "user")
-	@Builder.Default
-	private List<Portfolio> portfolioList = new ArrayList<>();
+//	@OneToMany(mappedBy = "user")
+//	@Builder.Default
+//	private List<Portfolio> portfolioList = new ArrayList<>();
 
 }
