@@ -119,7 +119,7 @@ public class FundServiceImpl implements FundService {
 		LocalDateTime recentDate = getMostRecentDate();
 
 		// 각 자산의 최근 종가를 검색하여 (자산,종가)의 맵을 만든다
-		Map<Asset, Double> assetPrice = assetHistoryRepository.findRecentHistory(assets, recentDate).stream()
+		Map<Asset, Double> assetPrice = assetHistoryRepository.findRecentHistoryOfAssets(assets, recentDate).stream()
 			.collect(Collectors.toMap(
 				AssetHistory::getAsset,  // AssetHistory에서 Asset을 가져옴
 				assetHistory -> assetHistory.getPrice() != null ? assetHistory.getPrice() : 0.0 // 가격이 null인 경우 0.0 반환
