@@ -132,21 +132,41 @@ const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
 		],
 	};
 
+	const [tempStocks, setTempStocks] = useState([]);
+	const handleTempStocks = stock => {
+		if (tempStocks.find(selected => selected.assetId === stock.assetId)) {
+			setTempStocks(
+				tempStocks.filter(selected => selected.assetId !== stock.assetId)
+			);
+		} else {
+			setTempStocks([...tempStocks, stock]);
+		}
+	};
+
+	const confirmSelectedStocks = () => {
+		const newStocks = tempStocks.filter(
+			stock =>
+				!selectedStocks.some(selected => selected.assetId === stock.assetId)
+		);
+		onConfirm([...selectedStocks, ...newStocks]);
+	};
 	return (
 		<Box>
-			<Title text="종목 검색" />
+			<Box sx={{ py: '20px' }}>
+				<Title text="종목 검색" />
+			</Box>
 			<StockSearchBar />
 			<Box
 				sx={{
-					bgcolor: colors.background.box,
+					bgcolor: colors.main.primary800,
 					my: 2,
 					borderRadius: '16px',
-					p: 1,
+					p: 2,
 				}}>
 				<StockList
 					assets={mockData.assets}
-					selectedStocks={selectedStocks}
-					onStockSelect={onStockSelect}
+					selectedStocks={tempStocks}
+					onStockSelect={handleTempStocks}
 					sx={{
 						display: 'flex',
 						flexDirection: 'row',
@@ -155,10 +175,7 @@ const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
 					}}
 				/>
 				<Box sx={{ display: 'flex', justifyContent: 'center' }}>
-					<BasicButton
-						text="추가"
-						onClick={() => onConfirm(selectedStocks)}
-					/>
+					<BasicButton text="추가" onClick={confirmSelectedStocks} />
 				</Box>
 			</Box>
 		</Box>
