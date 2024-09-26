@@ -1,12 +1,17 @@
 package com.example.mutualrisk.fund.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
+import com.example.mutualrisk.fund.dto.FundResponse;
+import com.example.mutualrisk.fund.dto.FundResponse.FundPortfolioRecord;
 import com.example.mutualrisk.fund.dto.FundResponse.FundResultDto;
 import com.example.mutualrisk.fund.dto.FundResponse.FundSummaryResultDto;
 import com.example.mutualrisk.fund.service.FundService;
@@ -24,7 +29,7 @@ public class FundController {
 	private final FundService fundService;
 
 	@GetMapping("")
-	public ResponseEntity<?> getAllfunds(HttpServletRequest request){
+	public ResponseEntity<ResponseWithData> getAllfunds(HttpServletRequest request){
 
 		Integer userId = (Integer)request.getAttribute("userId");
 		log.info("user Id : {}",userId);
@@ -36,7 +41,7 @@ public class FundController {
 	}
 
 	@GetMapping("/{fundId}")
-	public ResponseEntity<?> getFund(@PathVariable("fundId") String fundId,HttpServletRequest request){
+	public ResponseEntity<ResponseWithData> getFund(@PathVariable("fundId") String fundId,HttpServletRequest request){
 
 		Integer userId = (Integer)request.getAttribute("userId");
 		log.info("user Id : {}",userId);
@@ -45,5 +50,20 @@ public class FundController {
 
 		return ResponseEntity.status(fund.status())
 			.body(fund);
+	}
+
+
+	@GetMapping("/history")
+	public ResponseEntity<ResponseWithData> getHistory(@RequestParam("period") Integer period,
+		@RequestParam("company") String company,
+		HttpServletRequest request){
+
+		Integer userId = (Integer)request.getAttribute("userId");
+		log.info("user Id : {}",userId);
+
+		ResponseWithData<List<FundPortfolioRecord>> fundHistory = fundService.getHistory(userId, company, period);
+
+		return ResponseEntity.status(fundHistory.status())
+			.body(fundHistory);
 	}
 }

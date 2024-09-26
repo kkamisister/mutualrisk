@@ -3,15 +3,14 @@ package com.example.mutualrisk.fund.repository;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.stereotype.Repository;
-
 import com.example.mutualrisk.fund.entity.Fund;
 
 
 public interface FundRepository {
 
-	List<Fund> getAllfunds();
+	List<Fund> getFundsByPeriod(String fundName,Integer period);
+
+	List<Fund> getAllFunds();
 
 	Optional<Fund> getFund(String fundId);
 

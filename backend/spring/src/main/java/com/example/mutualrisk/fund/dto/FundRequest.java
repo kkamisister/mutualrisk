@@ -15,5 +15,14 @@ public record FundRequest() {
 
 	}
 
+	public record FundRecordRequest(
+		@Schema(
+			description = "펀드 포트폴리오 평가액 변동 기간",
+			example = "1"
+		)
+		Integer period,
+		String fundId
+	){
 
+	}
 }
