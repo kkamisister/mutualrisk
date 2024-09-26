@@ -41,29 +41,35 @@ const PortfolioCreatePage = () => {
 				sx={{
 					maxWidth: '40%',
 				}}>
-				<Stack>
-					<BoxTitle title="포트폴리오 제작" />
-				</Stack>
-				<Stack>
-					<StockSearch
-						onConfirm={handleSearchConfirm}
-						selectedStocks={selectedStocks}
-						onStockSelect={handleStockSelect}
-					/>
-				</Stack>
+				<BoxTitle title="포트폴리오 제작" />
+				<StockSearch
+					onConfirm={handleSearchConfirm}
+					selectedStocks={selectedStocks}
+					onStockSelect={handleStockSelect}
+				/>
 				{showSelectedItems && (
 					<Box
 						sx={{
 							backgroundColor: colors.background.white,
+							p: '20px 20px 8px',
+							borderRadius: '20px',
+							border: `solid 1px ${colors.point.stroke}`,
 						}}>
 						<Title text="담은 종목" />
 						<SelectedList
 							assets={selectedStocks}
 							onStockSelect={handleStockSelect}
 						/>
-						<BasicButton onClick={handleItemsConfirm}>
-							포트폴리오 제작
-						</BasicButton>
+						<Box
+							sx={{
+								display: 'flex',
+								justifyContent: 'center',
+							}}>
+							<BasicButton
+								text="다음 단계"
+								onClick={handleItemsConfirm}
+							/>
+						</Box>
 					</Box>
 				)}
 			</Box>
