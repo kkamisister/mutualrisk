@@ -32,7 +32,7 @@ const App = () => {
 							path="/portfolio/rebalance"
 							element={<RebalanceMainPage />}></Route>
 						<Route
-							path="/portfolio/result"
+							path="/rebalance/result"
 							element={<RebalanceResultPage />}></Route>
 						<Route
 							path="/portfolio/create"
