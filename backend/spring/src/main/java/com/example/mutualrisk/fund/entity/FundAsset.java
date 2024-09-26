@@ -14,4 +14,15 @@ public class FundAsset {
 	private Long valueOfHolding;
 	private Long changeValueOfHolding;
 
+	@Override
+	public String toString() {
+		return "FundAsset{" +
+			"assetId=" + assetId +
+			", code='" + code + '\'' +
+			", name='" + name + '\'' +
+			", region='" + region + '\'' +
+			", valueOfHolding=" + valueOfHolding +
+			", changeValueOfHolding=" + changeValueOfHolding +
+			'}';
+	}
 }

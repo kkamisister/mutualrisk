@@ -8,9 +8,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -99,143 +101,150 @@ public class FundServiceImpl implements FundService {
 	 *
 	 * @return
 	 */
-	// @Override
-	// public ResponseWithData<FundResultDto> getFund(Integer userId,String fundId) {
-	//
-	// 	// 유저를 가지고 온다
-	// 	User user = userRepository.findById(userId)
-	// 		.orElseThrow(() -> new MutualRiskException(ErrorCode.USER_NOT_FOUND));
-	//
-	// 	// 펀드를 가지고 온다
-	// 	Fund fund = fundRepository.getFund(fundId)
-	// 		.orElseThrow(() -> new MutualRiskException(ErrorCode.FUND_NOT_FOUND));
-	//
-	// 	// 펀드가 가진 자산을 가지고온다
-	// 	List<Asset> assets = assetRepository.findByIds(getAssetIds(fund));
-	//
-	// 	for(Asset asset : assets) {
-	// 		System.out.println("asset = " + asset);
-	// 	}
-	//
-	// 	// Todo: 실제 종목별 업데이트 시간 반영하도록 Refactor 필요
-	// 	LocalDateTime recentDate = getMostRecentDate();
-	//
-	// 	// 1. 각 자산의 최근 종가를 검색하여 (자산,종가)의 맵을 만든다
-	// 	Map<Asset, Double> assetPrice = assetHistoryRepository.findRecentHistory(assets, recentDate).stream()
-	// 		.collect(Collectors.toMap(
-	// 			AssetHistory::getAsset,  // AssetHistory에서 Asset을 가져옴
-	// 			assetHistory -> assetHistory.getPrice() != null ? assetHistory.getPrice() : 0.0 // 가격이 null인 경우 0.0 반환
-	// 		));
-	//
-	// 	//
-	//
-	//
-	// 	// 섹터 편중 계산을 해야한다
-	//
-	// 	// 펀드의 자산을 순회하면서, 각 자산이 어떤 섹터에 속해있는지 찾는다
-	// 	// 그런데 섹터 정보는 실제 자산정보를 가진 assets에 있다
-	//
-	// 	// 실제 자산을 순회하면서, 현재 펀드자산과 ID가 일치하는 자산의
-	// 	List<FundAsset> fundAssets = fund.getAsset();
-	// 	for(FundAsset fundAsset : fundAssets){
-	// 		assets.stream()
-	// 			.filter(asset -> {
-	//
-	// 			})
-	// 	}
-	//
-	// 	Map<Sector, Double> sectorHoldings = assets.stream()
-	// 		.collect(Collectors.toMap(
-	// 			asset -> asset.getIndustry().getSector(),
-	// 			assetPrice::get,
-	// 			Double::sum
-	// 		));
-	//
-	// 	// 비율 계산을 해야한다
-	// 	// 비율은, 각 섹터별 [Holding / (전체 valueOfHoldings)] * 100.0 으로 정의한다
-	// 	Long valueOfHoldings = fund.getValueOfHoldings();
-	// 	List<SectorInfo> sectorWeights = sectorHoldings.entrySet().stream()
-	// 		.map(entry -> getSectorInfo(entry, valueOfHoldings))
-	// 		.collect(Collectors.toList());
-	//
-	// 	// 이전 분기의 펀드를 가지고온다
-	// 	Optional<Fund> beforeQuarter = fundRepository.getBeforeQuarter(fund);
-	//
-	// 	// 유저의 관심자산 목록을 가지고온다
-	// 	List<InterestAsset> userInterestAssets = interestAssetRepository.findUserInterestAssets(user);
-	//
-	// 	// 펀드의 자산정보를 가지고 온다
-	// 	List<FundAssetInfo> fundAssetInfos = assets.parallelStream()
-	// 		.map(asset -> {
-	//
-	// 			//1. 해당 펀드자산의 일별 종가를 가지고온다
-	// 			List<AssetHistory> recentAssetHistoryList = assetHistoryRepository.findRecentTwoAssetHistory(asset);
-	//
-	// 			//Todo: 종가 기록이 1개이거나 없는경우 처리
-	//
-	// 			//2. 변화량을 계산한다
-	// 			AssetHistory mostRecentAssetHistory = recentAssetHistoryList.get(0);
-	// 			AssetHistory secondRecentAssetHistory = recentAssetHistoryList.get(1);
-	//
-	// 			Double price1 = mostRecentAssetHistory.getPrice();
-	// 			Double price2 = secondRecentAssetHistory.getPrice();
-	//
-	// 			Double dailyPriceChangeRate = (price1 - price2) / price2 * 100;
-	//
-	// 			// 3. rank 구하기
-	// 			// 현재 fund와 전 분기 fund의 topHoldAsset을 비교하여, 자산의 순위변화를 찾는다
-	// 			Integer rank = beforeQuarter
-	// 				.map(f -> calculateRank(fund, f, asset.getId()))
-	// 				.orElse(0);
-	//
-	// 			// 4. interest 구하기
-	// 			// 현재 로그인한 유저의 관심종목에 포함되어있는지 여부를 반환한다
-	// 			Boolean interest = userInterestAssets.stream()
-	// 				.anyMatch(interestAsset -> interestAsset.getAsset().getId().equals(asset.getId()));
-	//
-	// 			//5. valueOfHolding를 구한다
-	// 			FundAsset fundAsset = fund.getAsset().stream()
-	// 				.skip(1)
-	// 				.filter(item -> item.getAssetId().equals(asset.getId()))
-	// 				.findFirst()
-	// 				.orElse(FundAsset.builder().build()); // 없으면 빈 객체 반환
-	//
-	// 			return FundAssetInfo.of(fundAsset, dailyPriceChangeRate, rank, interest);
-	// 		}).collect(Collectors.toList()).subList(0,30);
-	//
-	// 	// 결과를 반환한다
-	// 	FundResultDto fundResultDto = FundResultDto.builder()
-	// 		.fund(FundInfo.of(fund,fundAssetInfos))
-	// 		.sectors(sectorWeights)
-	// 		.build();
-	//
-	//
-	// 	return new ResponseWithData<>(HttpStatus.OK.value(),"펀드 상세조회에 성공하였습니다",fundResultDto);
-	// 	// return new ResponseWithData<>(HttpStatus.OK.value(),"펀드 상세조회에 성공하였습니다",null);
-	// }
+	@Override
+	public ResponseWithData<FundResultDto> getFund(Integer userId,String fundId) {
+
+		// 유저를 가지고 온다
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new MutualRiskException(ErrorCode.USER_NOT_FOUND));
+
+		// 펀드를 가지고 온다
+		Fund fund = fundRepository.getFund(fundId)
+			.orElseThrow(() -> new MutualRiskException(ErrorCode.FUND_NOT_FOUND));
+
+		// 펀드가 가진 자산을 가지고온다
+		List<Asset> assets = assetRepository.findByIds(getAssetIds(fund));
+
+		// Todo: 실제 종목별 업데이트 시간 반영하도록 Refactor 필요
+		LocalDateTime recentDate = getMostRecentDate();
+
+		// 각 자산의 최근 종가를 검색하여 (자산,종가)의 맵을 만든다
+		Map<Asset, Double> assetPrice = assetHistoryRepository.findRecentHistory(assets, recentDate).stream()
+			.collect(Collectors.toMap(
+				AssetHistory::getAsset,  // AssetHistory에서 Asset을 가져옴
+				assetHistory -> assetHistory.getPrice() != null ? assetHistory.getPrice() : 0.0 // 가격이 null인 경우 0.0 반환
+			));
+
+
+		// 섹터 편중 계산을 해야한다
+		// 실제 자산을 순회하면서, 현재 펀드자산과 ID가 일치하는 자산에서 섹터 정보를 가지고와야한다
+		Map<String, Long> sectorValueMap = new HashMap<>();
+		Map<String,Integer> sectorIdMap = new HashMap<>();
+
+		List<FundAsset> fundAssets = fund.getAsset();
+		for (FundAsset fundAsset : fundAssets) {
+			// 자산과 FundAsset을 매핑하여 해당 자산의 Sector를 찾음
+			Optional<Sector> sector = assets.stream()
+				.filter(asset -> asset.getId().equals(fundAsset.getAssetId())) // Asset ID가 일치하는 자산 필터링
+				.findFirst()
+				.map(asset -> asset.getIndustry().getSector());// 섹터 정보 반환
+
+			if (sector.isPresent()) {
+				// 자산이 존재할 때는 해당 섹터에 valueOfHolding 누적
+				String sectorName = sector.get().getName();
+				sectorValueMap.merge(sectorName, fundAsset.getValueOfHolding(), Long::sum);
+				sectorIdMap.put(sectorName,sector.get().getId());
+			} else {
+				// 자산이 없을 경우, 이름이 "기타"인 자산을 따로 처리
+				sectorValueMap.put("기타자산 및 채권",fundAsset.getValueOfHolding());
+			}
+		}
+
+		// 결과 출력 또는 추가 처리
+		sectorValueMap.forEach((sectorName, value) -> {
+			System.out.println("Sector: " + sectorName + ", Value of Holding: " + value);
+		});
+
+		// 비율 계산을 해야한다
+		// 비율은, 각 섹터별 [Holding / (전체 valueOfHoldings)] * 100.0 으로 정의한다
+		Long valueOfHoldings = fund.getValueOfHoldings();
+		List<SectorInfo> sectorWeights = sectorValueMap.entrySet().stream()
+			.map(entry -> getSectorInfo(entry, valueOfHoldings,sectorIdMap))
+			.collect(Collectors.toList());
+
+		for(SectorInfo sectorInfo : sectorWeights) {
+			System.out.println("sectorInfo = " + sectorInfo);
+		}
+
+		// 이전 분기의 펀드를 가지고온다
+		Optional<Fund> beforeQuarter = fundRepository.getBeforeQuarter(fund);
+		log.warn("beforeQuarter : {}",beforeQuarter.get().getTopHoldAsset());
+
+		// 유저의 관심자산 목록을 가지고온다
+		List<InterestAsset> userInterestAssets = interestAssetRepository.findUserInterestAssets(user);
+
+		// 펀드의 자산정보를 가지고 온다
+		List<FundAssetInfo> fundAssetInfos = assets.parallelStream()
+			.map(asset -> {
+				//1. 해당 펀드자산의 일별 종가를 가지고온다
+				List<AssetHistory> recentAssetHistoryList = assetHistoryRepository.findRecentTwoAssetHistory(asset);
+
+				//Todo: 종가 기록이 1개이거나 없는경우 처리
+
+				//2. 변화량을 계산한다
+				AssetHistory mostRecentAssetHistory = recentAssetHistoryList.get(0);
+				AssetHistory secondRecentAssetHistory = recentAssetHistoryList.get(1);
+
+				Double price1 = mostRecentAssetHistory.getPrice();
+				Double price2 = secondRecentAssetHistory.getPrice();
+
+				Double dailyPriceChangeRate = (price1 - price2) / price2 * 100;
+
+				// 3. rank 구하기
+				// 현재 fund와 전 분기 fund의 topHoldAsset을 비교하여, 자산의 순위변화를 찾는다
+				Integer rank = beforeQuarter
+					.map(f -> calculateRank(fund, f, asset.getId()))
+					.orElse(0);
+
+				// 4. interest 구하기
+				// 현재 로그인한 유저의 관심종목에 포함되어있는지 여부를 반환한다
+				Boolean interest = userInterestAssets.stream()
+					.anyMatch(interestAsset -> interestAsset.getAsset().getId().equals(asset.getId()));
+
+				//5. valueOfHolding를 구한다
+				FundAsset fundAsset = fund.getAsset().stream()
+					.skip(1)
+					.filter(item -> item.getAssetId().equals(asset.getId()))
+					.findFirst()
+					.orElse(FundAsset.builder().build()); // 없으면 빈 객체 반환
+
+				return FundAssetInfo.of(fundAsset, dailyPriceChangeRate,mostRecentAssetHistory.getPrice(),rank, interest);
+			})
+			.limit(30) // 최대 30개만
+			.collect(Collectors.toList());
+
+		// 결과를 반환한다
+		FundResultDto fundResultDto = FundResultDto.builder()
+			.fund(FundInfo.of(fund,fundAssetInfos))
+			.sectors(sectorWeights)
+			.build();
+
+
+		return new ResponseWithData<>(HttpStatus.OK.value(),"펀드 상세조회에 성공하였습니다",fundResultDto);
+		// return new ResponseWithData<>(HttpStatus.OK.value(),"펀드 상세조회에 성공하였습니다",null);
+	}
 
 	private static LocalDateTime getMostRecentDate() {
 		return LocalDate.of(2024,9,24).atStartOfDay();
 	}
-
 	/**
 	 * 각 섹터의 비중을 구한 정보를 반환하는 메서드
 	 * @param entry
 	 * @param valueOfHoldings
 	 * @return
 	 */
-	private static SectorInfo getSectorInfo(Entry<Sector, Double> entry, Long valueOfHoldings) {
-		Sector sector = entry.getKey();
-		Double holding = entry.getValue();
-		Double ratio;
+	private static SectorInfo getSectorInfo(Entry<String, Long> entry, Long valueOfHoldings,Map<String,Integer> sectorIdMap) {
+		// 섹터를 생성
+		Sector sector = Sector.of(sectorIdMap.get(entry.getKey()),entry.getKey());
+		Long holding = entry.getValue();
 
+		Double ratio;
 		try {
-			ratio = (holding / valueOfHoldings) * 100.0;
+			ratio = (1.0*holding / valueOfHoldings) * 100.0;
 		} catch (ArithmeticException e) {
 			// 분모가 0인 경우
 			ratio = 0.0;
 		}
-
 		return SectorInfo.of(sector, ratio);
 	}
 
@@ -252,13 +261,14 @@ public class FundServiceImpl implements FundService {
 	private static Integer calculateRank(Fund curFund,Fund beforeFund,Integer assetId) {
 
 		// beforeFund에서 asset의 인덱스를 찾음
-		List<FundAsset> beforeAssets = beforeFund.getTopHoldAsset();
+		List<FundAsset> beforeAssets = beforeFund.getAsset();
 		int beforeIndex = findAssetIndex(beforeAssets, assetId);
 
 		// curFund에서 asset의 인덱스를 찾음
-		List<FundAsset> curAssets = curFund.getTopHoldAsset();
+		List<FundAsset> curAssets = curFund.getAsset();
 		int curIndex = findAssetIndex(curAssets, assetId);
 
+		System.out.println("(curIndex,beforeIndex) : "+curIndex+" "+beforeIndex+" "+assetId);
 
 		// 1. beforeFund가 없는경우 -> 순위변화 : 0
 		if(beforeIndex == -1)return 0;

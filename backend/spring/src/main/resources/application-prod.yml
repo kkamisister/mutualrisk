@@ -32,6 +32,10 @@ spring:
       host: redis
       port: 6379
 
+    mongodb:
+      uri: mongodb://ssafy:zeroticket607@j11a607.p.ssafy.io:27017/
+      database: product
+
   logging.level:
     org.hibernate.SQL: debug
 

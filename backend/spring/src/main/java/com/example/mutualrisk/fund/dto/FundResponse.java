@@ -92,9 +92,10 @@ public record FundResponse() {
 		Double dailyChangeRate,
 		Integer rank,
 		Boolean interest,
-		Long valueOfHolding
+		Long valueOfHolding,
+		Double currentValue
 	){
-		public static FundAssetInfo of(FundAsset item,Double dailyChangeRate,Integer rank,Boolean interest){
+		public static FundAssetInfo of(FundAsset item,Double dailyChangeRate,Double currentValue,Integer rank,Boolean interest){
 			return FundAssetInfo.builder()
 				.assetId(item.getAssetId())
 				.code(item.getCode())
@@ -103,6 +104,7 @@ public record FundResponse() {
 				.dailyChangeRate(dailyChangeRate)
 				.rank(rank)
 				.interest(interest)
+				.currentValue(currentValue)
 				.valueOfHolding(item.getValueOfHolding())
 				.build();
 		}

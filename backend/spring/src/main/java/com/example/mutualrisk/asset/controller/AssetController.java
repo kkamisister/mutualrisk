@@ -4,6 +4,7 @@ import static com.example.mutualrisk.asset.dto.AssetResponse.*;
 import static com.example.mutualrisk.common.dto.CommonResponse.*;
 
 import com.example.mutualrisk.asset.dto.AssetRequest;
+import com.example.mutualrisk.asset.dto.AssetRequest.InterestAssetInfo;
 import com.example.mutualrisk.asset.service.AssetService;
 import com.example.mutualrisk.common.enums.Order;
 import com.example.mutualrisk.common.enums.OrderCondition;
@@ -71,7 +72,7 @@ public class AssetController {
         @ApiResponse(responseCode = "200", description = "유저 관심종목 추가 성공"),
     })
     @PostMapping("/interest")
-    public ResponseEntity<ResponseWithMessage> addInterestAsset(@RequestBody AssetRequest.InterestAssetInfo asset,
+    public ResponseEntity<ResponseWithMessage> addInterestAsset(@RequestBody InterestAssetInfo asset,
         HttpServletRequest request){
 
         Integer userId = (Integer)request.getAttribute("userId");
@@ -89,7 +90,7 @@ public class AssetController {
         @ApiResponse(responseCode = "200", description = "유저 관심종목 삭제 성공"),
     })
     @DeleteMapping("/interest")
-    public ResponseEntity<ResponseWithMessage> deleteInterestAsset(@RequestBody AssetRequest.InterestAssetInfo asset,
+    public ResponseEntity<ResponseWithMessage> deleteInterestAsset(@RequestBody InterestAssetInfo asset,
         HttpServletRequest request){
 
         Integer userId = (Integer)request.getAttribute("userId");
