@@ -2,6 +2,7 @@ package com.example.mutualrisk.asset.entity;
 
 import com.example.mutualrisk.common.entity.BaseEntity;
 import com.example.mutualrisk.common.enums.Market;
+import com.example.mutualrisk.common.enums.Region;
 import com.example.mutualrisk.industry.entity.Industry;
 
 import jakarta.persistence.*;
@@ -50,6 +51,15 @@ public class Asset extends BaseEntity {
 
 	@Column(name = "image_name")
 	private String imageName;
+
+	@Column(name = "summary")
+	private String summary;
+
+	@Column(name = "recent_price")
+	private Double recentPrice;
+
+	@Column(name = "oldest_price")
+	private Double oldestPrice;
 
 	@Override
 	public String toString() {

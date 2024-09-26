@@ -15,7 +15,7 @@ import com.example.mutualrisk.asset.dto.AssetRequest;
 import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.asset.entity.AssetHistory;
 import com.example.mutualrisk.asset.entity.InterestAsset;
-import com.example.mutualrisk.asset.entity.Region;
+import com.example.mutualrisk.common.enums.Region;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
 import com.example.mutualrisk.asset.repository.AssetNewsRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
