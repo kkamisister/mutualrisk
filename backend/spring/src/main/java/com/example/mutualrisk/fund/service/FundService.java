@@ -9,7 +9,7 @@ public interface FundService {
 
 	ResponseWithData<FundSummaryResultDto> getAllFunds();
 
-	// ResponseWithData<FundResultDto> getFund(Integer userId,String fundId);
+	ResponseWithData<FundResultDto> getFund(Integer userId,String fundId);
 
 
 }

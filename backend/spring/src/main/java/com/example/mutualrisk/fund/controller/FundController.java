@@ -35,17 +35,15 @@ public class FundController {
 			.body(allfunds);
 	}
 
+	@GetMapping("/{fundId}")
+	public ResponseEntity<?> getFund(@PathVariable("fundId") String fundId,HttpServletRequest request){
 
+		Integer userId = (Integer)request.getAttribute("userId");
+		log.info("user Id : {}",userId);
 
-	// @GetMapping("/{fundId}")
-	// public ResponseEntity<?> getFund(@PathVariable("fundId") String fundId,HttpServletRequest request){
-	//
-	// 	Integer userId = (Integer)request.getAttribute("userId");
-	// 	log.info("user Id : {}",userId);
-	//
-	// 	ResponseWithData<FundResultDto> fund = fundService.getFund(userId,fundId);
-	//
-	// 	return ResponseEntity.status(fund.status())
-	// 		.body(fund);
-	// }
+		ResponseWithData<FundResultDto> fund = fundService.getFund(userId,fundId);
+
+		return ResponseEntity.status(fund.status())
+			.body(fund);
+	}
 }

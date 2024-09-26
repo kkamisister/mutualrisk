@@ -9,12 +9,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(callSuper = false)
@@ -25,4 +27,11 @@ public class Sector extends BaseEntity {
 
 	@Column(name = "name")
 	private String name;
+
+	public static Sector of(Integer id,String name){
+		return Sector.builder()
+			.id(id)
+			.name(name)
+			.build();
+	}
 }
