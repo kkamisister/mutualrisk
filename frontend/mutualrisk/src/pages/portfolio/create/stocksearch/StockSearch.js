@@ -4,6 +4,9 @@ import StockList from 'pages/portfolio/create/stocksearch/StockList';
 import BasicButton from 'components/button/BasicButton';
 import { colors } from 'constants/colors';
 import StockSearchBar from './StockSearchBar';
+import BoxTitle from 'components/title/BoxTitle';
+import SubTitle from 'components/title/SubTitle';
+import Title from 'components/title/Title';
 
 const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
 	const mockData = {
@@ -133,14 +136,7 @@ const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
 
 	return (
 		<Box>
-			<Box
-				sx={{
-					fontSize: '20px',
-					fontWeight: 'bold',
-					color: colors.text.main,
-				}}>
-				{'종목 검색'}
-			</Box>
+			<Title text="종목 검색" />
 			<StockSearchBar />
 			<StockList
 				assets={mockData.assets}

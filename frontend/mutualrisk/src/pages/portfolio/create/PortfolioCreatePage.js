@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Stack } from '@mui/material';
 import BoxTitle from 'components/title/BoxTitle';
+import Title from 'components/title/Title';
 import StockSearch from 'pages/portfolio/create/stocksearch/StockSearch';
 import ConditionSetting from 'pages/portfolio/create/condition/ConditionSetting';
 import { colors } from 'constants/colors';
@@ -53,16 +54,9 @@ const PortfolioCreatePage = () => {
 				{showSelectedItems && (
 					<Box
 						sx={{
-							backgroundColor: colors.background.box,
+							backgroundColor: colors.background.white,
 						}}>
-						<Box
-							sx={{
-								fontSize: '20px',
-								fontWeight: 'bold',
-								color: colors.text.main,
-							}}>
-							{'담은 종목'}
-						</Box>
+						<Title text="담은 종목" />
 						<SelectedList
 							assets={selectedStocks}
 							onStockSelect={handleStockSelect}
