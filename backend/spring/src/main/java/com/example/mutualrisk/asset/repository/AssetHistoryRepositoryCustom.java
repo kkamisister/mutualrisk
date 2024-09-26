@@ -15,4 +15,6 @@ public interface AssetHistoryRepositoryCustom {
     List<AssetHistory> findRecentTwoAssetHistory(Asset asset);
 
     List<AssetHistory> findRecentHistory(List<Asset> assets, LocalDateTime dateTime);
+
+    Optional<AssetHistory> findOneAssetHistory(Asset asset,LocalDateTime dateTime);
 }
