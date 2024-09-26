@@ -2,17 +2,15 @@ package com.example.mutualrisk.fund.service;
 
 import static com.example.mutualrisk.fund.dto.FundResponse.*;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -29,7 +27,6 @@ import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
-import com.example.mutualrisk.fund.dto.FundResponse;
 import com.example.mutualrisk.fund.dto.FundResponse.FundAssetInfo;
 import com.example.mutualrisk.fund.dto.FundResponse.FundResultDto;
 import com.example.mutualrisk.fund.dto.FundResponse.FundSummaryResultDto;
@@ -55,7 +52,6 @@ public class FundServiceImpl implements FundService {
 	private final AssetRepository assetRepository;
 	private final AssetHistoryRepository assetHistoryRepository;
 	private final InterestAssetRepository interestAssetRepository;
-	private final ExchangeRatesRepository exchangeRatesRepository;
 
 	/**
 	 * 전체 펀드 목록을 조회하는 메서드
@@ -65,7 +61,7 @@ public class FundServiceImpl implements FundService {
 	public ResponseWithData<FundSummaryResultDto> getAllFunds() {
 
 		// 펀드 정보를 가지고 온다
-		List<Fund> allfunds = fundRepository.getAllfunds();
+		List<Fund> allfunds = fundRepository.getAllFunds();
 
 		// 펀드 정보를 dto로 변환한 리스트를 만든다
 		List<FundSummaryInfo> fundSummarys = allfunds.stream()
@@ -96,7 +92,7 @@ public class FundServiceImpl implements FundService {
 	 * 섹터 편중
 	 *
 	 * 자산 평가액 변동 기록
-	 * - 포트폴리오에 속한 자산의 일종의 백테스팅?.. 
+	 * - 포트폴리오에 속한 자산의 일종의 백테스팅
 	 *
 	 *
 	 * @return
@@ -150,10 +146,6 @@ public class FundServiceImpl implements FundService {
 			}
 		}
 
-		// 결과 출력 또는 추가 처리
-		sectorValueMap.forEach((sectorName, value) -> {
-			System.out.println("Sector: " + sectorName + ", Value of Holding: " + value);
-		});
 
 		// 비율 계산을 해야한다
 		// 비율은, 각 섹터별 [Holding / (전체 valueOfHoldings)] * 100.0 으로 정의한다
@@ -161,10 +153,6 @@ public class FundServiceImpl implements FundService {
 		List<SectorInfo> sectorWeights = sectorValueMap.entrySet().stream()
 			.map(entry -> getSectorInfo(entry, valueOfHoldings,sectorIdMap))
 			.collect(Collectors.toList());
-
-		for(SectorInfo sectorInfo : sectorWeights) {
-			System.out.println("sectorInfo = " + sectorInfo);
-		}
 
 		// 이전 분기의 펀드를 가지고온다
 		Optional<Fund> beforeQuarter = fundRepository.getBeforeQuarter(fund);
@@ -224,6 +212,94 @@ public class FundServiceImpl implements FundService {
 		// return new ResponseWithData<>(HttpStatus.OK.value(),"펀드 상세조회에 성공하였습니다",null);
 	}
 
+	/**
+	 * 기간별 펀드자산 평가액 변동 기록을 반환하는 메서드
+	 *
+	 * @param userId
+	 * @param period
+	 * @return
+	 */
+	@Override
+	public ResponseWithData<List<FundPortfolioRecord>> getHistory(Integer userId, String company,Integer period) {
+
+		// S&P 500 자산을 가지고온다
+		Asset sp500 = assetRepository.findByCode("360750")
+			.orElseThrow(() -> new MutualRiskException(ErrorCode.SP_NOT_FOUND));
+
+		log.warn("sp500 :  {}",sp500);
+
+		// 입력받은 펀드의 현재시점으로부터 period 전의 펀드 데이터를 구한다
+		List<Fund> fundsByPeriod = fundRepository.getFundsByPeriod(company, period);
+		log.warn("fundsByPeriod : {}",fundsByPeriod);
+
+		// 펀드의 최초 데이터를 변동기록 그래프의 시작점으로 설정한다
+		Double initFundValue = 0.0;
+
+		// S&P 500의 초기 값
+		AssetHistory sp500InitialHistory = null;
+
+		if (!fundsByPeriod.isEmpty()) {
+			initFundValue = (double)fundsByPeriod.get(0).getValueOfHoldings();
+
+			// S&P 500의 초기값은 첫 번째 펀드의 제출일을 기준으로 설정
+			LocalDateTime submissionDate = fundsByPeriod.get(0).getSubmissionDate();
+			log.warn("submissionDate : {}",submissionDate);
+
+			sp500InitialHistory = assetHistoryRepository.findOneAssetHistory(sp500, submissionDate)
+				.orElseGet(this::getsp500Price);
+		}
+
+		// 직전 분기의 가치
+		Double previousSp500Value = sp500InitialHistory.getPrice();
+
+		List<FundPortfolioRecord> record = new ArrayList<>();
+		for(Fund fund : fundsByPeriod) {
+			log.warn("여기 도착");
+			// 각 분기별 포트폴리오의 누적 valueOfHolding을 구한다
+			LocalDateTime submissionDate = fund.getSubmissionDate();
+
+			log.warn("submissionDate2 : {}",submissionDate);
+
+			// 제출일(연도,분기)을 담을 객체
+			SubmissionDate subDate = SubmissionDate.of(submissionDate);
+
+			log.warn("subDate : {}",subDate);
+
+			// submissionDate의 S&P500의 가치 추정
+			AssetHistory sp500History = assetHistoryRepository.findOneAssetHistory(sp500,
+				submissionDate).orElseGet(this::getsp500Price);
+
+			// S&P500 변동률 계산
+			Double sp500ChangeRate = Math.abs((sp500History.getPrice() - previousSp500Value)/previousSp500Value * 100.0);
+
+			// 펀드의 현재 가치
+			Double curFundValue = (double)fund.getValueOfHoldings();
+
+			// S&P 500의 초기값(=initFundValue)에 변동률을 반영하여 추정된 S&P 500 가치를 계산
+			Double estimatedSp500Value = initFundValue + Math.round(initFundValue * sp500ChangeRate);
+
+			previousSp500Value+=(previousSp500Value * sp500ChangeRate);
+
+			//(펀드가치,sp500가치,분기)
+			FundPortfolioRecord fundPortfolioRecord = FundPortfolioRecord.of(subDate, curFundValue,
+				estimatedSp500Value);
+
+			record.add(fundPortfolioRecord);
+		}
+		return new ResponseWithData<>(HttpStatus.OK.value(),"자산 변동 조회 성공",record);
+	}
+
+	// dateTime에 종가가 존재하지 않으면 실행될 메서드
+	// Todo: 현재~해당 시점 전후로 비교하여 값 넣기
+	private AssetHistory getsp500Price() {
+		return null;
+	}
+
+	/**
+	 * 가장 최근날짜를 반환.
+	 * Todo: 실제 데이터가 들어있는 요일을 찾아야함
+	 * @return
+	 */
 	private static LocalDateTime getMostRecentDate() {
 		return LocalDate.of(2024,9,24).atStartOfDay();
 	}
