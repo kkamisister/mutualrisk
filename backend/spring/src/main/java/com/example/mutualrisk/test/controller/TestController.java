@@ -11,6 +11,8 @@ import com.example.mutualrisk.asset.entity.AssetHistory;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
+import com.example.mutualrisk.common.email.dto.EmailMessage;
+import com.example.mutualrisk.common.email.service.EmailService;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
@@ -19,7 +21,9 @@ import com.example.mutualrisk.fund.service.FundService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,6 +41,7 @@ public class TestController {
     private final AssetRepository assetRepository;
     private final AssetHistoryRepository assetHistoryRepository;
     private final ExchangeRatesRepository exchangeRatesRepository;
+    private final EmailService emailService;
 
     @GetMapping("/hello")
     public String hello() {
@@ -63,6 +68,18 @@ public class TestController {
 
 
         return new ResponseWithData<>(HttpStatus.OK.value(),"자산 조회에 성공하였습니다",assetSearchResultDto);
+    }
+
+    @PostMapping("/send-mail")
+    public ResponseEntity<?> sendMail(){
+        EmailMessage emailMessage = EmailMessage.builder()
+            .to("yongsu0201@gmail.com")
+            .subject("안녕하세요 조용수님. 카카오 모빌리티 코딩테스트 일정 정보입니다")
+            .message("구라임 ㅋㅋ")
+            .build();
+
+        emailService.sendMail(emailMessage);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     private AssetInfo getAssetInfo(Asset asset) {
