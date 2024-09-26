@@ -4,8 +4,6 @@ import StockList from 'pages/portfolio/create/stocksearch/StockList';
 import BasicButton from 'components/button/BasicButton';
 import { colors } from 'constants/colors';
 import StockSearchBar from './StockSearchBar';
-import BoxTitle from 'components/title/BoxTitle';
-import SubTitle from 'components/title/SubTitle';
 import Title from 'components/title/Title';
 
 const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
@@ -138,22 +136,31 @@ const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
 		<Box>
 			<Title text="종목 검색" />
 			<StockSearchBar />
-			<StockList
-				assets={mockData.assets}
-				selectedStocks={selectedStocks}
-				onStockSelect={onStockSelect}
+			<Box
 				sx={{
-					display: 'flex',
-					flexDirection: 'row',
-					overflowX: 'auto',
-					whiteSpace: 'nowrap',
-				}}
-			/>
-			<BasicButton
-				onClick={() => onConfirm(selectedStocks)}
-				sx={{ margin: '20px auto' }}>
-				추가
-			</BasicButton>
+					bgcolor: colors.background.box,
+					my: 2,
+					borderRadius: '16px',
+					p: 1,
+				}}>
+				<StockList
+					assets={mockData.assets}
+					selectedStocks={selectedStocks}
+					onStockSelect={onStockSelect}
+					sx={{
+						display: 'flex',
+						flexDirection: 'row',
+						overflowX: 'auto',
+						whiteSpace: 'nowrap',
+					}}
+				/>
+				<Box sx={{ display: 'flex', justifyContent: 'center' }}>
+					<BasicButton
+						text="추가"
+						onClick={() => onConfirm(selectedStocks)}
+					/>
+				</Box>
+			</Box>
 		</Box>
 	);
 };

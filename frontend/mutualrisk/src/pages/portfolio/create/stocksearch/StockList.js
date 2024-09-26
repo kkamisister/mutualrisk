@@ -11,6 +11,8 @@ const StockList = ({ assets, selectedStocks, onStockSelect }) => {
 				sx={{
 					display: 'flex',
 					flexDirection: 'row',
+					bgcolor: colors.background.box,
+					m: '10px',
 				}}>
 				{assets &&
 					assets.map(asset => (
