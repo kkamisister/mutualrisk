@@ -1,12 +1,11 @@
 import { Box } from '@mui/material';
-import SelectedItem from 'pages/portfolio/create/selectedstock/SeletedItem';
-
+import SelectedListItem from 'pages/portfolio/create/selectedstock/SelectedListItem';
 const SelectedList = ({ assets, onStockSelect }) => {
 	return (
 		<Box>
 			{assets &&
 				assets.map(asset => (
-					<SelectedItem
+					<SelectedListItem
 						key={asset.assetId}
 						asset={asset}
 						clicked={assets.some(

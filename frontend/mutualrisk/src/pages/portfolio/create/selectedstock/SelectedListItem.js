@@ -2,13 +2,13 @@ import { Avatar, Box, Stack, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import CloseIcon from '@mui/icons-material/Close';
 
-const SelectedItem = ({ asset, clicked, onClick }) => {
+const SelectedListItem = ({ asset, clicked, onClick }) => {
 	return (
 		<Stack
 			direction="row"
 			alignItems="center"
 			sx={{
-				bgcolor: colors.background.white,
+				bgcolor: colors.background.box,
 				borderRadius: '10px',
 				padding: '10px',
 				m: 1,
@@ -68,4 +68,4 @@ const SelectedItem = ({ asset, clicked, onClick }) => {
 	);
 };
 
-export default SelectedItem;
+export default SelectedListItem;
