@@ -107,9 +107,8 @@ const AssetList = () => {
 	return (
 		<Stack
 			sx={{
-				height: '100%',
-				width: '50%',
-				minWidth: '400px',
+				height: '500px',
+				position: 'relative',
 			}}>
 			<Box
 				sx={{
@@ -118,9 +117,13 @@ const AssetList = () => {
 					flexDirection: 'column',
 					justifyContent: 'space-between',
 				}}>
-				<Box sx={{ marginTop: '20px', minWidth: 0, flex: 1 }}>
+				<Box
+					sx={{
+						marginTop: '20px',
+						minWidth: 0,
+						flex: 1,
+					}}>
 					<Box sx={{ flex: 1 }}>
-						{/* 여기서 currentAssets.map을 사용하여 현재 페이지의 항목들만 렌더링 */}
 						{currentAssets.map((asset, index) => (
 							<AssetListItem key={index} asset={asset} />
 						))}
@@ -132,7 +135,6 @@ const AssetList = () => {
 						display: 'flex',
 						justifyContent: 'center',
 						alignItems: 'center',
-						marginTop: '10px',
 					}}>
 					{/* 왼쪽 화살표 */}
 					<IconButton

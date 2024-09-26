@@ -2,11 +2,12 @@ import React from 'react';
 import PortfolioSummaryListItem from 'pages/portfolio/detail/summary/PortfolioSummaryListItem';
 import { Stack, Typography, Box } from '@mui/material';
 import { colors } from 'constants/colors';
+import HorizontalScrollContainer from 'components/scroll/HorizontalScrollContainer';
 
 const PortfolioSummaryList = () => {
 	return (
-		<Stack spacing={2}>
-			<Stack direction="row" spacing={1} sx={{ marginTop: '20px' }}>
+		<HorizontalScrollContainer>
+			<Stack direction="row" spacing={1}>
 				{/* 위험도 박스 */}
 				<PortfolioSummaryListItem title="위험도">
 					<Box
@@ -68,8 +69,12 @@ const PortfolioSummaryList = () => {
 				<PortfolioSummaryListItem />
 				<PortfolioSummaryListItem />
 				<PortfolioSummaryListItem />
+				<PortfolioSummaryListItem />
+				<PortfolioSummaryListItem />
+				<PortfolioSummaryListItem />
+				<PortfolioSummaryListItem />
 			</Stack>
-		</Stack>
+		</HorizontalScrollContainer>
 	);
 };
 

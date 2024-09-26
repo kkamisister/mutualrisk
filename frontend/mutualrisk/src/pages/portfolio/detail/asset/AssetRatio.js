@@ -2,27 +2,33 @@ import React from 'react';
 import { Stack } from '@mui/material';
 import AssetRatioPieChart from 'pages/portfolio/detail/asset/AssetRatioPieChart';
 import AssetList from 'pages/portfolio/detail/asset/AssetList';
+import { colors } from 'constants/colors';
 
 const AssetRatio = () => {
 	return (
 		<Stack
-			spacing={2}
-			direction="row"
+			spacing={1}
 			sx={{
-				width: '100%',
-				// minWidth: '1000psx',
-				height: '100%',
-				maxHeight: '100%',
-				display: 'flex',
-				justifyContent: 'space-between',
-				// alignItems: 'stretch',
-				alignItems: 'center',
-				flexWrap: 'nowrap',
+				backgroundColor: colors.background.white,
+				padding: '20px',
+				borderRadius: '20px',
+				border: `solid 1px ${colors.point.stroke}`,
 			}}>
-			{/* <AssetRatioPieChart sx={{ flex: 1 }} /> */}
-			<AssetRatioPieChart sx={{ width: '50%' }} />
-			{/* <AssetList sx={{ flex: 1 }} /> */}
-			<AssetList sx={{ width: '50%' }} />
+			<Stack
+				spacing={2}
+				direction="row"
+				sx={{
+					width: '100%',
+					height: '100%',
+					maxHeight: '100%',
+					display: 'flex',
+					justifyContent: 'space-evenly',
+					alignItems: 'center',
+					flexWrap: 'nowrap',
+				}}>
+				<AssetRatioPieChart sx={{ flex: 1 }} />
+				<AssetList sx={{ flex: 1 }} />
+			</Stack>
 		</Stack>
 	);
 };

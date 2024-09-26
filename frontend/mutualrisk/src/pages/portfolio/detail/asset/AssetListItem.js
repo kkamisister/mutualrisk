@@ -23,11 +23,9 @@ const AssetListItem = ({ asset }) => {
 					borderRadius: '20px',
 					padding: '10px',
 					marginRight: '8px',
-					boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
 					flex: 1, // 부모 높이를 차지하게 설정
 					height: '50px',
 					minHeight: '0', // 부모 높이에 따라 높이 제한
-					maxWidth: '75%',
 				}}>
 				{/* 좌측 아이콘 및 정보 */}
 				<Box
@@ -86,7 +84,6 @@ const AssetListItem = ({ asset }) => {
 					height: '50px',
 					minHeight: '0', // 부모 높이에 따라 높이 제한
 					maxWidth: '30%',
-					boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
 					alignContent: 'center',
 				}}>
 				{asset.ratio}%

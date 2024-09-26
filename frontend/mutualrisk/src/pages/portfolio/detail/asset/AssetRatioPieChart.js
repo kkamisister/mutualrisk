@@ -17,16 +17,13 @@ const AssetRatioPieChart = () => {
 		setActiveIndex(index);
 	};
 
-	// const totalValue = data.reduce((acc, item) => acc + item.value, 0);
-
 	return (
 		<div
 			style={{
-				width: '100%',
+				// width: '100%',
 				minWidth: '570px', // 최소 너비 설정
 				height: '100%',
-				// minHeight: '400px',
-				flex: 1,
+				// flex: 1,
 				position: 'relative',
 				display: 'flex',
 				justifyContent: 'center',
