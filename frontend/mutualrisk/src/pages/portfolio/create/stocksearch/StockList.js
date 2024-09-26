@@ -1,11 +1,12 @@
 import { Box, List } from '@mui/material';
 import { colors } from 'constants/colors';
 import StockListItem from 'pages/portfolio/create/stocksearch/StockListItem';
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
+import HorizontalScrollContainer from 'components/scroll/HorizontalScrollContainer';
 
 const StockList = ({ assets, selectedStocks, onStockSelect }) => {
 	return (
-		<Box>
+		<HorizontalScrollContainer>
 			<List
 				sx={{
 					display: 'flex',
@@ -25,7 +26,7 @@ const StockList = ({ assets, selectedStocks, onStockSelect }) => {
 						/>
 					))}
 			</List>
-		</Box>
+		</HorizontalScrollContainer>
 	);
 };
 
