@@ -83,7 +83,7 @@ const AssetList = () => {
 	];
 
 	const [currentPage, setCurrentPage] = useState(0);
-	const itemsPerPage = 3;
+	const itemsPerPage = 5;
 
 	// 전체 페이지 수 계산
 	const totalPages = Math.ceil(assets.length / itemsPerPage);
