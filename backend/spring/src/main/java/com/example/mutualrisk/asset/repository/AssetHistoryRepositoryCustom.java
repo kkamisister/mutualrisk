@@ -12,7 +12,4 @@ public interface AssetHistoryRepositoryCustom {
 
     Optional<AssetHistory> findRecentHistoryOfAsset(Asset asset, LocalDateTime dateTime);
     List<AssetHistory> findRecentHistoryOfAssets(List<Asset> assets, LocalDateTime dateTime);
-    List<AssetHistory> findRecentHistory(List<Asset> assets, LocalDateTime dateTime);
-
-    Optional<AssetHistory> findOneAssetHistory(Asset asset,LocalDateTime dateTime);
 }

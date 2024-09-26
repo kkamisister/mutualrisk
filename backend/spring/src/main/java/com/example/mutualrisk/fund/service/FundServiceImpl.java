@@ -245,7 +245,7 @@ public class FundServiceImpl implements FundService {
 			LocalDateTime submissionDate = fundsByPeriod.get(0).getSubmissionDate();
 			log.warn("submissionDate : {}",submissionDate);
 
-			sp500InitialHistory = assetHistoryRepository.findOneAssetHistory(sp500, submissionDate)
+			sp500InitialHistory = assetHistoryRepository.findRecentHistoryOfAsset(sp500, submissionDate)
 				.orElseGet(this::getsp500Price);
 		}
 
@@ -266,7 +266,7 @@ public class FundServiceImpl implements FundService {
 			log.warn("subDate : {}",subDate);
 
 			// submissionDate의 S&P500의 가치 추정
-			AssetHistory sp500History = assetHistoryRepository.findOneAssetHistory(sp500,
+			AssetHistory sp500History = assetHistoryRepository.findRecentHistoryOfAsset(sp500,
 				submissionDate).orElseGet(this::getsp500Price);
 
 			// S&P500 변동률 계산

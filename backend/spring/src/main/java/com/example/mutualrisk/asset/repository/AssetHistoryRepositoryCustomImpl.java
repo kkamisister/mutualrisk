@@ -49,16 +49,4 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
             .fetch();
 
     }
-
-    @Override
-    public Optional<AssetHistory> findOneAssetHistory(Asset asset, LocalDateTime dateTime) {
-
-        log.warn("dateTime : {}",dateTime);
-
-        return Optional.ofNullable(select(assetHistory)
-            .from(assetHistory)
-            .where(assetHistory.asset.eq(asset)
-                .and(assetHistory.date.eq(dateTime)))
-            .fetchFirst());
-    }
 }
