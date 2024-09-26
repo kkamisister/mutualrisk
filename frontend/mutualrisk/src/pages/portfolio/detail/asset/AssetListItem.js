@@ -27,7 +27,6 @@ const AssetListItem = ({ asset }) => {
 					flex: 1, // 부모 높이를 차지하게 설정
 					height: '50px',
 					minHeight: '0', // 부모 높이에 따라 높이 제한
-					maxWidth: '75%',
 				}}>
 				{/* 좌측 아이콘 및 정보 */}
 				<Box

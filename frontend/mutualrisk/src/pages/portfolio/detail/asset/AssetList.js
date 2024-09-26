@@ -107,9 +107,8 @@ const AssetList = () => {
 	return (
 		<Stack
 			sx={{
-				height: '100%',
-				width: '50%',
-				minWidth: '400px',
+				height: '500px',
+				position: 'relative',
 			}}>
 			<Box
 				sx={{

@@ -12,8 +12,12 @@ const PortfolioSummaryListItem = ({ title, children }) => {
 				minWidth: '130px',
 				minHeight: '6px',
 				maxWidth: '160px',
-
-				boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.1)', // 약간의 그림자 효과
+				transition:
+					'background-color 0.3s ease, color 0.3s ease, width 0.3s ease',
+				'&:hover': {
+					backgroundColor: colors.background.box,
+				},
+				border: `solid 1px ${colors.point.stroke}`,
 			}}>
 			{/* 소제목 공통 레이아웃 */}
 			<Typography
