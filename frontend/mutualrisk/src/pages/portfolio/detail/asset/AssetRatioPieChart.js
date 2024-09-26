@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { PieChart, Pie, ResponsiveContainer, Cell } from 'recharts';
 import RenderActiveShape from 'pages/portfolio/detail/asset/RenderActiveShape'; // RenderActiveShape 함수 import
 
 // 샘플 데이터
@@ -23,7 +23,7 @@ const AssetRatioPieChart = () => {
 		<div
 			style={{
 				width: '100%',
-				minWidth: '350px', // 최소 너비 설정
+				minWidth: '570px', // 최소 너비 설정
 				height: '100%',
 				// minHeight: '400px',
 				flex: 1,
@@ -55,7 +55,6 @@ const AssetRatioPieChart = () => {
 							<Cell key={`cell-${index}`} fill={entry.color} />
 						))}
 					</Pie>
-					<Tooltip />
 				</PieChart>
 			</ResponsiveContainer>
 		</div>
