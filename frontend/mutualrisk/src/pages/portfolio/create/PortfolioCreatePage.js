@@ -67,7 +67,11 @@ const PortfolioCreatePage = () => {
 					</Box>
 				)}
 			</Box>
-			<Box flex="6 1 0%">{showConditionSetting && <ConditionSetting />}</Box>
+			<Box flex="6 1 0%">
+				{showConditionSetting && (
+					<ConditionSetting assets={selectedStocks} />
+				)}
+			</Box>
 		</Box>
 	);
 };
