@@ -73,6 +73,7 @@ class InterestAssetRepositoryTest {
 			.region(Region.US)
 			.expectedReturn(1.1)
 			.build();
+
 		Asset asset2 = Asset.builder()
 			// .id(2)
 			.name("LG전자")

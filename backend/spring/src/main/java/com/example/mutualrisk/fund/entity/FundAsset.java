@@ -1,14 +1,17 @@
 package com.example.mutualrisk.fund.entity;
 
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-public class Item {
+@Builder
+public class FundAsset {
 
-	private int assetId;
+	private Integer assetId;
 	private String code;
 	private String name;
 	private String region;
 	private Long valueOfHolding;
 	private Long changeValueOfHolding;
+
 }

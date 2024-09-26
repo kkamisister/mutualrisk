@@ -42,7 +42,7 @@ public record AssetResponse() {
 
         public static AssetInfo of(Asset asset, List<AssetHistory> recentAssetHistoryList, Double exchangeRate) {
 
-            // 서버에 저장된 이미지 이름. REGION별로 확장자가 다르다(kr : .svg, us: .png)
+            // 서버에 저장된 이미지 이름.
             String imageName;
             double price;    // 현재 주식의 가격(원화 기준)
             double dailyPriceChange;    // 전일 대비 가격의 변화량(원화 기준)
@@ -57,7 +57,7 @@ public record AssetResponse() {
             // 자산이 한국 자산일 때
             if (asset.getRegion() == Region.KR) {
                 price = price1;
-                imageName = asset.getCode() + ".svg";
+                imageName = asset.getCode() + ".png";
                 dailyPriceChange = price1 - price2;
                 dailyPriceChangeRate = (price1 - price2) / price2 * 100;
             }

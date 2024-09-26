@@ -41,3 +41,5 @@ out/
 
 # Ignore generated Q files by QueryDSL
 **/generated/**/Q*.java
+
+**/src/main/resources/application-local.yml
