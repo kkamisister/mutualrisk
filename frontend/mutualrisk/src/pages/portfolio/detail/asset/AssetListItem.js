@@ -75,7 +75,7 @@ const AssetListItem = ({ asset }) => {
 			</Box>
 			<Box
 				sx={{
-					backgroundColor: '#101C4E',
+					backgroundColor: '#73748B',
 					borderRadius: '20px',
 					color: '#FFFFFF',
 					padding: '15px',
