@@ -14,7 +14,7 @@ const AssetRatio = () => {
 				height: '100%',
 				maxHeight: '100%',
 				alignItems: 'stretch',
-				flexWrap: 'wrap',
+				flexWrap: 'nowrap',
 			}}>
 			<AssetRatioPieChart sx={{ flex: 1 }} />
 			<AssetList sx={{ flex: 1 }} />
