@@ -28,6 +28,19 @@ public class AssetController {
 
     private final AssetService assetService;
 
+    @Operation(summary = "종목 조회", description = "자산ID기반 검색 결과를 반환하는 api")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "종목 조회 완료"),
+    })
+    @GetMapping("/{code}")
+    public ResponseEntity<ResponseWithData<AssetResultDto>> getAsset(@PathVariable("code") String code){
+
+        ResponseWithData<AssetResultDto> findAsset = assetService.getAssetByCode(code);
+
+        return ResponseEntity.status(findAsset.status())
+            .body(findAsset);
+    }
+
     @Operation(summary = "종목 검색", description = "키워드 기반 종목 검색 결과를 반환하는 api")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "종목 검색 조회 완료"),
