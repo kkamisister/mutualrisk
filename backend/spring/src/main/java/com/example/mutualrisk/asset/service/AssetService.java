@@ -18,5 +18,5 @@ public interface AssetService {
 
 	ResponseWithMessage deleteInterestAsset(Integer userId, InterestAssetInfo asset);
 
-	ResponseWithData<AssetResultDto> getAssetByCode(String code);
+	ResponseWithData<AssetResultDto> getAssetByCode(Integer assetId);
 }
