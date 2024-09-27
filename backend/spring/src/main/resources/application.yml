@@ -8,7 +8,7 @@ spring:
     name: mutualrisk
 
   datasource:
-    url: jdbc:mysql://j11a607.p.ssafy.io:3306/product?serverTimezone=UTC&useUniCode=yes&characterEncoding=UTF-8
+    url: jdbc:mysql://j11a607.p.ssafy.io:3306/product?useUnicode=true&characterEncoding=UTF-8
     username: ssafy
     password: zeroticket607
     driver-class-name: com.mysql.cj.jdbc.Driver
