@@ -192,14 +192,14 @@ public class AssetServiceImpl implements AssetService{
 
     /**
      * 입력받은 코드에 대한 자산을 반환하는 메서드
-     * @param code
+     * @param assetId
      * @return
      */
     @Override
-    public ResponseWithData<AssetResultDto> getAssetByCode(String code) {
+    public ResponseWithData<AssetResultDto> getAssetByCode(Integer assetId) {
 
         // 자산을 찾는다
-        Asset findAsset = assetRepository.findByCode(code)
+        Asset findAsset = assetRepository.findById(assetId)
             .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
 
         // 자산관련 뉴스를 찾는다

@@ -32,10 +32,10 @@ public class AssetController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "종목 조회 완료"),
     })
-    @GetMapping("/{code}")
-    public ResponseEntity<ResponseWithData<AssetResultDto>> getAsset(@PathVariable("code") String code){
+    @GetMapping("/{assetId}")
+    public ResponseEntity<ResponseWithData<AssetResultDto>> getAsset(@PathVariable("assetId") Integer assetId){
 
-        ResponseWithData<AssetResultDto> findAsset = assetService.getAssetByCode(code);
+        ResponseWithData<AssetResultDto> findAsset = assetService.getAssetByCode(assetId);
 
         return ResponseEntity.status(findAsset.status())
             .body(findAsset);
