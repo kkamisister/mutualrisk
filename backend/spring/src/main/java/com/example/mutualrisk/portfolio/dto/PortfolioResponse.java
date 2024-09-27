@@ -1,7 +1,9 @@
 package com.example.mutualrisk.portfolio.dto;
 
 import com.example.mutualrisk.asset.entity.Asset;
+import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.Region;
+import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.portfolio.entity.PortfolioAsset;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -47,10 +49,7 @@ public record PortfolioResponse() {
         String code,
         String name,
         Region region,
-        Double weight,
-        LocalDateTime purchaseTime,
-        Integer purchaseNum,
-        Double purchaseAmount
+        Double weight
     ) {
         public static PortfolioAssetInfo of(PortfolioAsset portfolioAsset, Asset asset, Double weight) {
             return PortfolioAssetInfo.builder()
@@ -59,11 +58,29 @@ public record PortfolioResponse() {
                 .name(asset.getName())
                 .region(asset.getRegion())
                 .weight(weight)
-                .purchaseTime(portfolioAsset.getPurchaseDate().atStartOfDay())
-                .purchaseNum(portfolioAsset.getPurchaseQuantity())
-                .purchaseAmount(portfolioAsset.getPurchaseQuantity() * asset.getRecentPrice())
                 .build();
         }
     }
 
+    @Builder
+    @Schema(name = "포트폴리오 이익률 추이 데이터", description = "유저 포트폴리오의 수익률 추이 데이터")
+    public record PortfolioBacktestingResultDto(
+        TimeInterval timeInterval,
+        PerformanceMeasure measure,
+        String portfolioId,
+        List<Long> valuations
+    ) {
+
+    }
+
+    @Builder
+    @Schema(name = "날짜별 포트폴리오의 성과를 나타내는 데이터")
+    public record Performance(
+        LocalDateTime time,
+        Double returns,
+        Double valuation,
+        Double investment
+    ) {
+
+    }
 }

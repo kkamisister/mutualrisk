@@ -73,9 +73,14 @@ public class TestController {
     @PostMapping("/send-mail")
     public ResponseEntity<?> sendMail(){
         EmailMessage emailMessage = EmailMessage.builder()
-            .to("yongsu0201@gmail.com")
-            .subject("안녕하세요 조용수님. 카카오 모빌리티 코딩테스트 일정 정보입니다")
-            .message("구라임 ㅋㅋ")
+            .to("hayeonful@gmail.com")
+            .subject("안녕하세요 김하연님. 바나프레소 코딩테스트 일정 정보입니다")
+            .message("--------------------------------------------------------------------------------"
+                + ""
+                + "------------------------------"
+                + ""
+                + "-----------------------------\n"
+                + "더블쿼터파운드 치즈버거세트 9100원")
             .build();
 
         emailService.sendMail(emailMessage);

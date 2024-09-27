@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Builder
@@ -11,6 +12,7 @@ public class PortfolioAsset {
     private Integer assetId;
     private String code;
     private String name;
-    private Integer purchaseQuantity;
-    private LocalDate purchaseDate;
+    private Integer totalPurchaseQuantity;
+    private Double totalPurchaseAmount;
+    private List<PortfolioPurchaseInfo> purchaseInfos;
 }

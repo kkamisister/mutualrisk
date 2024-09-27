@@ -11,6 +11,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
+import static com.example.mutualrisk.asset.entity.QAsset.*;
 import static com.example.mutualrisk.asset.entity.QAssetHistory.assetHistory;
 
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,24 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
             .from(assetHistory)
             .where(assetHistory.asset.in(assetList)
                 .and(assetHistory.date.eq(targetDate)))
+            .fetch();
+    }
+
+    @Override
+    public List<AssetHistory> findRecentHistoriesBetweenDates(Asset asset, LocalDateTime pastDate, LocalDateTime targetDate) {
+        return selectFrom(assetHistory)
+            .where(assetHistory.asset.eq(asset)
+                .and(assetHistory.date.between(pastDate, targetDate)))
+            .fetch();
+    }
+
+    @Override
+    public List<AssetHistory> findRecentHistoryOfAssetsBetweenDates(List<Asset> assetList,
+        LocalDateTime pastDate, LocalDateTime targetDate) {
+        return selectFrom(assetHistory)
+            .join(assetHistory.asset,asset).fetchJoin()
+            .where(assetHistory.asset.in(assetList)
+                .and(assetHistory.date.between(pastDate, targetDate)))
             .fetch();
     }
 }

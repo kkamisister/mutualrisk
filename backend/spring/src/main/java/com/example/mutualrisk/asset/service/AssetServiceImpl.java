@@ -26,8 +26,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -40,15 +45,23 @@ public class AssetServiceImpl implements AssetService{
     private final InterestAssetRepository interestAssetRepository;
     private final AssetNewsRepository assetNewsRepository;
     private final ExchangeRatesRepository exchangeRatesRepository;
+    private final AssetHistoryService assetHistoryService;
 
-
+    /**
+     * 유저가 입력한 키워드를 통해 종목을 검색하는 메서드
+     * @param keyword
+     * @return
+     */
     @Override
     @Transactional
     public ResponseWithData<AssetResultDto> searchByKeyword(String keyword) {
         List<Asset> assets = assetRepository.searchByKeyword(keyword);
 
+        // 환율을 가져오는 메서드
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
         List<AssetInfo> assetInfos = assets.stream()
-            .map(this::getAssetInfo)
+            .map(asset -> getAssetInfo(asset,recentExchangeRate))
             .toList();
 
         AssetResultDto assetSearchResultDto = AssetResultDto.builder()
@@ -76,19 +89,63 @@ public class AssetServiceImpl implements AssetService{
             .orElseThrow(()-> new MutualRiskException(ErrorCode.USER_NOT_FOUND));
 
         // 유저의 관심자산 목록을 조건에 맞춰 가지고 온다
-        List<Asset> userInterestAssetList = interestAssetRepository.findUserInterestAssets(user).stream()
+        List<Asset> userInterestAssetList = interestAssetRepository.findUserInterestAssets(user,orderCondition,order).stream()
             .map(InterestAsset::getAsset)
             .toList();
 
-        // 조건에 맞춰 정렬한다
+        log.warn("관심자산 목록 가져오기 완료");
+
+        // 관심자산이 없으면 바로 응답을 반환한다
+        if(userInterestAssetList.isEmpty()){
+            AssetResultDto result = AssetResultDto.builder()
+                .build();
+            return new ResponseWithData<>(HttpStatus.OK.value(),"유저 관심종목 조회 성공",result);
+        }
+
+        // 환율을 가져오는 메서드
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+        // 관심자산들 중, 첫번째 자산의 최근종가일 2개를 가지고온다
+        // Todo : KR,US의 리스트를 따로 구분하여, 각각의 최근종가일을 구분하여 가져오기
+
+        List<LocalDateTime> twoValidDate = assetHistoryService.getValidDate(userInterestAssetList.get(0),
+            LocalDateTime.now(), 2);
+
+        log.warn("twoValidDate : {}", twoValidDate);
+
+        // 기존에는 오늘과 가장 근접한 영업일을 찾기위해 각 종목별로 (5일전~오늘) 사이에서
+        // findRecentTwoAssetHistory를 통해 종목의 기록을 가져왔다면,
+        // 지금은 일괄적으로 첫번째 자산의 영업일에 나머지 자산의 기록 또한 존재할 것이라 가정하고
+        // 한번의 쿼리로 가져오게 된다
+        // 단, 이것은 엄밀히 따져서 정확하지는 않다.. Todo를 해도 관심자산들 중에 해당 영업일에 종가가 없는
+        // 자산이 존재할 수도 있다.
+
+
+        // 관심자산의 최근 종가를 가지고 온다
+        List<AssetHistory> recentHistory = assetHistoryRepository.findRecentHistoryOfAssetsBetweenDates(
+            userInterestAssetList, twoValidDate.get(1), twoValidDate.get(0));
+
+        log.warn("recentHistory : {}", recentHistory);
+
+        // 1. AssetHistory를 Asset별로 그룹핑한다
+        Map<Asset, List<AssetHistory>> assetHistoryMap = recentHistory.stream()
+            .collect(Collectors.groupingBy(AssetHistory::getAsset));
+
+        // 2. Asset을 각각의 AssetHistory와 매핑하여 AssetInfo 생성
         List<AssetInfo> userInterestAssetInfoList = userInterestAssetList.stream()
-            .map(this::getAssetInfo)
-            .sorted((a1, a2) -> sorting(orderCondition, order, a1, a2))
+            .map(asset -> {
+                // Asset에 대응하는 최근 2개의 AssetHistory를 가져온다
+                return getAssetInfo(assetHistoryMap, recentExchangeRate, asset);
+            })
             .toList();
 
-        List<NewsInfo> relatedNewsList = getRelatedNewsList(userInterestAssetList);
 
-        // 결과를 DTO에 담아 반환한다
+        log.warn("뉴스가져오기");
+
+        // 관심자산과 연관된 뉴스를 가지고온다
+        List<NewsInfo> relatedNewsList = getRelatedNewsList(userInterestAssetList,recentExchangeRate);
+
+        // 결과를 DTO에 담아 n반환한다
         AssetResultDto result = AssetResultDto.builder()
             .assetNum(userInterestAssetInfoList.size())
             .assets(userInterestAssetInfoList)
@@ -137,18 +194,18 @@ public class AssetServiceImpl implements AssetService{
      * 유저의 관심종목에서 입력받은 종목을 삭제한다
      *
      * @param userId
-     * @param asset
+     * @param assetId
      * @return
      */
     @Override
-    public ResponseWithMessage deleteInterestAsset(Integer userId, InterestAssetInfo asset) {
+    public ResponseWithMessage deleteInterestAsset(Integer userId, Integer assetId) {
 
         // 해당하는 유저가 존재하는지 찾는다
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new MutualRiskException(ErrorCode.USER_NOT_FOUND));
 
         // 유저가 관심종목에서 없애려는 자산이 DB에 존재하는지 찾는다
-        Asset findAsset = assetRepository.findById(asset.assetId())
+        Asset findAsset = assetRepository.findById(assetId)
             .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
 
         // 유저의 관심종목에 asset이 있는지 확인한다
@@ -161,34 +218,6 @@ public class AssetServiceImpl implements AssetService{
         return new ResponseWithMessage(HttpStatus.OK.value(),"관심종목에서 삭제되었습니다.");
     }
 
-    /**
-     * 입력받은 정렬 기준에 따라 정렬하는 내부메서드
-     *
-     * @param orderCondition
-     * @param order
-     * @param a1
-     * @param a2
-     * @return
-     */
-    private static int sorting(OrderCondition orderCondition, Order order, AssetInfo a1, AssetInfo a2) {
-        // orderCondition의 기본값을 name, order의 기본값을 asc로 설정
-        int comparisonResult = 0;
-
-        if (orderCondition == OrderCondition.NAME) {
-            comparisonResult = a1.name().compareTo(a2.name());
-        } else if (orderCondition == OrderCondition.PRICE) {
-            comparisonResult = a1.price().compareTo(a2.price());
-        }
-        else if (orderCondition == OrderCondition.RETURN) {
-            comparisonResult = a1.expectedReturn().compareTo(a2.expectedReturn());
-        }
-
-        if(order == Order.DESC){
-            comparisonResult = -comparisonResult;
-        }
-
-        return comparisonResult;
-    }
 
     /**
      * 입력받은 코드에 대한 자산을 반환하는 메서드
@@ -196,22 +225,26 @@ public class AssetServiceImpl implements AssetService{
      * @return
      */
     @Override
-    public ResponseWithData<AssetResultDto> getAssetByCode(Integer assetId) {
+    public ResponseWithData<AssetResultDto> getAssetByAssetId(Integer assetId) {
 
         // 자산을 찾는다
         Asset findAsset = assetRepository.findById(assetId)
             .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
 
+        log.warn("findAsset :{}",findAsset);
+
         // 자산관련 뉴스를 찾는다
         List<AssetNews> findNews = assetNewsRepository.findByAsset(findAsset);
 
-        List<NewsInfo> newsList = findNews.stream()
-            .map(AssetNews::getNews)
-            .map(this::getNewsInfo)
-            .toList();
+        // 환율을 가져오는 메서드
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+        log.warn("환율 : {}",recentExchangeRate);
+
+        List<NewsInfo> newsList = getRelatedNewsList(List.of(findAsset),recentExchangeRate);
 
         // 자산을 DTO로 변환한다
-        AssetInfo assetInfo = getAssetInfo(findAsset);
+        AssetInfo assetInfo = getAssetInfo(findAsset,recentExchangeRate);
 
         // 결과를 DTO에 담아 반환한다
         AssetResultDto result = AssetResultDto.builder()
@@ -229,43 +262,114 @@ public class AssetServiceImpl implements AssetService{
      * @param asset
      * @return
      */
-    private AssetInfo getAssetInfo(Asset asset) {
-        List<AssetHistory> recentAssetHistoryList = assetHistoryRepository.findRecentTwoAssetHistory(asset);
+    private AssetInfo getAssetInfo(Asset asset,Double recentExchangeRate) {
+
+        LocalDateTime endDate = LocalDateTime.now();
+        LocalDateTime startDate = endDate.minusDays(5);
+        List<AssetHistory> recentAssetHistoryList = assetHistoryRepository.findRecentHistoriesBetweenDates(asset,startDate,endDate);
         if (recentAssetHistoryList.size() < 2) throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
 
         // Todo: recentDate와 now 비교 로직 추가
 //        LocalDate now = LocalDate.now();
 //        LocalDate recentDate = LocalDate.from(recentAssetHistoryList.getDate());
 
-        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
         return AssetInfo.of(asset, recentAssetHistoryList, recentExchangeRate);
     }
 
-    private List<NewsInfo> getRelatedNewsList(List<Asset> userInterestAssetList) {
+    /**
+     * 관심자산과 연관된 뉴스를 가져오는 메서드
+     *
+     * @param userInterestAssetList
+     * @param recentExchangeRate
+     * @return
+     */
+    private List<NewsInfo> getRelatedNewsList(List<Asset> userInterestAssetList,Double recentExchangeRate) {
+        // 두 개의 유효 날짜를 가져옴
+        List<LocalDateTime> twoValidDate = assetHistoryService.getValidDate(userInterestAssetList.get(0), LocalDateTime.now(), 2);
+
+        // 자산에 대한 최근 두 개의 AssetHistory를 조회
+        List<AssetHistory> recentHistory = assetHistoryRepository.findRecentHistoryOfAssetsBetweenDates(userInterestAssetList, twoValidDate.get(1), twoValidDate.get(0));
+
+        // AssetHistory를 Asset별로 그룹핑
+        Map<Asset, List<AssetHistory>> assetHistoryMap = recentHistory.stream()
+            .collect(Collectors.groupingBy(AssetHistory::getAsset));
+
+        // 관심 자산에 대한 관련 뉴스 가져오기
         List<AssetNews> relatedAssetNews = assetNewsRepository.findByAssetIn(userInterestAssetList);
 
+        log.warn("관심자산 뉴스 : {}",relatedAssetNews);
+
+        // 뉴스별로 관련된 AssetInfo와 함께 NewsInfo를 생성
         return relatedAssetNews.stream()
-            .map(AssetNews::getNews)
-            .map(this::getNewsInfo)
+            .map(assetNews -> {
+                News news = assetNews.getNews();
+
+                // 해당 뉴스와 관련된 자산 정보 생성
+                List<AssetInfo> relatedAssetInfoList = getRelatedAssetInfoList(news, assetHistoryMap, recentExchangeRate);
+
+                // 뉴스 정보를 정제하고 NewsInfo 생성
+                String cleanedTitle = getCleanedTitle(news.getTitle());
+                return NewsInfo.builder()
+                    .newsId(news.getId())
+                    .link(news.getLink())
+                    .title(cleanedTitle)
+                    .thumbnailUrl(news.getThumbnailUrl())
+                    .publishedAt(news.getPublishedAt())
+                    .relatedAssets(relatedAssetInfoList)
+                    .build();
+            })
             .toList();
     }
 
-    private NewsInfo getNewsInfo(News news) {
-        List<AssetInfo> relatedAssetInfoList = getRelatedAsset(news);
+    /**
+     * 뉴스와 연관된 자산을 가져오는 메서드
+     * @param news
+     * @param assetHistoryMap
+     * @param recentExchangeRate
+     * @return
+     */
+    private List<AssetInfo> getRelatedAssetInfoList(News news, Map<Asset, List<AssetHistory>> assetHistoryMap, Double recentExchangeRate) {
+        // 뉴스와 연관된 모든 자산을 가져옴
+        List<AssetNews> assetNewsList = assetNewsRepository.findAllByNews(news);
 
-        String cleanedTitle = getCleanedTitle(news.getTitle());
+        log.warn("뉴스와 연관된 자산 :{}",assetNewsList);
 
-        return NewsInfo.builder()
-            .newsId(news.getId())
-            .link(news.getLink())
-            .title(cleanedTitle)
-            .thumbnailUrl(news.getThumbnailUrl())
-            .publishedAt(news.getPublishedAt())
-            .relatedAssets(relatedAssetInfoList)
-            .build();
+        // 연관된 자산을 기반으로 AssetInfo를 생성
+        return assetNewsList.stream()
+            .map(AssetNews::getAsset)
+            .map(asset -> getAssetInfo(assetHistoryMap, recentExchangeRate, asset))
+            .toList();
     }
 
+    /**
+     * 자산에 대한 종가 기록을 바탕으로 자산정보를 생성하는 메서드
+     * @param assetHistoryMap
+     * @param recentExchangeRate
+     * @param asset
+     * @return
+     */
+    private static AssetInfo getAssetInfo(Map<Asset, List<AssetHistory>> assetHistoryMap, Double recentExchangeRate,
+        Asset asset) {
+        // 해당 자산에 대응하는 AssetHistory를 가져옴
+        log.warn("쿼리나가는 부분");
+        List<AssetHistory> historiesForAsset = assetHistoryMap.get(asset);
+        log.warn("AssetHistory : {}",historiesForAsset);
+
+        // AssetHistory가 없거나 부족하면 기본값 설정
+        if (historiesForAsset == null || historiesForAsset.size() < 2) {
+            historiesForAsset = List.of(AssetHistory.of(asset), AssetHistory.of(asset));
+        }
+
+        // AssetInfo 생성
+        return AssetInfo.of(asset, historiesForAsset, recentExchangeRate);
+    }
+
+    /**
+     * 제목에서 불필요한 html 태그 제거
+     * @param title
+     * @return
+     */
     private String getCleanedTitle(String title) {
         // 1. HTML 태그(<b>, </b>) 제거
         String withoutTags = title.replaceAll("<.*?>", "");
@@ -275,14 +379,6 @@ public class AssetServiceImpl implements AssetService{
 
         // 결과 출력
         return cleanText;
-    }
-
-    private List<AssetInfo> getRelatedAsset(News news) {
-        List<AssetNews> assetNewsList = assetNewsRepository.findAllByNews(news);
-        return assetNewsList.stream()
-            .map(AssetNews::getAsset)
-            .map(this::getAssetInfo)
-            .toList();
     }
 
 }
