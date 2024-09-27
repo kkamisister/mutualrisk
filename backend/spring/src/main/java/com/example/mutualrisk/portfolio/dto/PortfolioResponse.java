@@ -34,7 +34,7 @@ public record PortfolioResponse() {
     @Schema(name = "포트폴리오의 성능을 나타내는 지표")
     public record PortfolioPerformance(
         Double expectedReturn,
-        Double standardDeviation,
+        Double volatility,
         Double valuation
     ) {
 
