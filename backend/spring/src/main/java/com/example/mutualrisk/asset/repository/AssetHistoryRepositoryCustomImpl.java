@@ -58,4 +58,12 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
                 .and(assetHistory.date.eq(targetDate)))
             .fetch();
     }
+
+    @Override
+    public List<AssetHistory> findRecentHistoriesBetweenDates(Asset asset, LocalDateTime pastDate, LocalDateTime targetDate) {
+        return selectFrom(assetHistory)
+            .where(assetHistory.asset.eq(asset)
+                .and(assetHistory.date.between(pastDate, targetDate)))
+            .fetch();
+    }
 }

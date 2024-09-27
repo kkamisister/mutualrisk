@@ -23,22 +23,19 @@ public class AssetHistoryServiceImpl implements AssetHistoryService {
     private final AssetHistoryRepository assetHistoryRepository;
 
     // 주어진 날짜에 해당하는 asset의 종가 데이터를 구하는 함수
-    // 주어진 날짜에 해당하는 데이터가 없을 경우, +- 3일간을 돌며 데이터가 있는지 찾는다
+    // 현재 날 기준으로 과거 5일간의 데이터를 가져온다. 이 중 가장 마지막 데이터를 선택
     // (해당 날짜가 비영업일일 수도 있기 때문)
     @Override
     public Double getAssetPrice(Asset asset, LocalDateTime targetDate) {
-        int[] dDays = {0, 1, -1, 2, -2, 3, -3};
+        LocalDateTime pastDate = targetDate.minusDays(5);
 
-        for (int day : dDays) {
-            LocalDateTime dateTime = targetDate.plusDays(day);
-            Optional<AssetHistory> recentHistoryOfAsset = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime);
-            if (recentHistoryOfAsset.isPresent()) {
-                return recentHistoryOfAsset.get().getPrice();
-            }
-        }
+        List<AssetHistory> assetHistories = assetHistoryRepository.findRecentHistoriesBetweenDates(asset, pastDate, targetDate);
 
-        // +- 3일간의 데이터가 모두 없을 경우, 에러 반환
-        throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
+        // 5일간의 데이터가 모두 없을 경우, 에러 반환
+        if (assetHistories.isEmpty()) throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
+
+        // 가장 마지막 종가 데이터를 반환
+        return assetHistories.get(assetHistories.size()-1).getPrice();
     }
 
     @Override
