@@ -1,6 +1,7 @@
 package com.example.mutualrisk.fund.entity;
 
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -33,9 +34,24 @@ public class Fund {
 	private Double QoQChangeOfValue;
 	private Double QoQTurnOver;
 
+	@Override
+	public String toString() {
+		return "Fund{" +
+			"submissionDate='" + submissionDate + '\'' +
+			", QoQTurnOver=" + QoQTurnOver +
+			", QoQChangeOfValue=" + QoQChangeOfValue +
+			", valueOfHoldings=" + valueOfHoldings +
+			", ceo='" + ceo + '\'' +
+			", image='" + image + '\'' +
+			", company='" + company + '\'' +
+			", type='" + type + '\'' +
+			", id='" + id + '\'' +
+			'}';
+	}
+
 	private List<FundAsset> asset;
 	private List<FundAsset> topHoldAsset;
 	private List<FundAsset> topBuyAsset;
 
-	private String submissionDate;
+	private LocalDateTime submissionDate;
 }

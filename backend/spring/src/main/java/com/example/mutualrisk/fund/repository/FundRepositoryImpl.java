@@ -1,6 +1,8 @@
 package com.example.mutualrisk.fund.repository;
 
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +27,45 @@ public class FundRepositoryImpl implements FundRepository {
 	private final MongoTemplate mongoTemplate;
 
 	@Override
-	public List<Fund> getAllfunds() {
+	public List<Fund> getFundsByPeriod(String fundName,Integer period) {
+
+		// 날짜 형식 정의
+		// DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+
+		// 현재 날짜로부터 period 기간 전의 날짜를 계산
+		LocalDate today = LocalDate.now();
+		LocalDate startDate = today.minusYears(period); // period 기간 전의 날짜 계산
+
+		// LocalDate를 String으로 변환
+
+		// String startDateStr = startDate.format(formatter);
+		// String todayStr = today.format(formatter);
+
+		log.warn("today : {}",today);
+		log.warn("startDate : {}",startDate);
+
+		Query query = new Query();
+
+		log.warn("fundName : {}",fundName);
+		// 입력받은 펀드 찾기
+		query.addCriteria(Criteria.where("company").is(fundName));
+
+		// // (period전~오늘) 까지의 데이터만 가져오기
+		query.addCriteria(Criteria.where("submissionDate").lt(today).gte(startDate)); // period 기간 전의 데이터
+		//
+		// 날짜의 오름차순으로 정렬
+		query.with(Sort.by(Sort.Order.asc("submissionDate")));
+
+		// asset 필드는 제외
+		query.fields().exclude("asset");
+
+		// 쿼리 실행
+		return mongoTemplate.find(query, Fund.class);
+	}
+
+	@Override
+	public List<Fund> getAllFunds() {
 
 		Query query = new Query();
 
