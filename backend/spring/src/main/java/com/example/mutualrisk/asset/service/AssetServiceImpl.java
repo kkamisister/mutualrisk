@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -161,6 +162,10 @@ public class AssetServiceImpl implements AssetService{
         // 유저가 추가한 자산이 존재하는지 찾는다
         Asset findAsset = assetRepository.findById(asset.assetId())
             .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
+
+        // 이미 유저의 관심목록에 존재하는지 찾는다
+        interestAssetRepository.findUserInterestAsset(user, findAsset)
+                .ifPresent(a -> { throw new MutualRiskException(ErrorCode.ASSET_ALREADY_EXIST);});
 
         // 유저의 관심자산을 담은 Entity를 생성한다
         InterestAsset interestAsset = InterestAsset.of(user,findAsset);

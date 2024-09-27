@@ -29,6 +29,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.BAD_REQUEST,"해당하는 유저가 존재하지 않습니다"),
     ASSET_NOT_FOUND(HttpStatus.BAD_REQUEST,"해당 자산이 존재하지 않습니다"),
     ASSET_NOT_FOUND_IN_USER_LIST(HttpStatus.BAD_REQUEST,"유저 관심종목에 해당 자산이 없습니다"),
+    ASSET_ALREADY_EXIST(HttpStatus.CONFLICT,"이미 관심목록에 존재하는 자산입니다"),
 
     // 펀드관련 에러
     FUND_NOT_FOUND(HttpStatus.BAD_REQUEST,"해당하는 펀드가 존재하지 않습니다"),

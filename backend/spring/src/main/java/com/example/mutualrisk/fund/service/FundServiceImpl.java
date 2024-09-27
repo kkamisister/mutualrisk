@@ -298,12 +298,6 @@ public class FundServiceImpl implements FundService {
 		return changeValueOfHolding / totalValueOfHolding * 100;
 	}
 
-	// dateTime에 종가가 존재하지 않으면 실행될 메서드
-	// Todo: 현재~해당 시점 전후로 비교하여 값 넣기
-	private AssetHistory getsp500Price() {
-		return null;
-	}
-
 	/**
 	 * 가장 최근날짜를 반환.
 	 * Todo: 실제 데이터가 들어있는 요일을 찾아야함

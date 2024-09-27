@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 import com.example.mutualrisk.common.entity.BaseEntity;
+import com.example.mutualrisk.portfolio.entity.PortfolioAsset;
 
 @Table(name = "asset_history")
 @Entity

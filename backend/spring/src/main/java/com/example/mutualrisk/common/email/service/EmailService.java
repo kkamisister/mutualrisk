@@ -20,7 +20,6 @@ public class EmailService {
 
 	public void sendMail(EmailMessage emailMessage){
 		MimeMessage mimeMessage = mailSender.createMimeMessage();
-
 		try {
 			MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
 			mimeMessageHelper.setTo(emailMessage.getTo()); // 메일 수신자
