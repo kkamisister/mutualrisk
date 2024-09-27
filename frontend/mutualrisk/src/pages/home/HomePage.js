@@ -64,9 +64,8 @@ const HomePage = () => {
 						},
 						marginBottom: '40px',
 					}}
-					onClick={() => navigate('/login')}>
-					포트폴리오 제작
-				</CustomButton>
+					onClick={() => navigate('/login')}
+					text={'포트폴리오 제작'}></CustomButton>
 			</Stack>
 			<Box
 				sx={{

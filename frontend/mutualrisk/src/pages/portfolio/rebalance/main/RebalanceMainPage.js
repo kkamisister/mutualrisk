@@ -86,9 +86,8 @@ const RebalanceMainPage = () => {
 							backgroundColor: colors.main.primary200,
 						},
 					}}
-					onClick={() => navigate('/rebalance/result')}>
-					포트폴리오 리밸런싱
-				</CustomButton>
+					onClick={() => navigate('/rebalance/result')}
+					text={'포트폴리오 리밸런싱'}></CustomButton>
 			</Stack>
 		</Stack>
 	);
