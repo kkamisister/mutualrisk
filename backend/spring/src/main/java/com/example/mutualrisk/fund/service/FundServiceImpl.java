@@ -2,20 +2,21 @@ package com.example.mutualrisk.fund.service;
 
 import static com.example.mutualrisk.fund.dto.FundResponse.*;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import com.example.mutualrisk.asset.service.AssetHistoryService;
+import com.example.mutualrisk.asset.service.AssetHistoryServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +30,6 @@ import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
-import com.example.mutualrisk.fund.dto.FundResponse;
 import com.example.mutualrisk.fund.dto.FundResponse.FundAssetInfo;
 import com.example.mutualrisk.fund.dto.FundResponse.FundResultDto;
 import com.example.mutualrisk.fund.dto.FundResponse.FundSummaryResultDto;
@@ -50,12 +50,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class FundServiceImpl implements FundService {
 
+	private final AssetHistoryService assetHistoryService;
 	private final FundRepository fundRepository;
 	private final UserRepository userRepository;
 	private final AssetRepository assetRepository;
 	private final AssetHistoryRepository assetHistoryRepository;
 	private final InterestAssetRepository interestAssetRepository;
-	private final ExchangeRatesRepository exchangeRatesRepository;
 
 	/**
 	 * 전체 펀드 목록을 조회하는 메서드
@@ -65,7 +65,7 @@ public class FundServiceImpl implements FundService {
 	public ResponseWithData<FundSummaryResultDto> getAllFunds() {
 
 		// 펀드 정보를 가지고 온다
-		List<Fund> allfunds = fundRepository.getAllfunds();
+		List<Fund> allfunds = fundRepository.getAllFunds();
 
 		// 펀드 정보를 dto로 변환한 리스트를 만든다
 		List<FundSummaryInfo> fundSummarys = allfunds.stream()
@@ -96,7 +96,7 @@ public class FundServiceImpl implements FundService {
 	 * 섹터 편중
 	 *
 	 * 자산 평가액 변동 기록
-	 * - 포트폴리오에 속한 자산의 일종의 백테스팅?.. 
+	 * - 포트폴리오에 속한 자산의 일종의 백테스팅
 	 *
 	 *
 	 * @return
@@ -150,10 +150,6 @@ public class FundServiceImpl implements FundService {
 			}
 		}
 
-		// 결과 출력 또는 추가 처리
-		sectorValueMap.forEach((sectorName, value) -> {
-			System.out.println("Sector: " + sectorName + ", Value of Holding: " + value);
-		});
 
 		// 비율 계산을 해야한다
 		// 비율은, 각 섹터별 [Holding / (전체 valueOfHoldings)] * 100.0 으로 정의한다
@@ -161,10 +157,6 @@ public class FundServiceImpl implements FundService {
 		List<SectorInfo> sectorWeights = sectorValueMap.entrySet().stream()
 			.map(entry -> getSectorInfo(entry, valueOfHoldings,sectorIdMap))
 			.collect(Collectors.toList());
-
-		for(SectorInfo sectorInfo : sectorWeights) {
-			System.out.println("sectorInfo = " + sectorInfo);
-		}
 
 		// 이전 분기의 펀드를 가지고온다
 		Optional<Fund> beforeQuarter = fundRepository.getBeforeQuarter(fund);
@@ -224,6 +216,93 @@ public class FundServiceImpl implements FundService {
 		// return new ResponseWithData<>(HttpStatus.OK.value(),"펀드 상세조회에 성공하였습니다",null);
 	}
 
+	/**
+	 * 기간별 펀드자산 평가액 변동 기록을 반환하는 메서드
+	 *
+	 * @param userId
+	 * @param period
+	 * @return
+	 */
+	@Override
+	public ResponseWithData<List<FundPortfolioRecord>> getHistory(Integer userId, String company,Integer period) {
+
+		// S&P 500 자산을 가지고온다
+		Asset sp500 = assetRepository.findById(3621)
+			.orElseThrow(() -> new MutualRiskException(ErrorCode.SP_NOT_FOUND));
+
+		// 입력받은 펀드의 현재시점으로부터 period 전의 펀드 데이터를 구한다
+		List<Fund> fundsByPeriod = fundRepository.getFundsByPeriod(company, period);
+
+		log.warn("size: {}", fundsByPeriod.size());
+
+		List<FundPortfolioRecord> fundPortfolioRecordList = IntStream.range(0, fundsByPeriod.size() - 1)
+			.mapToObj(i -> {
+				var fund = fundsByPeriod.get(i);
+				Double fundReturn = getFundReturn(fund, 3);
+				Double sp500Return = getAssetReturn(sp500, fund.getSubmissionDate().withHour(0), 3);
+				return FundPortfolioRecord.builder()
+					.submissionDate(SubmissionDate.of(fund.getSubmissionDate()))
+					.fundReturns(fundReturn)
+					.sp500Returns(sp500Return)
+					.build();
+			})
+			.toList();
+
+		return new ResponseWithData<>(HttpStatus.OK.value(), "데이터 정상 반환", fundPortfolioRecordList);
+	}
+
+	private Double getAssetReturn(Asset asset, LocalDateTime startTime, int dMonth) {
+		Double assetPrice = assetHistoryService.getAssetPrice(asset, startTime);
+		LocalDateTime nextTime = startTime.plusMonths(dMonth);
+		Double nextPrice = assetHistoryService.getAssetPrice(asset, nextTime);
+
+		return (nextPrice - assetPrice) / assetPrice * 100;
+	}
+
+	// 펀드의 수익률 계산
+	private Double getFundReturn(Fund fund, int dMonth) {
+		LocalDateTime targetDate = fund.getSubmissionDate().withHour(0);
+
+		List<Long> valueOfHoldingList = new ArrayList<>();
+		List<FundAsset> topHoldAsset = fund.getTopHoldAsset();
+		List<Integer> assetIdList = new ArrayList<>();
+
+		for (FundAsset fundAsset : topHoldAsset) {
+			if (fundAsset.getCode().equals("-1")) continue;
+			Integer assetId = fundAsset.getAssetId();
+			assetIdList.add(assetId);
+			valueOfHoldingList.add(fundAsset.getValueOfHolding());
+		}
+
+		List<Asset> assetList = assetRepository.findByIds(assetIdList);
+
+		List<Double> assetPrices = assetHistoryService.getAssetPrices(assetList, targetDate);
+		LocalDateTime nextDate = targetDate.plusMonths(dMonth);
+		List<Double> nextPrices = assetHistoryService.getAssetPrices(assetList, nextDate);
+
+		// totalValueOfHolding 계산
+		long totalValueOfHolding = valueOfHoldingList.stream()
+			.mapToLong(Long::longValue)
+			.sum();
+
+		// changeValueOfHolding 계산
+		double changeValueOfHolding = IntStream.range(0, assetPrices.size())
+			.mapToDouble(i -> {
+				double assetPrice = assetPrices.get(i);
+				double nextAssetPrice = nextPrices.get(i);
+				long valueOfHolding = valueOfHoldingList.get(i);
+				return ((nextAssetPrice - assetPrice) / assetPrice) * valueOfHolding;
+			})
+			.sum();
+
+		return changeValueOfHolding / totalValueOfHolding * 100;
+	}
+
+	/**
+	 * 가장 최근날짜를 반환.
+	 * Todo: 실제 데이터가 들어있는 요일을 찾아야함
+	 * @return
+	 */
 	private static LocalDateTime getMostRecentDate() {
 		return LocalDate.of(2024,9,24).atStartOfDay();
 	}

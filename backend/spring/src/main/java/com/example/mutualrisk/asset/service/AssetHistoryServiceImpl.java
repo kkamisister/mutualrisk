@@ -1,0 +1,65 @@
+package com.example.mutualrisk.asset.service;
+
+import com.example.mutualrisk.asset.entity.Asset;
+import com.example.mutualrisk.asset.entity.AssetHistory;
+import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
+import com.example.mutualrisk.common.exception.ErrorCode;
+import com.example.mutualrisk.common.exception.MutualRiskException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@Transactional
+@RequiredArgsConstructor
+@Slf4j
+public class AssetHistoryServiceImpl implements AssetHistoryService {
+
+    private final AssetHistoryRepository assetHistoryRepository;
+
+    // 주어진 날짜에 해당하는 asset의 종가 데이터를 구하는 함수
+    // 주어진 날짜에 해당하는 데이터가 없을 경우, +- 3일간을 돌며 데이터가 있는지 찾는다
+    // (해당 날짜가 비영업일일 수도 있기 때문)
+    @Override
+    public Double getAssetPrice(Asset asset, LocalDateTime targetDate) {
+        int[] dDays = {0, 1, -1, 2, -2, 3, -3};
+
+        for (int day : dDays) {
+            LocalDateTime dateTime = targetDate.plusDays(day);
+            Optional<AssetHistory> recentHistoryOfAsset = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime);
+            if (recentHistoryOfAsset.isPresent()) {
+                return recentHistoryOfAsset.get().getPrice();
+            }
+        }
+
+        // +- 3일간의 데이터가 모두 없을 경우, 에러 반환
+        throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
+    }
+
+    @Override
+    public List<Double> getAssetPrices(List<Asset> assetList, LocalDateTime targetDate) {
+        LocalDateTime validDate = getValidDate(assetList.get(0), targetDate);
+        return assetHistoryRepository.getAssetPrices(assetList, validDate);
+    }
+
+    // targetDate와 가장 가까운 영업일 날짜를 반환하는 함수
+    private LocalDateTime getValidDate(Asset asset, LocalDateTime targetDate) {
+        int[] dDays = {0, 1, -1, 2, -2, 3, -3};
+
+        for (int day : dDays) {
+            LocalDateTime dateTime = targetDate.plusDays(day);
+            Optional<AssetHistory> recentHistoryOfAsset = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime);
+            if (recentHistoryOfAsset.isPresent()) {
+                return dateTime;
+            }
+        }
+
+        // +- 3일간의 데이터가 모두 없을 경우, 에러 반환
+        throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
+    }
+}

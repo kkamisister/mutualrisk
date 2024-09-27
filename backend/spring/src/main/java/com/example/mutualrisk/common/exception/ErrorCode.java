@@ -34,7 +34,7 @@ public enum ErrorCode {
     // 펀드관련 에러
     FUND_NOT_FOUND(HttpStatus.BAD_REQUEST,"해당하는 펀드가 존재하지 않습니다"),
     NO_HOLD_AND_BUY_AMOUNT(HttpStatus.BAD_REQUEST,"보유량 및 구매량 정보가 존재하지 않습니다"),
-
+    SP_NOT_FOUND(HttpStatus.BAD_REQUEST,"S&P500 자산이 존재하지 않습니다"),
     PARAMETER_INVALID(HttpStatus.BAD_REQUEST, "올바른 parameter 값이 아닙니다")
     ;
 

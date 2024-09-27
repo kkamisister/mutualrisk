@@ -1,5 +1,6 @@
 package com.example.mutualrisk.fund.dto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.example.mutualrisk.fund.entity.Fund;
@@ -28,7 +29,7 @@ public record FundResponse() {
 		String type,
 		String ceo,
 		String company,
-		String submissionDate,
+		LocalDateTime submissionDate,
 		Double QoQChangeOfValue,
 		Double QoQTurnOver,
 		List<FundAssetInfo> asset,
@@ -125,6 +126,63 @@ public record FundResponse() {
 				.weight(ratio)
 				.build();
 		}
+	}
+
+	@Builder
+	@Schema(name = "펀드 평가액 기록 데이터",description = "포트폴리오의 기간 별 평가액 데이터")
+	public record FundPortfolioRecord(
+		SubmissionDate submissionDate,
+		Double fundReturns,
+		Double sp500Returns
+	){
+
+		public static FundPortfolioRecord of(SubmissionDate submissionDate,Double fundReturns,Double sp500returns){
+			return FundPortfolioRecord.builder()
+				.submissionDate(submissionDate)
+				.fundReturns(fundReturns)
+				.sp500Returns(sp500returns)
+				.build();
+		}
+	}
+
+	@Builder
+	@Schema(name = "제출일 데이터", description = "제출일(연도,분기)를 표현하는 데이터")
+	public record SubmissionDate(
+		String year,
+		String quarter
+	){
+
+		public static SubmissionDate of(LocalDateTime submissionDate){
+
+			return SubmissionDate.builder()
+				.year(String.valueOf(submissionDate.getYear()))
+				.quarter(parseQuarter(submissionDate))
+				.build();
+		}
+
+		private static String parseQuarter(LocalDateTime submissionDate){
+
+			// 분기 계산
+			String quarter = "";
+
+			int month = submissionDate.getMonthValue();
+			if(month >= 1 && month <= 3){
+				quarter = "1Q";
+			}
+			else if(month >=4 && month <= 6){
+				quarter = "2Q";
+			}
+			else if(month >=7 && month <=9){
+				quarter = "3Q";
+			}
+			else{
+				quarter = "4Q";
+			}
+
+			return quarter;
+		}
+
+
 	}
 
 }
