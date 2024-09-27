@@ -10,6 +10,10 @@ import java.util.Optional;
 public interface AssetHistoryRepositoryCustom {
     List<AssetHistory> findRecentTwoAssetHistory(Asset asset);
 
-    Optional<AssetHistory> findRecentHistoryOfAsset(Asset asset, LocalDateTime dateTime);
+    Optional<AssetHistory> findRecentHistoryOfAsset(Asset asset);
     List<AssetHistory> findRecentHistoryOfAssets(List<Asset> assets, LocalDateTime dateTime);
+
+    Optional<AssetHistory> findRecentHistoryOfAssetByAssetId(Integer assetId);
+    Optional<AssetHistory> findHistoryOfAssetByAssetId(Integer assetId, LocalDateTime dateTime);
+
 }

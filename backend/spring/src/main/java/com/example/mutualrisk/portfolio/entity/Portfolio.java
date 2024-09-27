@@ -20,4 +20,8 @@ public class Portfolio {
 	@Field("userId")
 	private Integer userId;
 	private List<PortfolioAsset> asset;
+	private List<Double> lowerBound;
+	private List<Double> upperBound;
+	private List<Double> weights;
+	private List<FrontierPoint> frontierPoints;
 }

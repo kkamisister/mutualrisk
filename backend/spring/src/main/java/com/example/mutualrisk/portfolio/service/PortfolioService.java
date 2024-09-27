@@ -6,4 +6,5 @@ import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 
 public interface PortfolioService {
     ResponseWithData<PortfolioResultDto> getPortfolioInfo(Integer userId);
+    ResponseWithMessage sendRefreshMail();
 }

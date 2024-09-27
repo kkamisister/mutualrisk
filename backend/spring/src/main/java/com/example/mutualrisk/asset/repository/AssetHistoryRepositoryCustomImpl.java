@@ -28,13 +28,19 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
     }
 
     @Override
-    public Optional<AssetHistory> findRecentHistoryOfAsset(Asset asset, LocalDateTime dateTime) {
+    public Optional<AssetHistory> findRecentHistoryOfAsset(Asset asset) {
         AssetHistory recentAssetHistory = selectFrom(assetHistory)
-            .where(assetHistory.asset.eq(asset)
-                .and(assetHistory.date.eq(dateTime)))
+            .where(assetHistory.asset.eq(asset))
             .fetchFirst();
 
         return Optional.ofNullable(recentAssetHistory);
+    }
+
+    @Override
+    public Optional<AssetHistory> findRecentHistoryOfAssetByAssetId(Integer assetId) {
+        return Optional.ofNullable(selectFrom(assetHistory)
+            .where(assetHistory.asset.id.eq(assetId))
+            .fetchFirst());
     }
 
     @Override
@@ -47,6 +53,16 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
             .where(assetHistory.asset.in(assets)
                 .and(assetHistory.date.eq(dateTime)))
             .fetch();
+
+    }
+
+    @Override
+    public Optional<AssetHistory> findHistoryOfAssetByAssetId(Integer assetId, LocalDateTime dateTime) {
+        return Optional.ofNullable(select(assetHistory)
+            .from(assetHistory)
+            .where(assetHistory.asset.id.eq(assetId)
+                .and(assetHistory.date.eq(dateTime)))
+            .fetchFirst());
 
     }
 }
