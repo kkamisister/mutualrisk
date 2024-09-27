@@ -114,15 +114,15 @@ public class FundServiceImpl implements FundService {
 
 		// 펀드가 가진 자산을 가지고온다
 		List<Asset> assets = assetRepository.findByIds(getAssetIds(fund));
-
-		// Todo: 실제 종목별 업데이트 시간 반영하도록 Refactor 필요
-		LocalDateTime recentDate = getMostRecentDate();
+		List<Integer> assetIds = assets.stream()
+			.map(Asset::getId)
+			.toList();
 
 		// 각 자산의 최근 종가를 검색하여 (자산,종가)의 맵을 만든다
-		Map<Asset, Double> assetPrice = assetHistoryRepository.findRecentHistoryOfAssets(assets, recentDate).stream()
+		Map<Asset, Double> assetPrice = assetRepository.findByIds(assetIds).stream()
 			.collect(Collectors.toMap(
-				AssetHistory::getAsset,  // AssetHistory에서 Asset을 가져옴
-				assetHistory -> assetHistory.getPrice() != null ? assetHistory.getPrice() : 0.0 // 가격이 null인 경우 0.0 반환
+				asset -> asset, // AssetHistory에서 Asset을 가져옴
+				asset -> asset.getRecentPrice() != null ? asset.getRecentPrice() : 0.0 // 가격이 null인 경우 0.0 반환
 			));
 
 
@@ -150,7 +150,6 @@ public class FundServiceImpl implements FundService {
 			}
 		}
 
-
 		// 비율 계산을 해야한다
 		// 비율은, 각 섹터별 [Holding / (전체 valueOfHoldings)] * 100.0 으로 정의한다
 		Long valueOfHoldings = fund.getValueOfHoldings();
@@ -160,7 +159,6 @@ public class FundServiceImpl implements FundService {
 
 		// 이전 분기의 펀드를 가지고온다
 		Optional<Fund> beforeQuarter = fundRepository.getBeforeQuarter(fund);
-		log.warn("beforeQuarter : {}",beforeQuarter.get().getTopHoldAsset());
 
 		// 유저의 관심자산 목록을 가지고온다
 		List<InterestAsset> userInterestAssets = interestAssetRepository.findUserInterestAssets(user);
@@ -298,14 +296,6 @@ public class FundServiceImpl implements FundService {
 		return changeValueOfHolding / totalValueOfHolding * 100;
 	}
 
-	/**
-	 * 가장 최근날짜를 반환.
-	 * Todo: 실제 데이터가 들어있는 요일을 찾아야함
-	 * @return
-	 */
-	private static LocalDateTime getMostRecentDate() {
-		return LocalDate.of(2024,9,24).atStartOfDay();
-	}
 	/**
 	 * 각 섹터의 비중을 구한 정보를 반환하는 메서드
 	 * @param entry

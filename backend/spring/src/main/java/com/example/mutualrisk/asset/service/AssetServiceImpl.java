@@ -11,6 +11,7 @@ import com.example.mutualrisk.asset.repository.AssetRepository;
 import com.example.mutualrisk.asset.repository.InterestAssetRepository;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
+import com.example.mutualrisk.common.email.service.EmailService;
 import com.example.mutualrisk.common.enums.Order;
 import com.example.mutualrisk.common.enums.OrderCondition;
 import com.example.mutualrisk.common.exception.ErrorCode;
@@ -40,6 +41,7 @@ public class AssetServiceImpl implements AssetService{
     private final AssetNewsRepository assetNewsRepository;
     private final ExchangeRatesRepository exchangeRatesRepository;
 
+
     @Override
     @Transactional
     public ResponseWithData<AssetResultDto> searchByKeyword(String keyword) {
@@ -56,9 +58,6 @@ public class AssetServiceImpl implements AssetService{
 
         return new ResponseWithData<>(HttpStatus.OK.value(), "종목 검색 결과 불러오기에 성공하였습니다", assetSearchResultDto);
     }
-
-
-
     /**
      * 유저가 추가한 관심자산을 조회하는 메서드
      * orderCondition(name,expectedReturn,price)과 order(ASC,DESC) 의 정렬기준에 따라 결과를 반환한다
@@ -98,49 +97,6 @@ public class AssetServiceImpl implements AssetService{
             .build();
 
         return new ResponseWithData<>(HttpStatus.OK.value(),"유저 관심종목 조회 성공",result);
-    }
-
-    private List<NewsInfo> getRelatedNewsList(List<Asset> userInterestAssetList) {
-        List<AssetNews> relatedAssetNews = assetNewsRepository.findByAssetIn(userInterestAssetList);
-
-        return relatedAssetNews.stream()
-            .map(AssetNews::getNews)
-            .map(this::getNewsInfo)
-            .toList();
-    }
-
-    private NewsInfo getNewsInfo(News news) {
-        List<AssetInfo> relatedAssetInfoList = getRelatedAsset(news);
-
-        String cleanedTitle = getCleanedTitle(news.getTitle());
-
-        return NewsInfo.builder()
-            .newsId(news.getId())
-            .link(news.getLink())
-            .title(cleanedTitle)
-            .thumbnailUrl(news.getThumbnailUrl())
-            .publishedAt(news.getPublishedAt())
-            .relatedAssets(relatedAssetInfoList)
-            .build();
-    }
-
-    private String getCleanedTitle(String title) {
-        // 1. HTML 태그(<b>, </b>) 제거
-        String withoutTags = title.replaceAll("<.*?>", "");
-
-        // 2. HTML 엔티티(&quot;) 제거
-        String cleanText = withoutTags.replaceAll("&quot;", "'");
-
-        // 결과 출력
-        return cleanText;
-    }
-
-    private List<AssetInfo> getRelatedAsset(News news) {
-        List<AssetNews> assetNewsList = assetNewsRepository.findAllByNews(news);
-        return assetNewsList.stream()
-            .map(AssetNews::getAsset)
-            .map(this::getAssetInfo)
-            .toList();
     }
 
     /**
@@ -235,6 +191,39 @@ public class AssetServiceImpl implements AssetService{
     }
 
     /**
+     * 입력받은 코드에 대한 자산을 반환하는 메서드
+     * @param code
+     * @return
+     */
+    @Override
+    public ResponseWithData<AssetResultDto> getAssetByCode(String code) {
+
+        // 자산을 찾는다
+        Asset findAsset = assetRepository.findByCode(code)
+            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
+
+        // 자산관련 뉴스를 찾는다
+        List<AssetNews> findNews = assetNewsRepository.findByAsset(findAsset);
+
+        List<NewsInfo> newsList = findNews.stream()
+            .map(AssetNews::getNews)
+            .map(this::getNewsInfo)
+            .toList();
+
+        // 자산을 DTO로 변환한다
+        AssetInfo assetInfo = getAssetInfo(findAsset);
+
+        // 결과를 DTO에 담아 반환한다
+        AssetResultDto result = AssetResultDto.builder()
+            .assetNum(1)
+            .assets(List.of(assetInfo))
+            .newsNum(newsList.size())
+            .news(newsList)
+            .build();
+        return new ResponseWithData<>(HttpStatus.OK.value(), "종목 조회에 성공하였습니댜",result);
+    }
+
+    /**
      * 입력받은 자산의 가장 최근 종가를 가지고 온다
      *
      * @param asset
@@ -251,6 +240,49 @@ public class AssetServiceImpl implements AssetService{
         Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
         return AssetInfo.of(asset, recentAssetHistoryList, recentExchangeRate);
+    }
+
+    private List<NewsInfo> getRelatedNewsList(List<Asset> userInterestAssetList) {
+        List<AssetNews> relatedAssetNews = assetNewsRepository.findByAssetIn(userInterestAssetList);
+
+        return relatedAssetNews.stream()
+            .map(AssetNews::getNews)
+            .map(this::getNewsInfo)
+            .toList();
+    }
+
+    private NewsInfo getNewsInfo(News news) {
+        List<AssetInfo> relatedAssetInfoList = getRelatedAsset(news);
+
+        String cleanedTitle = getCleanedTitle(news.getTitle());
+
+        return NewsInfo.builder()
+            .newsId(news.getId())
+            .link(news.getLink())
+            .title(cleanedTitle)
+            .thumbnailUrl(news.getThumbnailUrl())
+            .publishedAt(news.getPublishedAt())
+            .relatedAssets(relatedAssetInfoList)
+            .build();
+    }
+
+    private String getCleanedTitle(String title) {
+        // 1. HTML 태그(<b>, </b>) 제거
+        String withoutTags = title.replaceAll("<.*?>", "");
+
+        // 2. HTML 엔티티(&quot;) 제거
+        String cleanText = withoutTags.replaceAll("&quot;", "'");
+
+        // 결과 출력
+        return cleanText;
+    }
+
+    private List<AssetInfo> getRelatedAsset(News news) {
+        List<AssetNews> assetNewsList = assetNewsRepository.findAllByNews(news);
+        return assetNewsList.stream()
+            .map(AssetNews::getAsset)
+            .map(this::getAssetInfo)
+            .toList();
     }
 
 }
