@@ -49,4 +49,13 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
             .fetch();
 
     }
+
+    @Override
+    public List<Double> getAssetPrices(List<Asset> assetList, LocalDateTime targetDate) {
+        return select(assetHistory.price)
+            .from(assetHistory)
+            .where(assetHistory.asset.in(assetList)
+                .and(assetHistory.date.eq(targetDate)))
+            .fetch();
+    }
 }

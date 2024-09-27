@@ -13,7 +13,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import com.example.mutualrisk.asset.service.AssetHistoryService;
+import com.example.mutualrisk.asset.service.AssetHistoryServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class FundServiceImpl implements FundService {
 
+	private final AssetHistoryService assetHistoryService;
 	private final FundRepository fundRepository;
 	private final UserRepository userRepository;
 	private final AssetRepository assetRepository;
@@ -223,70 +227,75 @@ public class FundServiceImpl implements FundService {
 	public ResponseWithData<List<FundPortfolioRecord>> getHistory(Integer userId, String company,Integer period) {
 
 		// S&P 500 자산을 가지고온다
-		Asset sp500 = assetRepository.findByCode("360750")
+		Asset sp500 = assetRepository.findById(3621)
 			.orElseThrow(() -> new MutualRiskException(ErrorCode.SP_NOT_FOUND));
-
-		log.warn("sp500 :  {}",sp500);
 
 		// 입력받은 펀드의 현재시점으로부터 period 전의 펀드 데이터를 구한다
 		List<Fund> fundsByPeriod = fundRepository.getFundsByPeriod(company, period);
-		log.warn("fundsByPeriod : {}",fundsByPeriod);
 
-		// 펀드의 최초 데이터를 변동기록 그래프의 시작점으로 설정한다
-		Double initFundValue = 0.0;
+		log.warn("size: {}", fundsByPeriod.size());
 
-		// S&P 500의 초기 값
-		AssetHistory sp500InitialHistory = null;
+		List<FundPortfolioRecord> fundPortfolioRecordList = IntStream.range(0, fundsByPeriod.size() - 1)
+			.mapToObj(i -> {
+				var fund = fundsByPeriod.get(i);
+				Double fundReturn = getFundReturn(fund, 3);
+				Double sp500Return = getAssetReturn(sp500, fund.getSubmissionDate().withHour(0), 3);
+				return FundPortfolioRecord.builder()
+					.submissionDate(SubmissionDate.of(fund.getSubmissionDate()))
+					.fundReturns(fundReturn)
+					.sp500Returns(sp500Return)
+					.build();
+			})
+			.toList();
 
-		if (!fundsByPeriod.isEmpty()) {
-			initFundValue = (double)fundsByPeriod.get(0).getValueOfHoldings();
+		return new ResponseWithData<>(HttpStatus.OK.value(), "데이터 정상 반환", fundPortfolioRecordList);
+	}
 
-			// S&P 500의 초기값은 첫 번째 펀드의 제출일을 기준으로 설정
-			LocalDateTime submissionDate = fundsByPeriod.get(0).getSubmissionDate();
-			log.warn("submissionDate : {}",submissionDate);
+	private Double getAssetReturn(Asset asset, LocalDateTime startTime, int dMonth) {
+		Double assetPrice = assetHistoryService.getAssetPrice(asset, startTime);
+		LocalDateTime nextTime = startTime.plusMonths(dMonth);
+		Double nextPrice = assetHistoryService.getAssetPrice(asset, nextTime);
 
-			sp500InitialHistory = assetHistoryRepository.findRecentHistoryOfAsset(sp500, submissionDate)
-				.orElseGet(this::getsp500Price);
+		return (nextPrice - assetPrice) / assetPrice * 100;
+	}
+
+	// 펀드의 수익률 계산
+	private Double getFundReturn(Fund fund, int dMonth) {
+		LocalDateTime targetDate = fund.getSubmissionDate().withHour(0);
+
+		List<Long> valueOfHoldingList = new ArrayList<>();
+		List<FundAsset> topHoldAsset = fund.getTopHoldAsset();
+		List<Integer> assetIdList = new ArrayList<>();
+
+		for (FundAsset fundAsset : topHoldAsset) {
+			if (fundAsset.getCode().equals("-1")) continue;
+			Integer assetId = fundAsset.getAssetId();
+			assetIdList.add(assetId);
+			valueOfHoldingList.add(fundAsset.getValueOfHolding());
 		}
 
-		// 직전 분기의 가치
-		Double previousSp500Value = sp500InitialHistory.getPrice();
+		List<Asset> assetList = assetRepository.findByIds(assetIdList);
 
-		List<FundPortfolioRecord> record = new ArrayList<>();
-		for(Fund fund : fundsByPeriod) {
-			log.warn("여기 도착");
-			// 각 분기별 포트폴리오의 누적 valueOfHolding을 구한다
-			LocalDateTime submissionDate = fund.getSubmissionDate();
+		List<Double> assetPrices = assetHistoryService.getAssetPrices(assetList, targetDate);
+		LocalDateTime nextDate = targetDate.plusMonths(dMonth);
+		List<Double> nextPrices = assetHistoryService.getAssetPrices(assetList, nextDate);
 
-			log.warn("submissionDate2 : {}",submissionDate);
+		// totalValueOfHolding 계산
+		long totalValueOfHolding = valueOfHoldingList.stream()
+			.mapToLong(Long::longValue)
+			.sum();
 
-			// 제출일(연도,분기)을 담을 객체
-			SubmissionDate subDate = SubmissionDate.of(submissionDate);
+		// changeValueOfHolding 계산
+		double changeValueOfHolding = IntStream.range(0, assetPrices.size())
+			.mapToDouble(i -> {
+				double assetPrice = assetPrices.get(i);
+				double nextAssetPrice = nextPrices.get(i);
+				long valueOfHolding = valueOfHoldingList.get(i);
+				return ((nextAssetPrice - assetPrice) / assetPrice) * valueOfHolding;
+			})
+			.sum();
 
-			log.warn("subDate : {}",subDate);
-
-			// submissionDate의 S&P500의 가치 추정
-			AssetHistory sp500History = assetHistoryRepository.findRecentHistoryOfAsset(sp500,
-				submissionDate).orElseGet(this::getsp500Price);
-
-			// S&P500 변동률 계산
-			Double sp500ChangeRate = Math.abs((sp500History.getPrice() - previousSp500Value)/previousSp500Value * 100.0);
-
-			// 펀드의 현재 가치
-			Double curFundValue = (double)fund.getValueOfHoldings();
-
-			// S&P 500의 초기값(=initFundValue)에 변동률을 반영하여 추정된 S&P 500 가치를 계산
-			Double estimatedSp500Value = initFundValue + Math.round(initFundValue * sp500ChangeRate);
-
-			previousSp500Value+=(previousSp500Value * sp500ChangeRate);
-
-			//(펀드가치,sp500가치,분기)
-			FundPortfolioRecord fundPortfolioRecord = FundPortfolioRecord.of(subDate, curFundValue,
-				estimatedSp500Value);
-
-			record.add(fundPortfolioRecord);
-		}
-		return new ResponseWithData<>(HttpStatus.OK.value(),"자산 변동 조회 성공",record);
+		return changeValueOfHolding / totalValueOfHolding * 100;
 	}
 
 	// dateTime에 종가가 존재하지 않으면 실행될 메서드

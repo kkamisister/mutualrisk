@@ -1,8 +1,6 @@
 package com.example.mutualrisk.fund.dto;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.example.mutualrisk.fund.entity.Fund;
@@ -134,15 +132,15 @@ public record FundResponse() {
 	@Schema(name = "펀드 평가액 기록 데이터",description = "포트폴리오의 기간 별 평가액 데이터")
 	public record FundPortfolioRecord(
 		SubmissionDate submissionDate,
-		Double fundValueOfHolding,
-		Double sp500ValueOfHolding
+		Double fundReturns,
+		Double sp500Returns
 	){
 
-		public static FundPortfolioRecord of(SubmissionDate submissionDate,Double fundValueOfHolding,Double sp500ValueOfHolding){
+		public static FundPortfolioRecord of(SubmissionDate submissionDate,Double fundReturns,Double sp500returns){
 			return FundPortfolioRecord.builder()
 				.submissionDate(submissionDate)
-				.fundValueOfHolding(fundValueOfHolding)
-				.sp500ValueOfHolding(sp500ValueOfHolding)
+				.fundReturns(fundReturns)
+				.sp500Returns(sp500returns)
 				.build();
 		}
 	}
