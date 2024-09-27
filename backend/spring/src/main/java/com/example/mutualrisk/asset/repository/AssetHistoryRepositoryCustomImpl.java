@@ -28,7 +28,17 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
     }
 
     @Override
-    public List<AssetHistory> findRecentHistory(List<Asset> assets, LocalDateTime dateTime) {
+    public Optional<AssetHistory> findRecentHistoryOfAsset(Asset asset, LocalDateTime dateTime) {
+        AssetHistory recentAssetHistory = selectFrom(assetHistory)
+            .where(assetHistory.asset.eq(asset)
+                .and(assetHistory.date.eq(dateTime)))
+            .fetchFirst();
+
+        return Optional.ofNullable(recentAssetHistory);
+    }
+
+    @Override
+    public List<AssetHistory> findRecentHistoryOfAssets(List<Asset> assets, LocalDateTime dateTime) {
 
         // LocalDateTime truncatedDateTime = dateTime.truncatedTo(ChronoUnit.SECONDS); // 밀리초 제거
 
@@ -40,15 +50,4 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
 
     }
 
-    @Override
-    public Optional<AssetHistory> findOneAssetHistory(Asset asset, LocalDateTime dateTime) {
-
-        log.warn("dateTime : {}",dateTime);
-
-        return Optional.ofNullable(select(assetHistory)
-            .from(assetHistory)
-            .where(assetHistory.asset.eq(asset)
-                .and(assetHistory.date.eq(dateTime)))
-            .fetchFirst());
-    }
 }

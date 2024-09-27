@@ -115,7 +115,7 @@ public class FundServiceImpl implements FundService {
 		LocalDateTime recentDate = getMostRecentDate();
 
 		// 각 자산의 최근 종가를 검색하여 (자산,종가)의 맵을 만든다
-		Map<Asset, Double> assetPrice = assetHistoryRepository.findRecentHistory(assets, recentDate).stream()
+		Map<Asset, Double> assetPrice = assetHistoryRepository.findRecentHistoryOfAssets(assets, recentDate).stream()
 			.collect(Collectors.toMap(
 				AssetHistory::getAsset,  // AssetHistory에서 Asset을 가져옴
 				assetHistory -> assetHistory.getPrice() != null ? assetHistory.getPrice() : 0.0 // 가격이 null인 경우 0.0 반환
@@ -245,7 +245,7 @@ public class FundServiceImpl implements FundService {
 			LocalDateTime submissionDate = fundsByPeriod.get(0).getSubmissionDate();
 			log.warn("submissionDate : {}",submissionDate);
 
-			sp500InitialHistory = assetHistoryRepository.findOneAssetHistory(sp500, submissionDate)
+			sp500InitialHistory = assetHistoryRepository.findRecentHistoryOfAsset(sp500, submissionDate)
 				.orElseGet(this::getsp500Price);
 		}
 
@@ -266,7 +266,7 @@ public class FundServiceImpl implements FundService {
 			log.warn("subDate : {}",subDate);
 
 			// submissionDate의 S&P500의 가치 추정
-			AssetHistory sp500History = assetHistoryRepository.findOneAssetHistory(sp500,
+			AssetHistory sp500History = assetHistoryRepository.findRecentHistoryOfAsset(sp500,
 				submissionDate).orElseGet(this::getsp500Price);
 
 			// S&P500 변동률 계산

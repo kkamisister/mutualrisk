@@ -1,7 +1,7 @@
 package com.example.mutualrisk.asset.dto;
 
 import com.example.mutualrisk.asset.entity.AssetHistory;
-import com.example.mutualrisk.asset.entity.Region;
+import com.example.mutualrisk.common.enums.Region;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
