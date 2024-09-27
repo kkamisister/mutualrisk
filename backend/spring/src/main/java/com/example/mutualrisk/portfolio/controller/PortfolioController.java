@@ -1,14 +1,15 @@
 package com.example.mutualrisk.portfolio.controller;
 
+import com.example.mutualrisk.common.enums.PerformanceMeasure;
+import com.example.mutualrisk.common.enums.TimeInterval;
+import com.example.mutualrisk.common.exception.ErrorCode;
+import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.portfolio.service.PortfolioService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
@@ -45,5 +46,24 @@ public class PortfolioController {
 
         return null;
 
+    }
+
+    @GetMapping("/backtest")
+    public ResponseEntity<ResponseWithData<PortfolioBacktestingResultDto>> getUserPortfolioReturn(@RequestParam("timeInterval") String timeIntervalString, @RequestParam("measure") String measureString, @RequestParam("portfolioId") String portfolioId, HttpServletRequest request) {
+        Integer userId = (Integer)request.getAttribute("userId");
+
+        // parameter(Enum) 초기화
+        TimeInterval timeInterval;
+        PerformanceMeasure measure;
+        try {
+            timeInterval = TimeInterval.valueOf(timeIntervalString.toUpperCase());
+            measure = PerformanceMeasure.valueOf(measureString.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
+        }
+
+        PortfolioBacktestingResultDto portfolioBacktestingResultDto = portfolioService.getUserPortfolioPerformance(timeInterval, measure, userId);
+
+        return null;
     }
 }

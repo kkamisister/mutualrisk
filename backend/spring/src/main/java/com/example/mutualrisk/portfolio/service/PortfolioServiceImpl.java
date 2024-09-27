@@ -1,17 +1,21 @@
 package com.example.mutualrisk.portfolio.service;
 
 import com.example.mutualrisk.asset.entity.Asset;
-import com.example.mutualrisk.asset.entity.AssetHistory;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
+import com.example.mutualrisk.asset.service.AssetHistoryService;
 import com.example.mutualrisk.common.dto.CommonResponse.*;
+import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.Region;
+import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
+import com.example.mutualrisk.common.util.DateUtil;
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 import com.example.mutualrisk.portfolio.entity.Portfolio;
 import com.example.mutualrisk.portfolio.entity.PortfolioAsset;
+import com.example.mutualrisk.portfolio.entity.PortfolioPurchaseInfo;
 import com.example.mutualrisk.portfolio.repository.PortfolioRepository;
 import com.example.mutualrisk.user.entity.User;
 import com.example.mutualrisk.user.repository.UserRepository;
@@ -22,10 +26,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -33,11 +37,15 @@ import java.util.stream.IntStream;
 @Slf4j
 @RequiredArgsConstructor
 public class PortfolioServiceImpl implements PortfolioService{
+    private final AssetHistoryService assetHistoryService;
+
     private final PortfolioRepository portfolioRepository;
     private final AssetRepository assetRepository;
     private final AssetHistoryRepository assetHistoryRepository;
     private final ExchangeRatesRepository exchangeRatesRepository;
     private final UserRepository userRepository;
+
+    private final DateUtil dateUtil;
 
 
     @Override
@@ -53,7 +61,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 2-2. userId에 해당하는 포트폴리오가 존재할 경우
         List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
         List<Asset> assetList = getAssetsFromPortfolio(portfolioAssetList);
-        // 자산들의 구매 금액을 저장하는 리스트
+        // 자산들의 현재 금액을 저장하는 리스트
         List<Double> purchaseAmounts = calculatePurchaseAmounts(portfolioAssetList, assetList);
         // 포트폴리오에 속해 있는 자산 리스트
 
@@ -150,6 +158,43 @@ public class PortfolioServiceImpl implements PortfolioService{
         return new ResponseWithMessage(HttpStatus.OK.value(),"메일발송에 성공하였습니다");
     }
 
+    @Override
+    public PortfolioBacktestingResultDto getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId) {
+        // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
+        Portfolio portfolio = portfolioRepository.getMyPortfolio(userId);
+
+        // 2. AssetList 구하기
+        List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
+
+        List<Integer> assetIdList = portfolioAssetList.stream()
+            .map(PortfolioAsset::getAssetId)
+            .toList();
+
+        List<Asset> assetList = assetRepository.findByIds(assetIdList);
+
+        // 3. 포트폴리오 백테스팅 결과 저장
+        LocalDateTime recentDate = LocalDateTime.now().minusDays(1).withHour(0);
+
+        for (int dDate = 30; dDate >= 1; dDate--) {
+            LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
+            Long valuation = getValuation(portfolioAssetList, assetList, targetDate);
+        }
+        return null;
+    }
+
+    // 백테스팅 그래프를 위한 메서드
+    /**
+     *
+     * @param portfolioAssetList : 포트폴리오 자산 관련 정보를 담는 list. 자산 구매량 정보를 담고 있다
+     * @param assetList : 자산 Entity를 담고 있는 list
+     * @param targetDate : valuation 를 구하기 원하는 날짜
+     * @return : targetDate 기준 포트폴리오 valuation
+     */
+    private Long getValuation(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList, LocalDateTime targetDate) {
+//        assetHistoryService.getAssetPrices()
+        return null;
+    }
+
     private Map<String, Double> getTodayValueOfHoldings(List<PortfolioAsset> assets) {
         return assets.stream()
             .collect(Collectors.toMap(
@@ -161,7 +206,12 @@ public class PortfolioServiceImpl implements PortfolioService{
 
                     log.warn("recentAssetPrice : {}",todayAsset.getRecentPrice());
 
-                    return asset.getPurchaseQuantity() * todayAsset.getRecentPrice();
+                    double totalPurchaseQuantity = asset.getPurchaseInfos().stream()
+                        .map(PortfolioPurchaseInfo::getPurchaseQuantity)
+                        .mapToDouble(Double::valueOf)
+                        .sum();
+
+                    return totalPurchaseQuantity * todayAsset.getRecentPrice();
                 },
                 Double::sum
             ));
@@ -210,7 +260,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             .mapToObj(i -> {
                 PortfolioAsset portfolioAsset = portfolioAssetList.get(i);
                 Asset asset = assetList.get(i);
-                double price = portfolioAsset.getPurchaseQuantity() * asset.getRecentPrice();
+                double price = portfolioAsset.getTotalPurchaseAmount() * asset.getRecentPrice();
                 if (asset.getRegion().equals(Region.US)) {
                     price *= recentExchangeRate;
                 }
