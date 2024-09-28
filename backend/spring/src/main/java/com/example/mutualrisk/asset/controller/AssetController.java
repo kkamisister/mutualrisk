@@ -12,6 +12,7 @@ import com.example.mutualrisk.common.exception.MutualRiskException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/asset")
 @Slf4j
+@Tag(name = "자산관련 API",description = "자산 검색,조회 유저 관심자산 CRUD를 수행하기위한 Controller입니다")
 public class AssetController {
 
     private final AssetService assetService;

@@ -15,11 +15,14 @@ import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.common.util.DateUtil;
+import com.example.mutualrisk.fund.dto.FundResponse;
+import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 import com.example.mutualrisk.portfolio.entity.Portfolio;
 import com.example.mutualrisk.portfolio.entity.PortfolioAsset;
 import com.example.mutualrisk.portfolio.entity.PortfolioPurchaseInfo;
 import com.example.mutualrisk.portfolio.repository.PortfolioRepository;
+import com.example.mutualrisk.sector.entity.Sector;
 import com.example.mutualrisk.user.entity.User;
 import com.example.mutualrisk.user.repository.UserRepository;
 
@@ -32,9 +35,12 @@ import org.springframework.util.ObjectUtils;
 import java.util.ArrayList;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -245,6 +251,84 @@ public class PortfolioServiceImpl implements PortfolioService{
             .build();
 
         return new ResponseWithData<>(HttpStatus.OK.value(), "데이터 정상 반환", data);
+    }
+
+    /**
+     * 유저의 포트폴리오가 가진 섹터 비중을 반환하는 메서드
+     * @param userId
+     * @return
+     */
+    @Override
+    public ResponseWithData<List<SectorInfo>> getUserPortfolioSector(Integer userId) {
+
+        // 유저를 가져온다
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new MutualRiskException(ErrorCode.USER_NOT_FOUND));
+
+        // 유저가 가진 포트폴리오를 가져온다
+        Portfolio myPortfolio = portfolioRepository.getMyPortfolio(userId);
+
+        if(ObjectUtils.isEmpty(myPortfolio)){
+            // 유저가 가진 포트폴리오가 없는 경우, 에러
+            throw new MutualRiskException(ErrorCode.PORTFOLIO_NOT_FOUND);
+        }
+
+        // 유저가 가진 포트폴리오 자산의 ID를 구한다
+        List<Integer> assetIds = myPortfolio.getAsset().stream()
+            .map(PortfolioAsset::getAssetId).toList();
+
+        // 유저가 가진 포트폴리오 자산을 가지고온다
+        List<Asset> assets = assetRepository.findAllById(assetIds);
+
+        // (섹터,오늘날의 비중) 을 구해야한다
+        // 오늘 비중 : 구매한 자산의 quantity * 최근 가격
+        Map<Sector, Double> sectorToTotalValue = new HashMap<>();
+        Double totalValueOfHolding = 0.0;
+
+        // 환율을 가져오는 메서드
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+        for (Asset asset : assets) {
+            Sector sector = asset.getIndustry().getSector(); // 섹터를 가져옴
+            log.warn("SECTOR : {}", sector.getName());
+            double totalValue = 0.0;
+
+            // 포트폴리오에서 해당 자산을 찾고, 수량 * 최근 가격을 계산
+            for (PortfolioAsset pAsset : myPortfolio.getAsset()) {
+                if (pAsset.getAssetId().equals(asset.getId())) {
+                    if(asset.getRegion().equals("US")){
+                        totalValue += pAsset.getTotalPurchaseQuantity() * asset.getRecentPrice() * recentExchangeRate; // 수량 * 최근 가격 * 환율
+                    }
+                    else{
+                        totalValue += pAsset.getTotalPurchaseQuantity() * asset.getRecentPrice();
+                    }
+                }
+            }
+
+            // 이미 섹터가 존재하면 값을 더하고, 없으면 새로운 값을 추가
+            sectorToTotalValue.put(sector, sectorToTotalValue.getOrDefault(sector, 0.0) + totalValue);
+            // log.warn("totalValue : {}",totalValue);
+
+            totalValueOfHolding+=totalValue;
+        }
+
+        // (섹터,누적합) 구했으니, 다시 순회하면서 누적합을 totalValueOfHolding으로 나눈 맵을 구한다
+        List<SectorInfo> sectorInfos = new ArrayList<>();
+        for(Entry<Sector,Double> entry:sectorToTotalValue.entrySet()){
+            Sector sector = entry.getKey();
+            Double weight = 0.0;
+            try{
+                weight = entry.getValue() * 100.0/totalValueOfHolding;
+            }
+            catch(ArithmeticException e){
+                weight = 0.0;
+            }
+            SectorInfo sectorInfo = SectorInfo.of(sector,weight);
+            sectorInfos.add(sectorInfo);
+        }
+
+        // 결과를 반환한다
+        return new ResponseWithData<>(HttpStatus.OK.value(),"섹터 조회에 성공하였습니다",sectorInfos);
     }
 
     // 백테스팅 그래프를 위한 메서드
