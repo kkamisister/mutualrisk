@@ -51,7 +51,7 @@ public class PortfolioController {
     }
 
     @GetMapping("/backtest")
-    public ResponseEntity<ResponseWithData<PortfolioBacktestingResultDto>> getUserPortfolioReturn(@RequestParam("timeInterval") String timeIntervalString, @RequestParam("measure") String measureString, @RequestParam("portfolioId") String portfolioId, HttpServletRequest request) {
+    public ResponseEntity<ResponseWithData<PortfolioBacktestingResultDto>> getUserPortfolioReturn(@RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
 
         // parameter(Enum) 초기화
@@ -64,8 +64,8 @@ public class PortfolioController {
             throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
         }
 
-        PortfolioBacktestingResultDto portfolioBacktestingResultDto = portfolioService.getUserPortfolioPerformance(timeInterval, measure, userId);
+        ResponseWithData<PortfolioBacktestingResultDto> portfolioBacktestingResultDto = portfolioService.getUserPortfolioPerformance(timeInterval, measure, userId);
 
-        return null;
+        return ResponseEntity.status(portfolioBacktestingResultDto.status()).body(portfolioBacktestingResultDto);
     }
 }

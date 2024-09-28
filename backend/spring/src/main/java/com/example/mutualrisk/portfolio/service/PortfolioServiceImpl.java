@@ -31,6 +31,7 @@ import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -211,7 +212,7 @@ public class PortfolioServiceImpl implements PortfolioService{
     }
 
     @Override
-    public PortfolioBacktestingResultDto getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId) {
+    public ResponseWithData<PortfolioBacktestingResultDto> getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId) {
         // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
         Portfolio portfolio = portfolioRepository.getMyPortfolio(userId);
 
@@ -225,13 +226,26 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<Asset> assetList = assetRepository.findByIds(assetIdList);
 
         // 3. 포트폴리오 백테스팅 결과 저장
-        LocalDateTime recentDate = LocalDateTime.now().minusDays(1).withHour(0);
+        LocalDateTime recentDate = LocalDateTime.now().minusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0);;
 
+        List<Performance> performances = new ArrayList<>();
         for (int dDate = 30; dDate >= 1; dDate--) {
             LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
-            Long valuation = getValuation(portfolioAssetList, assetList, targetDate);
+            Double valuation = getValuation(portfolioAssetList, assetList, targetDate);
+            performances.add(Performance.builder()
+                    .time(targetDate)
+                    .valuation(valuation)
+                .build());
         }
-        return null;
+
+        PortfolioBacktestingResultDto data = PortfolioBacktestingResultDto.builder()
+            .portfolioId(portfolio.getId())
+            .timeInterval(timeInterval)
+            .measure(measure)
+            .performances(performances)
+            .build();
+
+        return new ResponseWithData<>(HttpStatus.OK.value(), "데이터 정상 반환", data);
     }
 
     // 백테스팅 그래프를 위한 메서드
@@ -242,9 +256,14 @@ public class PortfolioServiceImpl implements PortfolioService{
      * @param targetDate : valuation 를 구하기 원하는 날짜
      * @return : targetDate 기준 포트폴리오 valuation
      */
-    private Long getValuation(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList, LocalDateTime targetDate) {
-//        assetHistoryService.getAssetPrices()
-        return null;
+    private Double getValuation(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList, LocalDateTime targetDate) {
+        // 특정 날짜의 자산 가격을 가져옴
+        List<Double> assetPrices = assetHistoryService.getAssetPrices(assetList, targetDate);
+
+        // PortfolioAsset의 totalPurchaseQuantity와 assetPrices를 곱한 값을 합산
+        return IntStream.range(0, assetPrices.size())
+            .mapToDouble(i -> portfolioAssetList.get(i).getTotalPurchaseQuantity() * assetPrices.get(i))
+            .sum();
     }
 
     /**
