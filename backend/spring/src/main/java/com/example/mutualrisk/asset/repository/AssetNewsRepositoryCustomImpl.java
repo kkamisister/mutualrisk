@@ -21,7 +21,7 @@ public class AssetNewsRepositoryCustomImpl extends Querydsl4RepositorySupport im
     public List<AssetNews> findByAssetIn(List<Asset> userInterestAssetList) {
         return selectFrom(assetNews)
             .join(assetNews.news, news).fetchJoin()
-            .join(assetNews.asset, asset).fetchJoin()
+            // .join(assetNews.asset, asset).fetchJoin()
             .where(assetNews.asset.in(userInterestAssetList))
             .orderBy(assetNews.news.publishedAt.desc())
             .limit(10)
