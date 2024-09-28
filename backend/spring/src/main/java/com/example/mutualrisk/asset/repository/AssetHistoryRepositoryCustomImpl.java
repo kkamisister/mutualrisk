@@ -3,6 +3,7 @@ package com.example.mutualrisk.asset.repository;
 import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.asset.entity.AssetHistory;
 import com.example.mutualrisk.common.repository.Querydsl4RepositorySupport;
+import com.querydsl.core.types.Projections;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -75,6 +76,7 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
             .join(assetHistory.asset,asset).fetchJoin()
             .where(assetHistory.asset.in(assetList)
                 .and(assetHistory.date.between(pastDate, targetDate)))
+            // .groupBy(assetHistory.asset)
             .fetch();
     }
 }

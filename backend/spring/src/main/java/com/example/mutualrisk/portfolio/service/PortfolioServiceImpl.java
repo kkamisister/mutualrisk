@@ -109,10 +109,10 @@ public class PortfolioServiceImpl implements PortfolioService{
             // 오늘일자 기준 포트폴리오 자산의 (자산코드,총가격)
             Map<String, Double> recentAssetPrice = getTodayValueOfHoldings(assets);
 
-            for(Entry<String,Double> entry: recentAssetPrice.entrySet()){
-                log.warn("CODE1 : {}", entry.getKey());
-                log.warn("PRICE: {}", entry.getValue());
-            }
+            // for(Entry<String,Double> entry: recentAssetPrice.entrySet()){
+            //     log.warn("CODE1 : {}", entry.getKey());
+            //     log.warn("PRICE: {}", entry.getValue());
+            // }
 
             // 오늘일자 기준 총 자산 가치 계산
             Double totalRecentValueOfHolding = recentAssetPrice.values().stream()
@@ -176,7 +176,6 @@ public class PortfolioServiceImpl implements PortfolioService{
                 }
             }
             // 알람 메일을 보내야할 종목에 대해 메일을 발송한다
-
             if (!lowerBoundExceededAssets.isEmpty() || !upperBoundExceededAssets.isEmpty() ||
                 !increasedWeightAssets.isEmpty() || !decreasedWeightAssets.isEmpty()) {
 
@@ -248,6 +247,12 @@ public class PortfolioServiceImpl implements PortfolioService{
         return null;
     }
 
+    /**
+     * 오늘자 자산의 가격을 가지고온다
+     * (자산코드, 자산가격) 을 반환한다
+     * @param assets
+     * @return
+     */
     private Map<String, Double> getTodayValueOfHoldings(List<PortfolioAsset> assets) {
         return assets.stream()
             .collect(Collectors.toMap(
@@ -257,7 +262,7 @@ public class PortfolioServiceImpl implements PortfolioService{
                     Asset todayAsset = assetRepository.findById(
                         asset.getAssetId()).orElseThrow(()  -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
 
-                    log.warn("recentAssetPrice : {}",todayAsset.getRecentPrice());
+                    // log.warn("recentAssetPrice : {}",todayAsset.getRecentPrice());
 
                     double totalPurchaseQuantity = asset.getPurchaseInfos().stream()
                         .map(PortfolioPurchaseInfo::getPurchaseQuantity)
@@ -270,6 +275,13 @@ public class PortfolioServiceImpl implements PortfolioService{
             ));
     }
 
+    /**
+     * 자산의 비중을 반환하는 메서드
+     * (자산코드, 비중) 을 반환한다
+     * @param assetPrice
+     * @param totalValueOfHolding
+     * @return
+     */
     private static Map<String, Double> getWeights(Map<String, Double> assetPrice, Double totalValueOfHolding) {
         return assetPrice.entrySet().stream()
             .collect(Collectors.toMap(

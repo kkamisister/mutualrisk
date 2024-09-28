@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -15,6 +16,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.example.mutualrisk.asset.dto.AssetResponse;
+import com.example.mutualrisk.asset.dto.AssetResponse.AssetInfo;
 import com.example.mutualrisk.asset.service.AssetHistoryService;
 import com.example.mutualrisk.asset.service.AssetHistoryServiceImpl;
 import org.springframework.http.HttpStatus;
@@ -56,6 +59,7 @@ public class FundServiceImpl implements FundService {
 	private final AssetRepository assetRepository;
 	private final AssetHistoryRepository assetHistoryRepository;
 	private final InterestAssetRepository interestAssetRepository;
+	private final ExchangeRatesRepository exchangeRatesRepository;
 
 	/**
 	 * 전체 펀드 목록을 조회하는 메서드
@@ -95,9 +99,6 @@ public class FundServiceImpl implements FundService {
 	 * - 종목이름,종목코드,가치, 이전분기 대비 순위상승,유저의 관심목록에 있는지 여부
 	 * 섹터 편중
 	 *
-	 * 자산 평가액 변동 기록
-	 * - 포트폴리오에 속한 자산의 일종의 백테스팅
-	 *
 	 *
 	 * @return
 	 */
@@ -112,19 +113,10 @@ public class FundServiceImpl implements FundService {
 		Fund fund = fundRepository.getFund(fundId)
 			.orElseThrow(() -> new MutualRiskException(ErrorCode.FUND_NOT_FOUND));
 
+		// 펀드에 속한 자산의 ID리스트를 구한다
+		List<Integer> assetIds = getAssetIds(fund);
 		// 펀드가 가진 자산을 가지고온다
-		List<Asset> assets = assetRepository.findByIds(getAssetIds(fund));
-		List<Integer> assetIds = assets.stream()
-			.map(Asset::getId)
-			.toList();
-
-		// 각 자산의 최근 종가를 검색하여 (자산,종가)의 맵을 만든다
-		Map<Asset, Double> assetPrice = assetRepository.findByIds(assetIds).stream()
-			.collect(Collectors.toMap(
-				asset -> asset, // AssetHistory에서 Asset을 가져옴
-				asset -> asset.getRecentPrice() != null ? asset.getRecentPrice() : 0.0 // 가격이 null인 경우 0.0 반환
-			));
-
+		List<Asset> assets = assetRepository.findByIds(assetIds);
 
 		// 섹터 편중 계산을 해야한다
 		// 실제 자산을 순회하면서, 현재 펀드자산과 ID가 일치하는 자산에서 섹터 정보를 가지고와야한다
@@ -163,22 +155,22 @@ public class FundServiceImpl implements FundService {
 		// 유저의 관심자산 목록을 가지고온다
 		List<InterestAsset> userInterestAssets = interestAssetRepository.findUserInterestAssets(user);
 
+		// 환율을 가져오는 메서드
+		Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+		// 첫번째 자산의 최근 종가일 2개를 가지고온다
+		List<LocalDateTime> twoValidDate = assetHistoryService.getValidDate(assets.get(0),
+			LocalDateTime.now(), 2);
+
 		// 펀드의 자산정보를 가지고 온다
 		List<FundAssetInfo> fundAssetInfos = assets.parallelStream()
 			.map(asset -> {
 				//1. 해당 펀드자산의 일별 종가를 가지고온다
-				List<AssetHistory> recentAssetHistoryList = assetHistoryRepository.findRecentTwoAssetHistory(asset);
+				List<AssetHistory> recentAssetHistoryList = assetHistoryRepository.findRecentHistoriesBetweenDates(asset
+				,twoValidDate.get(1),twoValidDate.get(0));
 
-				//Todo: 종가 기록이 1개이거나 없는경우 처리
-
-				//2. 변화량을 계산한다
-				AssetHistory mostRecentAssetHistory = recentAssetHistoryList.get(0);
-				AssetHistory secondRecentAssetHistory = recentAssetHistoryList.get(1);
-
-				Double price1 = mostRecentAssetHistory.getPrice();
-				Double price2 = secondRecentAssetHistory.getPrice();
-
-				Double dailyPriceChangeRate = (price1 - price2) / price2 * 100;
+				//2. 해당 자산의 정보를 가지고온다
+				AssetInfo assetInfo = AssetInfo.of(asset, recentAssetHistoryList, recentExchangeRate);
 
 				// 3. rank 구하기
 				// 현재 fund와 전 분기 fund의 topHoldAsset을 비교하여, 자산의 순위변화를 찾는다
@@ -198,9 +190,10 @@ public class FundServiceImpl implements FundService {
 					.findFirst()
 					.orElse(FundAsset.builder().build()); // 없으면 빈 객체 반환
 
-				return FundAssetInfo.of(fundAsset, dailyPriceChangeRate,mostRecentAssetHistory.getPrice(),rank, interest);
+				return FundAssetInfo.of(fundAsset,assetInfo,rank, interest);
 			})
-			.limit(30) // 최대 30개만
+			.limit(10) // 최대 10개만
+			.sorted(Comparator.comparing(FundAssetInfo::valueOfHolding).reversed()) // valueOfHolding의 내림차순
 			.collect(Collectors.toList());
 
 		// 결과를 반환한다
@@ -209,9 +202,7 @@ public class FundServiceImpl implements FundService {
 			.sectors(sectorWeights)
 			.build();
 
-
 		return new ResponseWithData<>(HttpStatus.OK.value(),"펀드 상세조회에 성공하였습니다",fundResultDto);
-		// return new ResponseWithData<>(HttpStatus.OK.value(),"펀드 상세조회에 성공하였습니다",null);
 	}
 
 	/**
@@ -231,8 +222,6 @@ public class FundServiceImpl implements FundService {
 		// 입력받은 펀드의 현재시점으로부터 period 전의 펀드 데이터를 구한다
 		List<Fund> fundsByPeriod = fundRepository.getFundsByPeriod(company, period);
 
-		log.warn("size: {}", fundsByPeriod.size());
-
 		List<FundPortfolioRecord> fundPortfolioRecordList = IntStream.range(0, fundsByPeriod.size() - 1)
 			.mapToObj(i -> {
 				var fund = fundsByPeriod.get(i);
@@ -248,6 +237,7 @@ public class FundServiceImpl implements FundService {
 
 		return new ResponseWithData<>(HttpStatus.OK.value(), "데이터 정상 반환", fundPortfolioRecordList);
 	}
+
 
 	private Double getAssetReturn(Asset asset, LocalDateTime startTime, int dMonth) {
 		Double assetPrice = assetHistoryService.getAssetPrice(asset, startTime);
@@ -327,6 +317,16 @@ public class FundServiceImpl implements FundService {
 			.map(FundAsset::getAssetId).toList();
 	}
 
+	/**
+	 * 두 펀드의 순위 변화를 반환하는 메서드
+	 *
+	 * 이전에 없던 자산인 경우, 0을 반환
+	 * 있던 자산의 경우 인덱스의 차이를 반환
+	 * @param curFund
+	 * @param beforeFund
+	 * @param assetId
+	 * @return
+	 */
 	private static Integer calculateRank(Fund curFund,Fund beforeFund,Integer assetId) {
 
 		// beforeFund에서 asset의 인덱스를 찾음
@@ -337,8 +337,6 @@ public class FundServiceImpl implements FundService {
 		List<FundAsset> curAssets = curFund.getAsset();
 		int curIndex = findAssetIndex(curAssets, assetId);
 
-		System.out.println("(curIndex,beforeIndex) : "+curIndex+" "+beforeIndex+" "+assetId);
-
 		// 1. beforeFund가 없는경우 -> 순위변화 : 0
 		if(beforeIndex == -1)return 0;
 		// 2. beforeFund가 있는경우 -> 순위변화를 반환
@@ -347,7 +345,12 @@ public class FundServiceImpl implements FundService {
 		}
 	}
 
-
+	/**
+	 * 배열을 돌면서 매칭되는 자산ID를 찾는 메서드
+	 * @param assets
+	 * @param assetId
+	 * @return
+	 */
 	private static int findAssetIndex(List<FundAsset> assets,Integer assetId) {
 		for (int i = 1; i < assets.size(); i++) {
 			if (assets.get(i).getAssetId().equals(assetId)) {

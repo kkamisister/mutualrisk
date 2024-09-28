@@ -93,8 +93,6 @@ public class AssetServiceImpl implements AssetService{
             .map(InterestAsset::getAsset)
             .toList();
 
-        log.warn("관심자산 목록 가져오기 완료");
-
         // 관심자산이 없으면 바로 응답을 반환한다
         if(userInterestAssetList.isEmpty()){
             AssetResultDto result = AssetResultDto.builder()
@@ -111,8 +109,6 @@ public class AssetServiceImpl implements AssetService{
         List<LocalDateTime> twoValidDate = assetHistoryService.getValidDate(userInterestAssetList.get(0),
             LocalDateTime.now(), 2);
 
-        log.warn("twoValidDate : {}", twoValidDate);
-
         // 기존에는 오늘과 가장 근접한 영업일을 찾기위해 각 종목별로 (5일전~오늘) 사이에서
         // findRecentTwoAssetHistory를 통해 종목의 기록을 가져왔다면,
         // 지금은 일괄적으로 첫번째 자산의 영업일에 나머지 자산의 기록 또한 존재할 것이라 가정하고
@@ -124,8 +120,6 @@ public class AssetServiceImpl implements AssetService{
         // 관심자산의 최근 종가를 가지고 온다
         List<AssetHistory> recentHistory = assetHistoryRepository.findRecentHistoryOfAssetsBetweenDates(
             userInterestAssetList, twoValidDate.get(1), twoValidDate.get(0));
-
-        log.warn("recentHistory : {}", recentHistory);
 
         // 1. AssetHistory를 Asset별로 그룹핑한다
         Map<Asset, List<AssetHistory>> assetHistoryMap = recentHistory.stream()
@@ -139,19 +133,11 @@ public class AssetServiceImpl implements AssetService{
             })
             .toList();
 
-
-        log.warn("뉴스가져오기");
-
         // 관심자산과 연관된 뉴스를 가지고온다
         List<NewsInfo> relatedNewsList = getRelatedNewsList(userInterestAssetList,recentExchangeRate);
 
-        // 결과를 DTO에 담아 n반환한다
-        AssetResultDto result = AssetResultDto.builder()
-            .assetNum(userInterestAssetInfoList.size())
-            .assets(userInterestAssetInfoList)
-            .newsNum(relatedNewsList.size())
-            .news(relatedNewsList)
-            .build();
+        // 결과를 DTO에 담아 반환한다
+        AssetResultDto result = AssetResultDto.of(userInterestAssetInfoList,relatedNewsList);
 
         return new ResponseWithData<>(HttpStatus.OK.value(),"유저 관심종목 조회 성공",result);
     }
@@ -218,28 +204,24 @@ public class AssetServiceImpl implements AssetService{
         return new ResponseWithMessage(HttpStatus.OK.value(),"관심종목에서 삭제되었습니다.");
     }
 
-
     /**
      * 입력받은 코드에 대한 자산을 반환하는 메서드
      * @param assetId
      * @return
      */
     @Override
+    @Transactional
     public ResponseWithData<AssetResultDto> getAssetByAssetId(Integer assetId) {
 
         // 자산을 찾는다
         Asset findAsset = assetRepository.findById(assetId)
             .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
 
-        log.warn("findAsset :{}",findAsset);
-
         // 자산관련 뉴스를 찾는다
         List<AssetNews> findNews = assetNewsRepository.findByAsset(findAsset);
 
         // 환율을 가져오는 메서드
         Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
-
-        log.warn("환율 : {}",recentExchangeRate);
 
         List<NewsInfo> newsList = getRelatedNewsList(List.of(findAsset),recentExchangeRate);
 
@@ -257,7 +239,7 @@ public class AssetServiceImpl implements AssetService{
     }
 
     /**
-     * 입력받은 자산의 가장 최근 종가를 가지고 온다
+     * 입력받은 자산의 가장 최근 종가를 가지고오는 메서드
      *
      * @param asset
      * @return
@@ -276,7 +258,6 @@ public class AssetServiceImpl implements AssetService{
 
         return AssetInfo.of(asset, recentAssetHistoryList, recentExchangeRate);
     }
-
     /**
      * 관심자산과 연관된 뉴스를 가져오는 메서드
      *
@@ -298,8 +279,6 @@ public class AssetServiceImpl implements AssetService{
         // 관심 자산에 대한 관련 뉴스 가져오기
         List<AssetNews> relatedAssetNews = assetNewsRepository.findByAssetIn(userInterestAssetList);
 
-        log.warn("관심자산 뉴스 : {}",relatedAssetNews);
-
         // 뉴스별로 관련된 AssetInfo와 함께 NewsInfo를 생성
         return relatedAssetNews.stream()
             .map(assetNews -> {
@@ -310,14 +289,7 @@ public class AssetServiceImpl implements AssetService{
 
                 // 뉴스 정보를 정제하고 NewsInfo 생성
                 String cleanedTitle = getCleanedTitle(news.getTitle());
-                return NewsInfo.builder()
-                    .newsId(news.getId())
-                    .link(news.getLink())
-                    .title(cleanedTitle)
-                    .thumbnailUrl(news.getThumbnailUrl())
-                    .publishedAt(news.getPublishedAt())
-                    .relatedAssets(relatedAssetInfoList)
-                    .build();
+                return NewsInfo.of(news,cleanedTitle,relatedAssetInfoList);
             })
             .toList();
     }
@@ -352,19 +324,15 @@ public class AssetServiceImpl implements AssetService{
     private static AssetInfo getAssetInfo(Map<Asset, List<AssetHistory>> assetHistoryMap, Double recentExchangeRate,
         Asset asset) {
         // 해당 자산에 대응하는 AssetHistory를 가져옴
-        log.warn("쿼리나가는 부분");
         List<AssetHistory> historiesForAsset = assetHistoryMap.get(asset);
-        log.warn("AssetHistory : {}",historiesForAsset);
 
         // AssetHistory가 없거나 부족하면 기본값 설정
         if (historiesForAsset == null || historiesForAsset.size() < 2) {
             historiesForAsset = List.of(AssetHistory.of(asset), AssetHistory.of(asset));
         }
-
         // AssetInfo 생성
         return AssetInfo.of(asset, historiesForAsset, recentExchangeRate);
     }
-
     /**
      * 제목에서 불필요한 html 태그 제거
      * @param title
