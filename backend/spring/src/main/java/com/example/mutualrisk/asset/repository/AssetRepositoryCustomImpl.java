@@ -34,7 +34,7 @@ public class AssetRepositoryCustomImpl extends Querydsl4RepositorySupport implem
     }
 
     @Override
-    public List<Asset> findByIds(List<Integer> ids) {
+    public List<Asset> findAssetListWithIndustryAndSectorByIds(List<Integer> ids) {
         return selectFrom(asset)
             .innerJoin(asset.industry, industry).fetchJoin()
             .innerJoin(industry.sector, sector).fetchJoin()

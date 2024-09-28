@@ -40,25 +40,9 @@ public class AssetHistoryServiceImpl implements AssetHistoryService {
     }
 
     @Override
-    public List<Double> getAssetPrices(List<Asset> assetList, LocalDateTime targetDate) {
-        LocalDateTime validDate = getValidDate(assetList.get(0), targetDate);
-        return assetHistoryRepository.getAssetPrices(assetList, validDate);
-    }
-
-    // targetDate와 가장 가까운 영업일 날짜를 반환하는 함수
-    private LocalDateTime getValidDate(Asset asset, LocalDateTime targetDate) {
-        int[] dDays = {0, 1, -1, 2, -2, 3, -3};
-
-        for (int day : dDays) {
-            LocalDateTime dateTime = targetDate.plusDays(day);
-            Optional<AssetHistory> recentHistoryOfAsset = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime);
-            if (recentHistoryOfAsset.isPresent()) {
-                return dateTime;
-            }
-        }
-
-        // +- 3일간의 데이터가 모두 없을 경우, 에러 반환
-        throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
+    public List<AssetHistory> getAssetHistoryList(List<Asset> assetList, LocalDateTime targetDate) {
+        LocalDateTime validDate = getValidDate(assetList.get(0), targetDate, 1).get(0);
+        return assetHistoryRepository.findHistoryOfAssets(assetList, validDate);
     }
 
     @Override

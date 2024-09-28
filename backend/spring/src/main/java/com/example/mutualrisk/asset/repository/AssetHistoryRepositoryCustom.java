@@ -11,9 +11,8 @@ public interface AssetHistoryRepositoryCustom {
     List<AssetHistory> findRecentTwoAssetHistory(Asset asset);
 
     Optional<AssetHistory> findRecentHistoryOfAsset(Asset asset, LocalDateTime dateTime);
-    List<AssetHistory> findRecentHistoryOfAssets(List<Asset> assets, LocalDateTime dateTime);
+    List<AssetHistory> findHistoryOfAssets(List<Asset> assets, LocalDateTime dateTime);
 
-    List<Double> getAssetPrices(List<Asset> assetList, LocalDateTime targetDate);
 
     List<AssetHistory> findRecentHistoriesBetweenDates(Asset asset, LocalDateTime pastDate, LocalDateTime targetDate);
 
