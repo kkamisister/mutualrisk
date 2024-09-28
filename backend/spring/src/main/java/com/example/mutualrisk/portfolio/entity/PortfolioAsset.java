@@ -13,6 +13,6 @@ public class PortfolioAsset {
     private String code;
     private String name;
     private Integer totalPurchaseQuantity;
-    private Double totalPurchaseAmount;
+    private Double totalPurchasePrice;
     private List<PortfolioPurchaseInfo> purchaseInfos;
 }
