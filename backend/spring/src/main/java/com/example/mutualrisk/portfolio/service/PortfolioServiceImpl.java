@@ -15,7 +15,6 @@ import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.common.util.DateUtil;
-import com.example.mutualrisk.fund.dto.FundResponse;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 import com.example.mutualrisk.portfolio.entity.Portfolio;
@@ -35,12 +34,9 @@ import org.springframework.util.ObjectUtils;
 import java.util.ArrayList;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -70,27 +66,27 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 2-1. userId에 해당하는 포트폴리오가 없을 경우
         if (portfolio == null) {
-            return buildNoPortfolioResponse();
+            return buildPortfolioResponse();
         }
         // 2-2. userId에 해당하는 포트폴리오가 존재할 경우
         List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
         List<Asset> assetList = getAssetsFromPortfolio(portfolioAssetList);
         // 자산들의 구매 금액을 저장하는 리스트
-        List<Double> purchaseAmounts = calculatePurchaseAmounts(portfolioAssetList, assetList);
+        List<Double> assetValuationList = calculatePurchaseAmounts(portfolioAssetList, assetList);
         // 포트폴리오에 속해 있는 자산 리스트
 
-        double totalAmount = purchaseAmounts.stream()
+        double totalValuation = assetValuationList.stream()
             .mapToDouble(Double::doubleValue)
             .sum();
 
         // 3. 각 값의 비율을 계산해서 weights 리스트에 추가
-        List<Double> weights = calculateWeights(purchaseAmounts, totalAmount);
+        List<Double> weights = calculateWeights(assetValuationList, totalValuation);
 
-        List<PortfolioAssetInfo> portfolioAssetInfoList = buildPortfolioAssetInfoList(assetList, weights, portfolioAssetList);
+        List<PortfolioAssetInfo> portfolioAssetInfoList = buildPortfolioAssetInfoList(assetList, weights, portfolioAssetList, assetValuationList);
 
-        PortfolioPerformance portfolioPerformance = getPortfolioPerformance(assetList, weights, totalAmount);
+        PortfolioPerformance portfolioPerformance = getPortfolioPerformance(assetList, weights, totalValuation);
 
-        return buildNoPortfolioResponse(portfolio, portfolioAssetInfoList, portfolioPerformance);
+        return buildPortfolioResponse(portfolio, portfolioAssetInfoList, portfolioPerformance);
     }
 
     /**
@@ -231,7 +227,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<Asset> assetList = assetRepository.findAllById(assetIdList);
 
         // 3. 포트폴리오 백테스팅 결과 저장
-        LocalDateTime recentDate = LocalDateTime.now().minusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0);;
+        LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
 
         List<Performance> performances = new ArrayList<>();
         for (int dDate = 30; dDate >= 1; dDate--) {
@@ -395,7 +391,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             ));
     }
 
-    private ResponseWithData<PortfolioResultDto> buildNoPortfolioResponse(Portfolio portfolio, List<PortfolioAssetInfo> portfolioAssetInfoList, PortfolioPerformance portfolioPerformance) {
+    private ResponseWithData<PortfolioResultDto> buildPortfolioResponse(Portfolio portfolio, List<PortfolioAssetInfo> portfolioAssetInfoList, PortfolioPerformance portfolioPerformance) {
         PortfolioInfo portfolioInfo = PortfolioInfo.builder()
             .portfolioId(portfolio.getId())
             .performance(portfolioPerformance)
@@ -410,10 +406,10 @@ public class PortfolioServiceImpl implements PortfolioService{
         return new ResponseWithData<>(HttpStatus.OK.value(), "정상적인 응답을 반환하였습니다", portfolioResultDto);
     }
 
-    private static List<PortfolioAssetInfo> buildPortfolioAssetInfoList(List<Asset> assetList, List<Double> weights, List<PortfolioAsset> portfolioAssetList) {
+    private static List<PortfolioAssetInfo> buildPortfolioAssetInfoList(List<Asset> assetList, List<Double> weights, List<PortfolioAsset> portfolioAssetList, List<Double> assetValuationList) {
 
         return IntStream.range(0, assetList.size())
-            .mapToObj(i -> PortfolioAssetInfo.of(portfolioAssetList.get(i), assetList.get(i), weights.get(i)))
+            .mapToObj(i -> PortfolioAssetInfo.of(portfolioAssetList.get(i), assetList.get(i), weights.get(i), assetValuationList.get(i)))
             .toList();
     }
 
@@ -430,7 +426,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             .mapToObj(i -> {
                 PortfolioAsset portfolioAsset = portfolioAssetList.get(i);
                 Asset asset = assetList.get(i);
-                double price = portfolioAsset.getTotalPurchaseAmount() * asset.getRecentPrice();
+                double price = portfolioAsset.getTotalPurchaseQuantity() * asset.getRecentPrice();
                 if (asset.getRegion().equals(Region.US)) {
                     price *= recentExchangeRate;
                 }
@@ -447,7 +443,7 @@ public class PortfolioServiceImpl implements PortfolioService{
     }
 
     // 포트폴리오가 없을 경우 응답을 생성하는 메서드
-    private ResponseWithData<PortfolioResultDto> buildNoPortfolioResponse() {
+    private ResponseWithData<PortfolioResultDto> buildPortfolioResponse() {
         PortfolioResultDto portfolioResultDto = PortfolioResultDto.builder()
             .hasPortfolio(Boolean.FALSE)
             .build();

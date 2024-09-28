@@ -49,15 +49,19 @@ public record PortfolioResponse() {
         String code,
         String name,
         Region region,
-        Double weight
+        Double weight,
+        Integer purchaseNum,
+        Double valuation
     ) {
-        public static PortfolioAssetInfo of(PortfolioAsset portfolioAsset, Asset asset, Double weight) {
+        public static PortfolioAssetInfo of(PortfolioAsset portfolioAsset, Asset asset, Double weight, Double valuation) {
             return PortfolioAssetInfo.builder()
                 .assetId(asset.getId())
                 .code(asset.getCode())
                 .name(asset.getName())
                 .region(asset.getRegion())
                 .weight(weight)
+                .purchaseNum(portfolioAsset.getTotalPurchaseQuantity())
+                .valuation(valuation)
                 .build();
         }
     }
