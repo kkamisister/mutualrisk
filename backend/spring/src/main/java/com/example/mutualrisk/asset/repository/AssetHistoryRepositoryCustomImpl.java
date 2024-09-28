@@ -40,7 +40,7 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
     }
 
     @Override
-    public List<AssetHistory> findRecentHistoryOfAssets(List<Asset> assets, LocalDateTime dateTime) {
+    public List<AssetHistory> findHistoryOfAssets(List<Asset> assets, LocalDateTime dateTime) {
 
         // LocalDateTime truncatedDateTime = dateTime.truncatedTo(ChronoUnit.SECONDS); // 밀리초 제거
 
@@ -50,15 +50,6 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
                 .and(assetHistory.date.eq(dateTime)))
             .fetch();
 
-    }
-
-    @Override
-    public List<Double> getAssetPrices(List<Asset> assetList, LocalDateTime targetDate) {
-        return select(assetHistory.price)
-            .from(assetHistory)
-            .where(assetHistory.asset.in(assetList)
-                .and(assetHistory.date.eq(targetDate)))
-            .fetch();
     }
 
     @Override

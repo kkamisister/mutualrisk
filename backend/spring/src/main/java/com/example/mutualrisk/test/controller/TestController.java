@@ -70,7 +70,7 @@ public class TestController {
 
     @GetMapping("/asset")
     public ResponseWithData<?> assetTest(){
-        List<Asset> assets = assetRepository.findByIds(Arrays.asList(1, 2, 3));
+        List<Asset> assets = assetRepository.findAssetListWithIndustryAndSectorByIds(Arrays.asList(1, 2, 3));
 
         List<AssetInfo> assetInfos = assets.stream()
             .map(this::getAssetInfo)
