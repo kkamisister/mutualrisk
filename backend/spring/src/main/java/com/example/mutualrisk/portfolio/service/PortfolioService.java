@@ -10,5 +10,5 @@ public interface PortfolioService {
     ResponseWithData<PortfolioResultDto> getPortfolioInfo(Integer userId);
     ResponseWithMessage sendRefreshMail();
 
-    PortfolioBacktestingResultDto getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId);
+    ResponseWithData<PortfolioBacktestingResultDto> getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId);
 }

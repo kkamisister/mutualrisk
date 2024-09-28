@@ -68,18 +68,16 @@ public record PortfolioResponse() {
         TimeInterval timeInterval,
         PerformanceMeasure measure,
         String portfolioId,
-        List<Long> valuations
+        List<Performance> performances
     ) {
 
     }
 
     @Builder
-    @Schema(name = "날짜별 포트폴리오의 성과를 나타내는 데이터")
+    @Schema(name = "날짜별 포트폴리오의 자산 평가액을 나타내는 데이터")
     public record Performance(
         LocalDateTime time,
-        Double returns,
-        Double valuation,
-        Double investment
+        Double valuation
     ) {
 
     }
