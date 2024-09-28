@@ -8,6 +8,6 @@ import java.util.List;
 public interface AssetRepositoryCustom {
     List<Asset> searchByKeyword(@Param("keyword") String keyword);
 
-    List<Asset> findByIds(List<Integer> ids);
+    List<Asset> findAssetListWithIndustryAndSectorByIds(List<Integer> ids);
 
 }
