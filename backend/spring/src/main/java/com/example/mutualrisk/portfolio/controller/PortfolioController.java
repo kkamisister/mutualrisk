@@ -4,6 +4,8 @@ import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
+import com.example.mutualrisk.common.dto.CommonResponse;
+import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
 import com.example.mutualrisk.portfolio.service.PortfolioService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +42,7 @@ public class PortfolioController {
      * @return
      */
     @PostMapping("/checking")
-    public ResponseEntity<?> checkPortfolios(){
+    public ResponseEntity<ResponseWithMessage> checkPortfolios(){
 
         portfolioService.sendRefreshMail();
 

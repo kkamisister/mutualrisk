@@ -1,11 +1,14 @@
 package com.example.mutualrisk.portfolio.service;
 
 import com.example.mutualrisk.asset.entity.Asset;
+import com.example.mutualrisk.asset.entity.AssetHistory;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
 import com.example.mutualrisk.asset.service.AssetHistoryService;
 import com.example.mutualrisk.common.dto.CommonResponse.*;
 import com.example.mutualrisk.common.enums.PerformanceMeasure;
+import com.example.mutualrisk.common.email.dto.EmailMessage;
+import com.example.mutualrisk.common.email.service.EmailService;
 import com.example.mutualrisk.common.enums.Region;
 import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.common.exception.ErrorCode;
@@ -26,11 +29,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.util.ArrayList;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -48,6 +53,9 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     private final DateUtil dateUtil;
 
+    // 메일발송을 위한 서비스
+    private final EmailService emailService;
+
 
     @Override
     public ResponseWithData<PortfolioResultDto> getPortfolioInfo(Integer userId) {
@@ -62,7 +70,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 2-2. userId에 해당하는 포트폴리오가 존재할 경우
         List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
         List<Asset> assetList = getAssetsFromPortfolio(portfolioAssetList);
-        // 자산들의 현재 금액을 저장하는 리스트
+        // 자산들의 구매 금액을 저장하는 리스트
         List<Double> purchaseAmounts = calculatePurchaseAmounts(portfolioAssetList, assetList);
         // 포트폴리오에 속해 있는 자산 리스트
 
@@ -102,27 +110,27 @@ public class PortfolioServiceImpl implements PortfolioService{
             // 오늘일자 기준 포트폴리오 자산의 (자산코드,총가격)
             Map<String, Double> recentAssetPrice = getTodayValueOfHoldings(assets);
 
-            for(Entry<String,Double> entry: recentAssetPrice.entrySet()){
-                log.warn("CODE1 : {}", entry.getKey());
-                log.warn("PRICE: {}", entry.getValue());
-            }
+            // for(Entry<String,Double> entry: recentAssetPrice.entrySet()){
+            //     log.warn("CODE1 : {}", entry.getKey());
+            //     log.warn("PRICE: {}", entry.getValue());
+            // }
 
             // 오늘일자 기준 총 자산 가치 계산
             Double totalRecentValueOfHolding = recentAssetPrice.values().stream()
                 .mapToDouble(Double::doubleValue)
                 .sum();
 
-            log.warn("TOTAL RECENT VALUE : {}", totalRecentValueOfHolding);
+            // log.warn("TOTAL RECENT VALUE : {}", totalRecentValueOfHolding);
 
             // 오늘일자 기준 (종목, 비중) 계산
             Map<String, Double> recentAssetWeights = getWeights(recentAssetPrice, totalRecentValueOfHolding);
 
-            for(Entry<String,Double> recentAssetWeightEntry: recentAssetWeights.entrySet()){
-
-                log.warn("CODE2 : {}", recentAssetWeightEntry.getKey());
-                log.warn("WEIGHT : {}", recentAssetWeightEntry.getValue());
-
-            }
+            // for(Entry<String,Double> recentAssetWeightEntry: recentAssetWeights.entrySet()){
+            //
+            //     log.warn("CODE2 : {}", recentAssetWeightEntry.getKey());
+            //     log.warn("WEIGHT : {}", recentAssetWeightEntry.getValue());
+            //
+            // }
             /**
              * 구매 당시 비중과 오늘날의 비중을 비교하여
              * 1. 포트폴리오의 lower bound 를 넘은 종목, upper bound를 넘은 종목을 찾는다
@@ -135,6 +143,12 @@ public class PortfolioServiceImpl implements PortfolioService{
                 .toList();
 
             // lowerBound, upperBound, weights와 최근 비중을 비교
+
+            List<String> lowerBoundExceededAssets = new ArrayList<>();
+            List<String> upperBoundExceededAssets = new ArrayList<>();
+            List<String> increasedWeightAssets = new ArrayList<>();
+            List<String> decreasedWeightAssets = new ArrayList<>();
+
             for (int i = 0; i < assetCodes.size(); i++) {
                 String code = assetCodes.get(i);
                 Double recentWeight = recentAssetWeights.get(code); // 최근 비중
@@ -144,17 +158,55 @@ public class PortfolioServiceImpl implements PortfolioService{
 
                 // 1. lower bound와 upper bound를 넘는 종목 찾기
                 if (recentWeight < lowerBound) {
-                    log.warn(code+"의 비중이 lower bound를 넘었습니다.");
+                    // log.warn(code+"의 비중이 lower bound를 넘었습니다.");
+                    lowerBoundExceededAssets.add(code);
                 } else if (recentWeight > upperBound) {
-                    log.warn(code+"의 비중이 upper bound를 넘었습니다.");
+                    // log.warn(code+"의 비중이 upper bound를 넘었습니다.");
+                    upperBoundExceededAssets.add(code);
                 }
 
-                // 2. 구매 당시 비중과 오늘 비중이 ±10%p 이상 차이나는 자산 찾기
-                if (Math.abs(recentWeight - originWeight) > 10.0) {
-                    log.warn(code + "의 비중 차이가 ±10%p 이상입니다.");
+                if((recentWeight - originWeight) > 10.0){
+                    // code 종목의 비중이 10% 상승한것
+                    // log.info(code + "의 비중이 10% 상승하였습니다.");
+                    increasedWeightAssets.add(code);
+                }
+                else if((originWeight - recentWeight) > 10.0){
+                    // code 종목의 비중이 -10% 감소한것
+                    // log.info(code + "의 비중이 10% 감소하였습니다.");
+                    decreasedWeightAssets.add(code);
                 }
             }
             // 알람 메일을 보내야할 종목에 대해 메일을 발송한다
+            if (!lowerBoundExceededAssets.isEmpty() || !upperBoundExceededAssets.isEmpty() ||
+                !increasedWeightAssets.isEmpty() || !decreasedWeightAssets.isEmpty()) {
+
+                // 메일 발송 로직
+                StringBuilder mailContent = new StringBuilder("포트폴리오 자산 비중 경고:\n");
+
+                if (!lowerBoundExceededAssets.isEmpty()) {
+                    mailContent.append("하한선을 넘은 자산: ").append(lowerBoundExceededAssets).append("\n");
+                }
+                if (!upperBoundExceededAssets.isEmpty()) {
+                    mailContent.append("상한선을 넘은 자산: ").append(upperBoundExceededAssets).append("\n");
+                }
+                if (!increasedWeightAssets.isEmpty()) {
+                    mailContent.append("비중이 10% 상승한 자산: ").append(increasedWeightAssets).append("\n");
+                }
+                if (!decreasedWeightAssets.isEmpty()) {
+                    mailContent.append("비중이 10% 감소한 자산: ").append(decreasedWeightAssets).append("\n");
+                }
+
+                EmailMessage emailMessage = EmailMessage.builder()
+                    .to(user.getEmail())
+                    .subject("포트폴리오 자산 비중 경고")
+                    .message(mailContent.toString())
+                    .build();
+
+                log.warn("emailMessage: {}", emailMessage);
+                // 메일 발송 함수 호출
+                emailService.sendMail(emailMessage);
+            }
+
         }
         return new ResponseWithMessage(HttpStatus.OK.value(),"메일발송에 성공하였습니다");
     }
@@ -214,6 +266,12 @@ public class PortfolioServiceImpl implements PortfolioService{
             .sum();
     }
 
+    /**
+     * 오늘자 자산의 가격을 가지고온다
+     * (자산코드, 자산가격) 을 반환한다
+     * @param assets
+     * @return
+     */
     private Map<String, Double> getTodayValueOfHoldings(List<PortfolioAsset> assets) {
         return assets.stream()
             .collect(Collectors.toMap(
@@ -223,7 +281,7 @@ public class PortfolioServiceImpl implements PortfolioService{
                     Asset todayAsset = assetRepository.findById(
                         asset.getAssetId()).orElseThrow(()  -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
 
-                    log.warn("recentAssetPrice : {}",todayAsset.getRecentPrice());
+                    // log.warn("recentAssetPrice : {}",todayAsset.getRecentPrice());
 
                     double totalPurchaseQuantity = asset.getPurchaseInfos().stream()
                         .map(PortfolioPurchaseInfo::getPurchaseQuantity)
@@ -236,6 +294,13 @@ public class PortfolioServiceImpl implements PortfolioService{
             ));
     }
 
+    /**
+     * 자산의 비중을 반환하는 메서드
+     * (자산코드, 비중) 을 반환한다
+     * @param assetPrice
+     * @param totalValueOfHolding
+     * @return
+     */
     private static Map<String, Double> getWeights(Map<String, Double> assetPrice, Double totalValueOfHolding) {
         return assetPrice.entrySet().stream()
             .collect(Collectors.toMap(

@@ -9,4 +9,5 @@ public interface AssetRepositoryCustom {
     List<Asset> searchByKeyword(@Param("keyword") String keyword);
 
     List<Asset> findByIds(List<Integer> ids);
+
 }

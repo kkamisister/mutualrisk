@@ -41,4 +41,5 @@ public class AssetRepositoryCustomImpl extends Querydsl4RepositorySupport implem
             .where(asset.id.in(ids))
             .fetch();
     }
+
 }

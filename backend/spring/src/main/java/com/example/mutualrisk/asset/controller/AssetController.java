@@ -3,7 +3,6 @@ package com.example.mutualrisk.asset.controller;
 import static com.example.mutualrisk.asset.dto.AssetResponse.*;
 import static com.example.mutualrisk.common.dto.CommonResponse.*;
 
-import com.example.mutualrisk.asset.dto.AssetRequest;
 import com.example.mutualrisk.asset.dto.AssetRequest.InterestAssetInfo;
 import com.example.mutualrisk.asset.service.AssetService;
 import com.example.mutualrisk.common.enums.Order;
@@ -16,7 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.BadRequestException;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +26,19 @@ import org.springframework.web.bind.annotation.*;
 public class AssetController {
 
     private final AssetService assetService;
+
+    @Operation(summary = "종목 조회", description = "자산ID기반 검색 결과를 반환하는 api")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "종목 조회 완료"),
+    })
+    @GetMapping("/{assetId}")
+    public ResponseEntity<ResponseWithData<AssetResultDto>> getAsset(@PathVariable("assetId") Integer assetId){
+
+        ResponseWithData<AssetResultDto> findAsset = assetService.getAssetByAssetId(assetId);
+
+        return ResponseEntity.status(findAsset.status())
+            .body(findAsset);
+    }
 
     @Operation(summary = "종목 검색", description = "키워드 기반 종목 검색 결과를 반환하는 api")
     @ApiResponses(value = {
@@ -90,13 +102,13 @@ public class AssetController {
         @ApiResponse(responseCode = "200", description = "유저 관심종목 삭제 성공"),
     })
     @DeleteMapping("/interest")
-    public ResponseEntity<ResponseWithMessage> deleteInterestAsset(@RequestBody InterestAssetInfo asset,
+    public ResponseEntity<ResponseWithMessage> deleteInterestAsset(@RequestParam("assetId") Integer assetId,
         HttpServletRequest request){
 
         Integer userId = (Integer)request.getAttribute("userId");
         log.info("user Id : {}",userId);
 
-        ResponseWithMessage responseWithMessage = assetService.deleteInterestAsset(userId, asset);
+        ResponseWithMessage responseWithMessage = assetService.deleteInterestAsset(userId, assetId);
 
         return ResponseEntity.status(responseWithMessage.status())
             .body(responseWithMessage);

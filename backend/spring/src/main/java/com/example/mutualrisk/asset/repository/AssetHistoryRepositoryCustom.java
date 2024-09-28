@@ -16,4 +16,6 @@ public interface AssetHistoryRepositoryCustom {
     List<Double> getAssetPrices(List<Asset> assetList, LocalDateTime targetDate);
 
     List<AssetHistory> findRecentHistoriesBetweenDates(Asset asset, LocalDateTime pastDate, LocalDateTime targetDate);
+
+    List<AssetHistory> findRecentHistoryOfAssetsBetweenDates(List<Asset> userInterestAssetList, LocalDateTime localDateTime, LocalDateTime now);
 }
