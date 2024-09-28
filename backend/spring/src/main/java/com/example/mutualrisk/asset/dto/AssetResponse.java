@@ -1,6 +1,7 @@
 package com.example.mutualrisk.asset.dto;
 
 import com.example.mutualrisk.asset.entity.AssetHistory;
+import com.example.mutualrisk.asset.entity.News;
 import com.example.mutualrisk.common.enums.Region;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -21,6 +22,16 @@ public record AssetResponse() {
         Integer newsNum,
         List<NewsInfo> news
     ) {
+        public static AssetResultDto of(List<AssetInfo> assets, List<NewsInfo> news){
+
+            return AssetResultDto.builder()
+                .assetNum(assets.size())
+                .assets(assets)
+                .newsNum(news.size())
+                .news(news)
+                .build();
+
+        }
 
     }
 
@@ -100,7 +111,17 @@ public record AssetResponse() {
         LocalDateTime publishedAt,
         List<AssetInfo> relatedAssets
     ) {
+        public static NewsInfo of(News news,String cleanedTitle,List<AssetInfo> relatedAssetInfoList){
 
+            return NewsInfo.builder()
+                .newsId(news.getId())
+                .link(news.getLink())
+                .title(cleanedTitle)
+                .thumbnailUrl(news.getThumbnailUrl())
+                .publishedAt(news.getPublishedAt())
+                .relatedAssets(relatedAssetInfoList)
+                .build();
+        }
     }
 
 
