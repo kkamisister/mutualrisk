@@ -41,6 +41,7 @@ public class AssetHistory extends BaseEntity {
     public String toString() {
         return "AssetHistory{" +
             "id=" + id +
+            ", asset=" + asset +
             ", date=" + date +
             ", price=" + price +
             '}';

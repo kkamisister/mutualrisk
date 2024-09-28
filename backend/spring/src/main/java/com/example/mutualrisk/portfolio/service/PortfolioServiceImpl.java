@@ -31,11 +31,10 @@ import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -223,7 +222,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             .map(PortfolioAsset::getAssetId)
             .toList();
 
-        List<Asset> assetList = assetRepository.findByIds(assetIdList);
+        List<Asset> assetList = assetRepository.findAllById(assetIdList);
 
         // 3. 포트폴리오 백테스팅 결과 저장
         LocalDateTime recentDate = LocalDateTime.now().minusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0);;
@@ -258,7 +257,10 @@ public class PortfolioServiceImpl implements PortfolioService{
      */
     private Double getValuation(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList, LocalDateTime targetDate) {
         // 특정 날짜의 자산 가격을 가져옴
-        List<Double> assetPrices = assetHistoryService.getAssetPrices(assetList, targetDate);
+        List<Double> assetPrices = assetHistoryService.getAssetHistoryList(assetList, targetDate)
+            .stream()
+            .map(AssetHistory::getPrice)
+            .toList();
 
         // PortfolioAsset의 totalPurchaseQuantity와 assetPrices를 곱한 값을 합산
         return IntStream.range(0, assetPrices.size())

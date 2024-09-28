@@ -2,24 +2,19 @@ package com.example.mutualrisk.fund.service;
 
 import static com.example.mutualrisk.fund.dto.FundResponse.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.example.mutualrisk.asset.dto.AssetResponse;
 import com.example.mutualrisk.asset.dto.AssetResponse.AssetInfo;
 import com.example.mutualrisk.asset.service.AssetHistoryService;
-import com.example.mutualrisk.asset.service.AssetHistoryServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -116,7 +111,7 @@ public class FundServiceImpl implements FundService {
 		// 펀드에 속한 자산의 ID리스트를 구한다
 		List<Integer> assetIds = getAssetIds(fund);
 		// 펀드가 가진 자산을 가지고온다
-		List<Asset> assets = assetRepository.findByIds(assetIds);
+		List<Asset> assets = assetRepository.findAssetListWithIndustryAndSectorByIds(assetIds);
 
 		// 섹터 편중 계산을 해야한다
 		// 실제 자산을 순회하면서, 현재 펀드자산과 ID가 일치하는 자산에서 섹터 정보를 가지고와야한다
@@ -262,11 +257,18 @@ public class FundServiceImpl implements FundService {
 			valueOfHoldingList.add(fundAsset.getValueOfHolding());
 		}
 
-		List<Asset> assetList = assetRepository.findByIds(assetIdList);
+		List<Asset> assetList = assetRepository.findAssetListWithIndustryAndSectorByIds(assetIdList);
 
-		List<Double> assetPrices = assetHistoryService.getAssetPrices(assetList, targetDate);
+		List<AssetHistory> prevAssetHistoryList = assetHistoryService.getAssetHistoryList(assetList, targetDate);
+		List<Double> assetPrices = prevAssetHistoryList.stream()
+			.map(AssetHistory::getPrice)
+			.toList();
+
 		LocalDateTime nextDate = targetDate.plusMonths(dMonth);
-		List<Double> nextPrices = assetHistoryService.getAssetPrices(assetList, nextDate);
+		List<AssetHistory> nextAssetHistoryList = assetHistoryService.getAssetHistoryList(assetList, nextDate);
+		List<Double> nextPrices = nextAssetHistoryList.stream()
+			.map(AssetHistory::getPrice)
+			.toList();
 
 		// totalValueOfHolding 계산
 		long totalValueOfHolding = valueOfHoldingList.stream()
