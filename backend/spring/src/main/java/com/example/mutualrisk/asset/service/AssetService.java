@@ -1,6 +1,7 @@
 package com.example.mutualrisk.asset.service;
 
 import static com.example.mutualrisk.asset.dto.AssetRequest.*;
+import static com.example.mutualrisk.asset.dto.AssetResponse.*;
 
 import com.example.mutualrisk.asset.dto.AssetResponse.AssetResultDto;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
@@ -18,4 +19,8 @@ public interface AssetService {
 	ResponseWithMessage deleteInterestAsset(Integer userId, Integer assetId);
 
 	ResponseWithData<AssetResultDto> getAssetByAssetId(Integer assetId);
+
+	ResponseWithData<StockTrendWithDetail> getStockTrendWithDetail(Integer assetId);
+
+	ResponseWithData<ETFInfo> getETFDetail(Integer assetId);
 }

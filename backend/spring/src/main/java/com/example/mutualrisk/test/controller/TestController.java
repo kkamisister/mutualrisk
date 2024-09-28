@@ -10,6 +10,8 @@ import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.asset.entity.AssetHistory;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
+import com.example.mutualrisk.asset.repository.StockTrendRepository;
+import com.example.mutualrisk.asset.service.AssetService;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 import com.example.mutualrisk.common.email.dto.EmailMessage;
 import com.example.mutualrisk.common.email.service.EmailService;
@@ -19,12 +21,14 @@ import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.fund.service.FundService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -35,14 +39,25 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/test")
+@Slf4j
 public class TestController {
 
     private final FundService fundService;
     private final AssetRepository assetRepository;
     private final AssetHistoryRepository assetHistoryRepository;
     private final ExchangeRatesRepository exchangeRatesRepository;
+    private final AssetService assetService;
     private final EmailService emailService;
 
+    @GetMapping("/stock-detail")
+    public ResponseEntity<ResponseWithData<StockTrendWithDetail>> stockDetail(@RequestParam("assetId") Integer assetId) {
+
+        ResponseWithData<StockTrendWithDetail> stockTrendWithDetail = assetService.getStockTrendWithDetail(assetId);
+
+        log.warn("주식 세부사항 : {}",stockTrendWithDetail);
+        return ResponseEntity.status(stockTrendWithDetail.status())
+            .body(stockTrendWithDetail);
+    }
     @GetMapping("/hello")
     public String hello() {
         throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);

@@ -1,7 +1,10 @@
 package com.example.mutualrisk.asset.dto;
 
 import com.example.mutualrisk.asset.entity.AssetHistory;
+import com.example.mutualrisk.asset.entity.ETFDetail;
 import com.example.mutualrisk.asset.entity.News;
+import com.example.mutualrisk.asset.entity.StockDetail;
+import com.example.mutualrisk.asset.entity.StockTrend;
 import com.example.mutualrisk.common.enums.Region;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -120,6 +123,97 @@ public record AssetResponse() {
                 .thumbnailUrl(news.getThumbnailUrl())
                 .publishedAt(news.getPublishedAt())
                 .relatedAssets(relatedAssetInfoList)
+                .build();
+        }
+    }
+
+    @Builder
+    @Schema(name = "주식 거래 데이터 반환 DTO",description = ""
+        + "매매현황을 포함하여 주식 상세정보를 반환한다")
+    public record StockTrendWithDetail(
+        Integer recordNum,
+        Integer assetId,
+        String name,
+        String code,
+        String summary,
+        String marketValue,
+        String per,
+        String pbr,
+        String eps,
+        List<StockRecord> records
+    ){
+        public static StockTrendWithDetail of(List<StockRecord> records, StockDetail stockDetail){
+            return StockTrendWithDetail.builder()
+                .name(stockDetail.getAsset().getName())
+                .recordNum(records.size())
+                .assetId(stockDetail.getAsset().getId())
+                .code(stockDetail.getCode())
+                .summary(stockDetail.getAsset().getSummary())
+                .marketValue(stockDetail.getMarketValue())
+                .per(stockDetail.getPer())
+                .pbr(stockDetail.getPbr())
+                .eps(stockDetail.getEps())
+                .records(records)
+                .build();
+
+        }
+    }
+
+    @Builder
+    @Schema(name = "주식 거래 데이터",description = ""
+        + "네이버 증권에서 가져온 외국인,기관,개인 매매현황을 반환한다")
+    public record StockRecord(
+        LocalDateTime date,
+        Integer foreignerPureBuyQuant,
+        Double foreignerHoldRatio,
+        Integer organPureBuyQuant,
+        Integer individualPureBuyQuant,
+        Integer accumulatedTradingVolume
+    ){
+        public static StockRecord from(StockTrend trend){
+            return StockRecord.builder()
+                .date(trend.getDate())
+                .foreignerPureBuyQuant(trend.getForeignerPureBuy())
+                .foreignerHoldRatio(trend.getForeignerHoldRatio())
+                .organPureBuyQuant(trend.getOrganPureBuy())
+                .individualPureBuyQuant(trend.getIndividualPureBuy())
+                .accumulatedTradingVolume(trend.getAccumulatedTradingVolume())
+                .build();
+        }
+    }
+
+
+    @Builder
+    public record ETFInfo(
+        Integer etfNum,
+        Integer assetId,
+        String code,
+        String summary,
+        String name,
+        List<ETFRecord> portfolio
+    ){
+        public static ETFInfo of(List<ETFDetail> details,List<ETFRecord> record){
+            return ETFInfo.builder()
+                .etfNum(details.size())
+                .assetId(details.get(0).getAsset().getId())
+                .code(details.get(0).getAsset().getCode())
+                .summary(details.get(0).getAsset().getSummary())
+                .name(details.get(0).getAsset().getName())
+                .portfolio(record)
+                .build();
+
+        }
+
+    }
+    @Builder
+    public record ETFRecord(
+        String assetName,
+        String stockCount
+    ){
+        public static ETFRecord from(ETFDetail detail){
+            return ETFRecord.builder()
+                .assetName(detail.getAssetName())
+                .stockCount(detail.getStockCount())
                 .build();
         }
     }
