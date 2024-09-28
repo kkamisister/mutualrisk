@@ -3,12 +3,17 @@ package com.example.mutualrisk.asset.service;
 import static com.example.mutualrisk.asset.dto.AssetRequest.*;
 import static com.example.mutualrisk.asset.dto.AssetResponse.*;
 
+import com.example.mutualrisk.asset.dto.AssetResponse;
 import com.example.mutualrisk.asset.dto.AssetResponse.AssetResultDto;
 import com.example.mutualrisk.asset.entity.*;
+import com.example.mutualrisk.asset.entity.ETFDetail;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
 import com.example.mutualrisk.asset.repository.AssetNewsRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
+import com.example.mutualrisk.asset.repository.ETFDetailRepository;
 import com.example.mutualrisk.asset.repository.InterestAssetRepository;
+import com.example.mutualrisk.asset.repository.StockDetailRepository;
+import com.example.mutualrisk.asset.repository.StockTrendRepository;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
 import com.example.mutualrisk.common.email.service.EmailService;
@@ -27,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +51,9 @@ public class AssetServiceImpl implements AssetService{
     private final InterestAssetRepository interestAssetRepository;
     private final AssetNewsRepository assetNewsRepository;
     private final ExchangeRatesRepository exchangeRatesRepository;
+    private final StockTrendRepository stockTrendRepository;
+    private final StockDetailRepository stockDetailRepository;
+    private final ETFDetailRepository etfDetailRepository;
     private final AssetHistoryService assetHistoryService;
 
     /**
@@ -260,6 +269,93 @@ public class AssetServiceImpl implements AssetService{
             .news(newsList)
             .build();
         return new ResponseWithData<>(HttpStatus.OK.value(), "종목 조회에 성공하였습니댜",result);
+    }
+
+    /**
+     * 입력받은 국장 주식 자산에 대한 상세정보를 반환한다
+     * 상세정보에는 주식 트렌드 및 per,pbr,eps,marketValue 가 있다
+     * @param assetId
+     * @return
+     */
+    @Override
+    @Transactional
+    public ResponseWithData<StockTrendWithDetail> getStockTrendWithDetail(Integer assetId) {
+
+        // 자산의 trend를 가지고 온다
+        List<StockRecord> stockRecord = stockTrendRepository.findByAssetId(assetId)
+            .stream()
+            .map(StockRecord::from)
+            .toList();
+
+        // 자산의 detail을 가지고 온다
+        StockDetail stockDetail = stockDetailRepository.findByAssetId(assetId)
+            .orElseGet(() -> maketDefaultDetail(assetId));
+
+        StockTrendWithDetail stockTrendWithDetail = StockTrendWithDetail.of(stockRecord,stockDetail);
+
+        return new ResponseWithData<>(HttpStatus.OK.value(),"종목 상세정보 조회에 성공하였습니다",stockTrendWithDetail);
+    }
+
+    /**
+     * 입력받은 국장 ETF 자산에 대한 상세정보를 반환한다
+     * @param assetId
+     * @return
+     */
+    @Override
+    public ResponseWithData<ETFInfo> getETFDetail(Integer assetId) {
+
+        // 입력받은 자산을 가지고온다
+        List<ETFDetail> etfDetails = etfDetailRepository.findByAssetId(assetId);
+
+        if(etfDetails.isEmpty()){
+            ETFInfo info = maketDefault(assetId);
+            return new ResponseWithData<>(HttpStatus.OK.value(), "종목 상세정보 조회에 성공하였습니다",info);
+        }
+
+        // 자산에서 record를 추출한다
+        List<ETFRecord> list = etfDetails.stream()
+            .map(ETFRecord::from)
+            .toList();
+
+        // 반환할 DTO를 생성한다
+        ETFInfo info = ETFInfo.of(etfDetails,list);
+
+        return new ResponseWithData<>(HttpStatus.OK.value(), "종목 상세정보 조회에 성공하였습니다",info);
+    }
+
+    /**
+     * assetId에 해당하는 ETF상세정보가 없을경우 빈 객체를 반환하는 메서드
+     * @param assetId
+     * @return
+     */
+    private static ETFInfo maketDefault(Integer assetId) {
+        return ETFInfo.builder()
+            .etfNum(0)
+            .assetId(assetId)
+            .code("N/A")
+            .summary("N/A")
+            .name("N/A")
+            .portfolio(new ArrayList<>())
+            .build();
+    }
+
+    /**
+     * assetId에 해당하는 주식상세정보가 없을경우 빈 객체를 반환하는 메서드
+     * @param assetId
+     * @return
+     */
+    private static StockDetail maketDefaultDetail(Integer assetId) {
+        return StockDetail.builder()
+            .code("N/A")
+            .marketValue("N/A")
+            .per("N/A")
+            .pbr("N/A")
+            .eps("N/A")
+            .asset(Asset.builder() // asset이 null일경우
+                .id(assetId)
+                .summary("N/A")
+                .build())
+            .build();
     }
 
     /**

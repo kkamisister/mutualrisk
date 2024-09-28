@@ -113,4 +113,31 @@ public class AssetController {
         return ResponseEntity.status(responseWithMessage.status())
             .body(responseWithMessage);
     }
+
+    // Todo: assetId에 음수가 오지 못하도록 valid설정
+    @Operation(summary = "종목 상세정보 조회", description = "국장주식의 상세정보를 조회하는 api")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "상세정보 조회 성공"),
+    })
+    @GetMapping("/detail/stock")
+    public ResponseEntity<ResponseWithData<StockTrendWithDetail>> stockDetail(@RequestParam("assetId") Integer assetId) {
+
+        ResponseWithData<StockTrendWithDetail> stockTrendWithDetail = assetService.getStockTrendWithDetail(assetId);
+
+        log.warn("주식 세부사항 : {}",stockTrendWithDetail);
+        return ResponseEntity.status(stockTrendWithDetail.status())
+            .body(stockTrendWithDetail);
+    }
+
+    @Operation(summary = "종목 상세정보 조회", description = "국장ETF의 상세정보를 조회하는 api")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "상세정보 조회 성공"),
+    })
+    @GetMapping("/detail/etf")
+    public ResponseEntity<ResponseWithData<ETFInfo>> etfDetail(@RequestParam("assetId") Integer assetId){
+
+        ResponseWithData<ETFInfo> info = assetService.getETFDetail(assetId);
+        return ResponseEntity.status(info.status())
+            .body(info);
+    }
 }
