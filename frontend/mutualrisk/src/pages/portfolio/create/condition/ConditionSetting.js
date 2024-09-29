@@ -16,7 +16,7 @@ const ConditionSetting = ({ assets }) => {
 			}}>
 			<Title
 				text="제약 조건"
-				caption="필요에 따라 종목별 최솟값, 최댓값을 설정할 수 있습니다."
+				caption="대충 니가 설정한 거 최대한 맞춰주는데 주가때문에 못 맞출 수도 있어 알지?"
 			/>
 			<WidgetContainer
 				sx={{

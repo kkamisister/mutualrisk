@@ -1,20 +1,21 @@
 import React from 'react';
-import { Box, TextField, Typography } from '@mui/material';
+import { Box, TextField, Typography, Chip } from '@mui/material';
+import BasicButton from 'components/button/BasicButton';
 
 const AssetConstraintList = ({ assets }) => {
 	return (
 		<Box>
-			{/* 헤더 부분 */}
 			<Box
 				sx={{
 					display: 'flex',
 					justifyContent: 'space-between',
 					mb: 2,
+					gap: 2,
 				}}>
-				<Typography sx={{ flex: 1 }}>종목 이름</Typography>
-				<Typography sx={{ flex: 1 }}>최솟값 (%)</Typography>
-				<Typography sx={{ flex: 1 }}>최댓값 (%)</Typography>
-				<Typography sx={{ flex: 1 }}>지정 비율 (%)</Typography>
+				<Chip sx={{ flex: 1 }} label="종목 이름" />
+				<Chip sx={{ flex: 1 }} label="최솟값 (%)" />
+				<Chip sx={{ flex: 1 }} label="최댓값 (%)" />
+				<Chip sx={{ flex: 1 }} label="지정 비율 (%)" />
 			</Box>
 
 			{/* 종목별 입력란 */}
@@ -48,6 +49,7 @@ const AssetConstraintList = ({ assets }) => {
 					</Box>
 				</Box>
 			))}
+			<BasicButton text="포트폴리오 제작하기" sx={{ mt: 'auto' }} />
 		</Box>
 	);
 };
