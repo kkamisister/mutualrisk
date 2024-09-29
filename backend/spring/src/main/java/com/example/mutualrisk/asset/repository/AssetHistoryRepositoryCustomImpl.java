@@ -2,13 +2,10 @@ package com.example.mutualrisk.asset.repository;
 
 import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.asset.entity.AssetHistory;
+import com.example.mutualrisk.asset.entity.QAsset;
 import com.example.mutualrisk.common.repository.Querydsl4RepositorySupport;
-import com.querydsl.core.types.Projections;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +47,16 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
                 .and(assetHistory.date.eq(dateTime)))
             .fetch();
 
+    }
+
+    @Override
+    public List<AssetHistory> findRecentHistoryOfAsset(Asset asset,Integer period) {
+        return selectFrom(assetHistory)
+            .join(assetHistory.asset, QAsset.asset).fetchJoin()
+            .where(assetHistory.asset.eq(asset))
+            .orderBy(assetHistory.date.desc())
+            .limit(period)
+            .fetch();
     }
 
     @Override
