@@ -17,9 +17,7 @@ import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.common.util.DateUtil;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
-import com.example.mutualrisk.portfolio.entity.Portfolio;
-import com.example.mutualrisk.portfolio.entity.PortfolioAsset;
-import com.example.mutualrisk.portfolio.entity.PortfolioPurchaseInfo;
+import com.example.mutualrisk.portfolio.entity.*;
 import com.example.mutualrisk.portfolio.repository.PortfolioRepository;
 import com.example.mutualrisk.sector.entity.Sector;
 import com.example.mutualrisk.user.entity.User;
@@ -246,7 +244,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             .performances(performances)
             .build();
 
-        return new ResponseWithData<>(HttpStatus.OK.value(), "데이터 정상 반환", data);
+        return new ResponseWithData<>(HttpStatus.OK.value(), "백테스팅 결과 조회 성공", data);
     }
 
     /**
@@ -325,6 +323,22 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 결과를 반환한다
         return new ResponseWithData<>(HttpStatus.OK.value(),"섹터 조회에 성공하였습니다",sectorInfos);
+    }
+
+    @Override
+    public ResponseWithData<FrontierDto> getFrontierPoints(Integer userId) {
+        // 1. 유저가 가진 포트폴리오를 가져온다
+        Portfolio myPortfolio = portfolioRepository.getMyPortfolio(userId);
+
+        List<FrontierPoint> frontierPoints = myPortfolio.getFrontierPoints();
+        FictionalPerformance fictionalPerformance = myPortfolio.getFictionalPerformance();
+
+        FrontierDto frontierDto = FrontierDto.builder()
+            .frontierPoints(frontierPoints)
+            .optimalPerformance(fictionalPerformance)
+            .build();
+
+        return new ResponseWithData<>(HttpStatus.OK.value(), "효율적 포트폴리오 곡선 데이터 정상 반환", frontierDto);
     }
 
     // 백테스팅 그래프를 위한 메서드
