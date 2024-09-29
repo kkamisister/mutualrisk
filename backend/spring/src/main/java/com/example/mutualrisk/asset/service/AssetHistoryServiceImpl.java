@@ -1,19 +1,27 @@
 package com.example.mutualrisk.asset.service;
 
+import com.example.mutualrisk.asset.dto.AssetResponse;
+import com.example.mutualrisk.asset.dto.AssetResponse.AssetPriceWithDate;
+import com.example.mutualrisk.asset.dto.AssetResponse.AssetRecentHistory;
 import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.asset.entity.AssetHistory;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
+import com.example.mutualrisk.asset.repository.AssetRepository;
+import com.example.mutualrisk.common.dto.CommonResponse;
+import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
+import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -22,6 +30,7 @@ import java.util.Optional;
 public class AssetHistoryServiceImpl implements AssetHistoryService {
 
     private final AssetHistoryRepository assetHistoryRepository;
+    private final AssetRepository assetRepository;
 
     // 주어진 날짜에 해당하는 asset의 종가 데이터를 구하는 함수
     // 현재 날 기준으로 과거 5일간의 데이터를 가져온다. 이 중 가장 마지막 데이터를 선택
@@ -61,5 +70,40 @@ public class AssetHistoryServiceImpl implements AssetHistoryService {
         }
 
         return validDates;
+    }
+
+    /**
+     * 자산의 최근 영업일 period 기간 동안의 종가를 반환하는 메서드
+     *
+     * @param assetId
+     * @param period
+     * @return
+     */
+    @Override
+    @Transactional
+    public ResponseWithData<AssetRecentHistory> getAssetRecentHistory(Integer assetId, Integer period) {
+
+        // 자산을 찾는다
+        Asset findAsset = assetRepository.findById(assetId)
+            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
+
+
+        // period 동안의 자산 정보를 조회한다
+        List<AssetHistory> recentPriceHistory = assetHistoryRepository.findRecentHistoryOfAsset(
+            findAsset, period);
+
+
+        // DTO에 담아 반환한다
+        List<AssetPriceWithDate> assetPriceWithDate = recentPriceHistory.stream()
+            .map(assetHistory -> AssetPriceWithDate.of(assetHistory.getPrice(),assetHistory.getDate()))
+            .toList();
+
+        AssetRecentHistory assetRecentHistory = AssetRecentHistory.builder()
+            .assetId(findAsset.getId())
+            .recordNum(assetPriceWithDate.size())
+            .records(assetPriceWithDate)
+            .build();
+
+        return new ResponseWithData<>(HttpStatus.OK.value(),"자산 기록 조회에 성공하였습니다",assetRecentHistory);
     }
 }

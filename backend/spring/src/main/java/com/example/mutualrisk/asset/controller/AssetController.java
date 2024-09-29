@@ -4,42 +4,65 @@ import static com.example.mutualrisk.asset.dto.AssetResponse.*;
 import static com.example.mutualrisk.common.dto.CommonResponse.*;
 
 import com.example.mutualrisk.asset.dto.AssetRequest.InterestAssetInfo;
+import com.example.mutualrisk.asset.service.AssetHistoryService;
 import com.example.mutualrisk.asset.service.AssetService;
 import com.example.mutualrisk.common.enums.Order;
 import com.example.mutualrisk.common.enums.OrderCondition;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/asset")
 @Slf4j
+@Validated
 @Tag(name = "자산관련 API",description = "자산 검색,조회 유저 관심자산 CRUD를 수행하기위한 Controller입니다")
 public class AssetController {
 
     private final AssetService assetService;
+    private final AssetHistoryService assetHistoryService;
 
     @Operation(summary = "종목 조회", description = "자산ID기반 검색 결과를 반환하는 api")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "종목 조회 완료"),
     })
     @GetMapping("/{assetId}")
-    public ResponseEntity<ResponseWithData<AssetResultDto>> getAsset(@PathVariable("assetId") Integer assetId){
+    public ResponseEntity<ResponseWithData<AssetResultDto>> getAsset(@PathVariable("assetId") @Parameter(description = "자산ID", required = true) Integer assetId){
 
         ResponseWithData<AssetResultDto> findAsset = assetService.getAssetByAssetId(assetId);
 
         return ResponseEntity.status(findAsset.status())
             .body(findAsset);
+    }
+
+
+    @Operation(summary = "종목 종가 기록 조회", description = "자산ID기반 기간내 종목 종가 기록을 반환하는 api")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "조회 완료"),
+    })
+    @GetMapping("/history/{assetId}")
+    public ResponseEntity<ResponseWithData<AssetRecentHistory>> getAssetHistory(@PathVariable("assetId") @Parameter(description = "자산ID", required = true) Integer assetId,
+        @RequestParam("period") @Positive(message = "기간은 1보다 작아질 수 없습니다.") Integer period){
+
+        ResponseWithData<AssetRecentHistory> findAssetHistorys = assetHistoryService.getAssetRecentHistory(assetId,period);
+        
+        return ResponseEntity.status(findAssetHistorys.status())
+            .body(findAssetHistorys);
+
     }
 
     @Operation(summary = "종목 검색", description = "키워드 기반 종목 검색 결과를 반환하는 api")
@@ -104,7 +127,7 @@ public class AssetController {
         @ApiResponse(responseCode = "200", description = "유저 관심종목 삭제 성공"),
     })
     @DeleteMapping("/interest")
-    public ResponseEntity<ResponseWithMessage> deleteInterestAsset(@RequestParam("assetId") Integer assetId,
+    public ResponseEntity<ResponseWithMessage> deleteInterestAsset(@RequestParam("assetId") @Parameter(description = "자산ID", required = true) Integer assetId,
         HttpServletRequest request){
 
         Integer userId = (Integer)request.getAttribute("userId");
@@ -136,7 +159,7 @@ public class AssetController {
         @ApiResponse(responseCode = "200", description = "상세정보 조회 성공"),
     })
     @GetMapping("/detail/etf")
-    public ResponseEntity<ResponseWithData<ETFInfo>> etfDetail(@RequestParam("assetId") Integer assetId){
+    public ResponseEntity<ResponseWithData<ETFInfo>> etfDetail(@RequestParam("assetId") @Parameter(description = "자산ID", required = true) Integer assetId){
 
         ResponseWithData<ETFInfo> info = assetService.getETFDetail(assetId);
         return ResponseEntity.status(info.status())

@@ -9,8 +9,11 @@ import com.example.mutualrisk.common.enums.Region;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.cglib.core.Local;
 
 import com.example.mutualrisk.asset.entity.Asset;
 
@@ -182,8 +185,8 @@ public record AssetResponse() {
         }
     }
 
-
     @Builder
+    @Schema(name = "국장 ETF의 구성정보 데이터",description = "국장 ETF에 대한 상세정보를 반환한다")
     public record ETFInfo(
         Integer etfNum,
         Integer assetId,
@@ -206,6 +209,7 @@ public record AssetResponse() {
 
     }
     @Builder
+    @Schema(name = "국장ETF구성 포트폴리오 정보",description = "국장 ETF를 구성하고있는 자산의 이름과 주식 수를 반환한다")
     public record ETFRecord(
         String assetName,
         String stockCount
@@ -217,6 +221,28 @@ public record AssetResponse() {
                 .build();
         }
     }
+    @Builder
+    @Schema(name = "특정 기간동안의 자산의 종가정보",description = "기간동안의 자산의 종가를 반환한다")
+    public record AssetRecentHistory(
+        Integer recordNum,
+        Integer assetId,
+        List<AssetPriceWithDate> records
+    ){
 
+    }
+
+    @Schema(name = "날짜별 종가 정보",description = "특정일의 자산의 종가를 반환한다")
+    @Builder
+    public record AssetPriceWithDate(
+        Double price,
+        LocalDateTime date
+    ){
+        public static AssetPriceWithDate of(Double price,LocalDateTime date){
+            return AssetPriceWithDate.builder()
+                .price(price)
+                .date(date)
+                .build();
+        }
+    }
 
 }

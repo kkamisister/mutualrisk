@@ -17,6 +17,7 @@ import com.example.mutualrisk.fund.dto.FundResponse.FundSummaryResultDto;
 import com.example.mutualrisk.fund.service.FundService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -65,13 +66,13 @@ public class FundController {
 			.body(fund);
 	}
 
-	@Operation(summary = "펀드 평가액 변동 기록 조회", description = "13f 펀드의 변동기록을 조회하는 api")
+	@Operation(summary = "펀드 평가액 변동 기록 조회", description = "특정 13f 펀드의 변동기록을 조회하는 api")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "변동기록 조회 성공"),
 	})
 	@GetMapping("/history")
 	public ResponseEntity<ResponseWithData> getHistory(@RequestParam("period") Integer period,
-		@RequestParam("company") String company,
+		@RequestParam("company") @Parameter(description = "회사명", required = true) String company,
 		HttpServletRequest request){
 
 		Integer userId = (Integer)request.getAttribute("userId");
