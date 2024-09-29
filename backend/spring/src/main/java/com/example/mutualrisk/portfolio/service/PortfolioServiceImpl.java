@@ -375,7 +375,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             .performances(performances)
             .build();
 
-        return new ResponseWithData<>(HttpStatus.OK.value(), "백테스팅 결과 조회 성공", data);
+        return new ResponseWithData<>(HttpStatus.OK.value(), "자산 평가액 조회 성공", data);
 
     }
 

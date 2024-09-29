@@ -102,6 +102,10 @@ public class PortfolioController {
             .body(userPortfolioSector);
     }
 
+    @Operation(summary = "효율적 프론티어 조회", description = "효율적 프론티어를 이루는 각 점들의 성과 지표를 조회하는 api")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "효율적 포트폴리오 곡선 데이터 정상 반환"),
+    })
     @GetMapping("/frontier")
     public ResponseEntity<ResponseWithData<FrontierDto>> getFrontierPoints(HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
@@ -112,6 +116,10 @@ public class PortfolioController {
             .body(frontierDtoResponseWithData);
     }
 
+    @Operation(summary = "포트폴리오 평가액 추이 조회", description = "각 기간별 포트폴리오의 자산 평가액을 조회하는 api")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "자산 평가액 조회 성공"),
+    })
     @GetMapping("/valuation")
     public ResponseEntity<ResponseWithData<PortfolioValuationDto>> getValuation(@RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
