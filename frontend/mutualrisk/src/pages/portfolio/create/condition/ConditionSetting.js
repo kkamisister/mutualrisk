@@ -4,7 +4,6 @@ import { HelpOutline } from '@mui/icons-material';
 import Title from 'components/title/Title';
 import WidgetContainer from 'components/container/WidgetConatiner';
 import BasicButton from 'components/button/BasicButton';
-import ChipWithTooltip from 'components/chip/ChipWithTooltip';
 import AssetConstraintList from './AssetConstraintList';
 
 const ConditionSetting = ({ assets }) => {
