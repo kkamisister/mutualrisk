@@ -211,7 +211,7 @@ public class PortfolioServiceImpl implements PortfolioService{
     }
 
     @Override
-    public ResponseWithData<PortfolioBacktestingResultDto> getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId) {
+    public ResponseWithData<PortfolioValuationDto> getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId) {
         // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
         Portfolio portfolio = portfolioRepository.getMyPortfolio(userId);
 
@@ -237,7 +237,7 @@ public class PortfolioServiceImpl implements PortfolioService{
                 .build());
         }
 
-        PortfolioBacktestingResultDto data = PortfolioBacktestingResultDto.builder()
+        PortfolioValuationDto data = PortfolioValuationDto.builder()
             .portfolioId(portfolio.getId())
             .timeInterval(timeInterval)
             .measure(measure)
@@ -339,6 +339,71 @@ public class PortfolioServiceImpl implements PortfolioService{
             .build();
 
         return new ResponseWithData<>(HttpStatus.OK.value(), "효율적 포트폴리오 곡선 데이터 정상 반환", frontierDto);
+    }
+
+    @Override
+    public ResponseWithData<PortfolioValuationDto> getHistoricalValuation(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId) {
+        // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
+        Portfolio portfolio = portfolioRepository.getMyPortfolio(userId);
+
+        // 2. AssetList 구하기
+        List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
+
+        List<Integer> assetIdList = portfolioAssetList.stream()
+            .map(PortfolioAsset::getAssetId)
+            .toList();
+
+        List<Asset> assetList = assetRepository.findAllById(assetIdList);
+
+        // 3. 포트폴리오 백테스팅 결과 저장
+        LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
+
+        List<Performance> performances = new ArrayList<>();
+        for (int dDate = 30; dDate >= 1; dDate--) {
+            LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
+            Double valuation = getHistoricValuation(portfolioAssetList, assetList, targetDate);
+            performances.add(Performance.builder()
+                .time(targetDate)
+                .valuation(valuation)
+                .build());
+        }
+
+        PortfolioValuationDto data = PortfolioValuationDto.builder()
+            .portfolioId(portfolio.getId())
+            .timeInterval(timeInterval)
+            .measure(measure)
+            .performances(performances)
+            .build();
+
+        return new ResponseWithData<>(HttpStatus.OK.value(), "백테스팅 결과 조회 성공", data);
+
+    }
+
+    private Double getHistoricValuation(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList, LocalDateTime targetDate) {
+        // 특정 날짜의 자산 가격을 가져옴
+        List<Double> assetPrices = assetHistoryService.getAssetHistoryList(assetList, targetDate)
+            .stream()
+            .map(AssetHistory::getPrice)
+            .toList();
+
+        // PortfolioAsset의 totalPurchaseQuantity와 assetPrices를 곱한 값을 합산
+        return IntStream.range(0, assetPrices.size())
+            .mapToDouble(i -> {
+                int quantity = getPastQuantity(portfolioAssetList.get(i), targetDate);
+                return quantity * assetPrices.get(i);
+            })
+            .sum();
+    }
+
+    private int getPastQuantity(PortfolioAsset portfolioAsset, LocalDateTime targetDate) {
+        List<PortfolioPurchaseInfo> purchaseInfos = portfolioAsset.getPurchaseInfos();
+        int quantity = 0;
+        for (PortfolioPurchaseInfo purchaseInfo : purchaseInfos) {
+            if (purchaseInfo.getPurchaseDate().atStartOfDay().isAfter(targetDate)) break;
+            quantity += purchaseInfo.getPurchaseQuantity();
+
+        }
+        return quantity;
     }
 
     // 백테스팅 그래프를 위한 메서드
