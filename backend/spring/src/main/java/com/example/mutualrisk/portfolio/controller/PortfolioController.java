@@ -66,6 +66,10 @@ public class PortfolioController {
         return ResponseEntity.status(responseWithMessage.status()).body(responseWithMessage);
     }
 
+    @Operation(summary = "백테스팅 결과 조회", description = "현재 포트폴리오 자산 보유량 기준으로, 과거 평가액을 조회하는 api")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "백테스팅 결과 조회 성공")
+    })
     @GetMapping("/backtest")
     public ResponseEntity<ResponseWithData<PortfolioBacktestingResultDto>> getUserPortfolioReturn(@RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
