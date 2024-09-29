@@ -103,4 +103,14 @@ public class PortfolioController {
         return ResponseEntity.status(userPortfolioSector.status())
             .body(userPortfolioSector);
     }
+
+    @GetMapping("/frontier")
+    public ResponseEntity<ResponseWithData<FrontierDto>> getFrontierPoints(HttpServletRequest request) {
+        Integer userId = (Integer)request.getAttribute("userId");
+
+        ResponseWithData<FrontierDto> frontierDtoResponseWithData = portfolioService.getFrontierPoints(userId);
+
+        return ResponseEntity.status(frontierDtoResponseWithData.status())
+            .body(frontierDtoResponseWithData);
+    }
 }

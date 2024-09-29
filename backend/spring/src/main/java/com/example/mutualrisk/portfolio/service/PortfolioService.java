@@ -17,4 +17,6 @@ public interface PortfolioService {
     ResponseWithData<PortfolioBacktestingResultDto> getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId);
 
     ResponseWithData<List<SectorInfo>> getUserPortfolioSector(Integer userId);
+
+    ResponseWithData<FrontierDto> getFrontierPoints(Integer userId);
 }

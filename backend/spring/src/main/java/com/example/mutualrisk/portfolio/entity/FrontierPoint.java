@@ -9,6 +9,6 @@ import lombok.Getter;
 @Builder
 public class FrontierPoint {
 	private Double expectedReturn;
-	private Double standardDeviation;
+	private Double volatility;
 	private List<Double> weights;
 }

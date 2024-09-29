@@ -4,6 +4,8 @@ import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.Region;
 import com.example.mutualrisk.common.enums.TimeInterval;
+import com.example.mutualrisk.portfolio.entity.FictionalPerformance;
+import com.example.mutualrisk.portfolio.entity.FrontierPoint;
 import com.example.mutualrisk.portfolio.entity.PortfolioAsset;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -82,6 +84,15 @@ public record PortfolioResponse() {
     public record Performance(
         LocalDateTime time,
         Double valuation
+    ) {
+
+    }
+
+    @Builder
+    @Schema(name = "효율적 포트폴리오 곡선을 나타내는 데이터")
+    public record FrontierDto (
+        List<FrontierPoint> frontierPoints,
+        FictionalPerformance optimalPerformance
     ) {
 
     }
