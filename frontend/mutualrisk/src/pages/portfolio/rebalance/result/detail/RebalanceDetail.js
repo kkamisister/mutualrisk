@@ -13,6 +13,7 @@ const RebalanceDetail = () => {
 				display: 'flex',
 				justifyContent: 'space-between',
 				alignItems: 'center',
+				height: '100%',
 			}}>
 			<RebalanceBefore sx={{ flex: 1 }} />
 			<Stack

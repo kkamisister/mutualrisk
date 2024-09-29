@@ -4,7 +4,7 @@ import { colors } from 'constants/colors';
 
 const DetailContainer = ({ title, children, ...props }) => {
 	return (
-		<Stack spacing={1} direction={'column'} width={'500px'}>
+		<Stack spacing={1} direction={'column'} width={'100%'} height={'100%'}>
 			<Box
 				sx={{
 					backgroundColor: '#B6B5D0',
@@ -23,7 +23,7 @@ const DetailContainer = ({ title, children, ...props }) => {
 				sx={{
 					backgroundColor: colors.background.box,
 					borderRadius: '20px',
-					height: '50px',
+					height: '300px',
 					padding: '20px',
 				}}>
 				{children}

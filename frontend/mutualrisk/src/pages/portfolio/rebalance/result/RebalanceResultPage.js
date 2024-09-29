@@ -7,6 +7,39 @@ import StockChangeList from 'pages/portfolio/rebalance/result/stockchange/StockC
 import BackTestChart from 'pages/portfolio/rebalance/result/backtest/BackTestChart';
 
 const RebalanceResultPage = () => {
+	const stockData = [
+		{
+			name: '엔비디아',
+			ticker: 'NVDA(NASDAQ)',
+			imagePath: 'https://link-to-image/nvda.png',
+			currentPrice: '58,000',
+			currentShares: '14',
+			rebalancedPrice: '56,500',
+			rebalancedShares: '19',
+			change: 5,
+		},
+		{
+			name: '엔비디아',
+			ticker: 'NVDA(NASDAQ)',
+			imagePath: 'https://link-to-image/nvda.png',
+			currentPrice: '58,000',
+			currentShares: '14',
+			rebalancedPrice: '56,500',
+			rebalancedShares: '19',
+			change: 5,
+		},
+		{
+			name: '엔비디아',
+			ticker: 'NVDA(NASDAQ)',
+			imagePath: 'https://link-to-image/nvda.png',
+			currentPrice: '58,000',
+			currentShares: '14',
+			rebalancedPrice: '56,500',
+			rebalancedShares: '19',
+			change: 5,
+		},
+		// 추가 데이터
+	];
 	return (
 		<Stack spacing={2} sx={{ backgroundColor: colors.background.pcrimary }}>
 			<Stack spacing={1}>
@@ -15,7 +48,7 @@ const RebalanceResultPage = () => {
 			</Stack>
 			<Stack spacing={1}>
 				<TitleDivider text="종목별 보유량 변화" />
-				<StockChangeList />
+				<StockChangeList stocks={stockData} />
 			</Stack>
 			<Stack spacing={1}>
 				<TitleDivider text="백테스팅" />
