@@ -8,6 +8,7 @@ const StockListItem = ({ name, imagePath, clicked, onClick }) => {
 			imagePath={imagePath}
 			clicked={clicked}
 			onClick={onClick}
+			sx={{ border: 'none' }}
 		/>
 	);
 };

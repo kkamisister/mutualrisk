@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import StockList from 'pages/portfolio/create/stocksearch/StockList';
 import BasicButton from 'components/button/BasicButton';
 import { colors } from 'constants/colors';
 import StockSearchBar from './StockSearchBar';
 import Title from 'components/title/Title';
+import CloseIcon from '@mui/icons-material/Close';
 
 const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
 	const mockData = {
@@ -155,25 +156,48 @@ const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
 			<Box sx={{ py: '20px' }}>
 				<Title text="종목 검색" />
 			</Box>
-			<StockSearchBar />
 			<Box
 				sx={{
-					bgcolor: colors.main.primary800,
+					bgcolor: colors.background.white,
 					my: 2,
 					borderRadius: '16px',
+					border: `solid 1px ${colors.point.stroke}`,
 					p: 2,
 				}}>
-				<StockList
-					assets={mockData.assets}
-					selectedStocks={tempStocks}
-					onStockSelect={handleTempStocks}
-					sx={{
-						display: 'flex',
-						flexDirection: 'row',
-						overflowX: 'auto',
-						whiteSpace: 'nowrap',
-					}}
-				/>
+				<StockSearchBar />
+				{mockData.assets ? (
+					<StockList
+						assets={mockData.assets}
+						selectedStocks={tempStocks}
+						onStockSelect={handleTempStocks}
+						sx={{
+							display: 'flex',
+							flexDirection: 'row',
+							overflowX: 'auto',
+							whiteSpace: 'nowrap',
+						}}
+					/>
+				) : (
+					<Box
+						sx={{
+							display: 'flex',
+							flexDirection: 'column',
+							color: colors.text.sub1,
+							p: 4,
+							justifyContent: 'center',
+							alignItems: 'center',
+							textAlign: 'center',
+						}}>
+						<CloseIcon sx={{ fontSize: '100px' }} />
+						<Typography
+							sx={{
+								fontWeight: 'bold',
+								fontSize: '16px',
+							}}>
+							검색 결과가 없습니다.
+						</Typography>
+					</Box>
+				)}
 				<Box sx={{ display: 'flex', justifyContent: 'center' }}>
 					<BasicButton text="추가" onClick={confirmSelectedStocks} />
 				</Box>
