@@ -1,7 +1,7 @@
 import { Stack } from '@mui/material';
 import { colors } from 'constants/colors';
 
-const WidgetContainer = ({ children }) => {
+const WidgetContainer = ({ children, sx = {} }) => {
 	return (
 		<Stack
 			spacing={1}
@@ -10,6 +10,7 @@ const WidgetContainer = ({ children }) => {
 				padding: '20px',
 				borderRadius: '20px',
 				border: `solid 1px ${colors.point.stroke}`,
+				...sx,
 			}}>
 			{children}
 		</Stack>

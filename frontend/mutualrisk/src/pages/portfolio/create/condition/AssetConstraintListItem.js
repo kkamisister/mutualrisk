@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
-const AssetConstraintListItem = () => {
-	return <Box>쀼잉</Box>;
+const AssetConstraintListItem = ({ asset }) => {
+	return <Box>{asset.title}</Box>;
 };
 
 export default AssetConstraintListItem;

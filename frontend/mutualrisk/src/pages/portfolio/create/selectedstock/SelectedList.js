@@ -2,7 +2,10 @@ import { Box } from '@mui/material';
 import SelectedListItem from 'pages/portfolio/create/selectedstock/SelectedListItem';
 const SelectedList = ({ assets, onStockSelect }) => {
 	return (
-		<Box>
+		<Box
+			sx={{
+				maxHeight: '100vh',
+			}}>
 			{assets &&
 				assets.map(asset => (
 					<SelectedListItem
