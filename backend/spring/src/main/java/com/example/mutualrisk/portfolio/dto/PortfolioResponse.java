@@ -70,7 +70,7 @@ public record PortfolioResponse() {
 
     @Builder
     @Schema(name = "포트폴리오 이익률 추이 데이터", description = "유저 포트폴리오의 수익률 추이 데이터")
-    public record PortfolioBacktestingResultDto(
+    public record PortfolioValuationDto(
         TimeInterval timeInterval,
         PerformanceMeasure measure,
         String portfolioId,
