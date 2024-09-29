@@ -68,7 +68,6 @@ const StockAddBox = () => {
 					}}>
 					{stockInfoSample.title}({stockInfoSample.symbol})
 				</span>
-				{/* {getParticle(stockInfoSample.title)} 포트폴리오에 추가하면 <br /> */}
 				{getParticle(stockInfoSample.title)} 포트폴리오에 추가하면 예상
 				수익룰이{' '}
 				<span
@@ -101,9 +100,8 @@ const StockAddBox = () => {
 					'&:hover': {
 						backgroundColor: colors.main.primary200,
 					},
-				}}>
-				종목 추가하기
-			</CustomButton>
+				}}
+				text={'종목 추가하기'}></CustomButton>
 			<ChangeCircleOutlinedIcon
 				onClick={() => console.log('icon Clicked')}
 				sx={{

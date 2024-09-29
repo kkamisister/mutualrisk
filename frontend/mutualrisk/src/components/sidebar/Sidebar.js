@@ -21,8 +21,8 @@ const SidebarItemInfoArray = [
 	{
 		title: '리밸런싱',
 		icon: InsightsIcon,
-		move: '/portfolio/rebalance',
-		sub: ['/portfolio/rebalance'],
+		move: '/rebalance',
+		sub: ['/rebalance'],
 		clicked: false,
 	},
 	{
