@@ -12,5 +12,5 @@ public interface AssetNewsRepositoryCustom {
 
     List<AssetNews> findByAsset(Asset asset);
 
-    List<AssetNews> findAllByNews(News news);
+    List<AssetNews> findAllByNews(News news,List<Asset> userInterestAssetList);
 }

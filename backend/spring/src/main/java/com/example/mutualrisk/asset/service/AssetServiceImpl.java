@@ -102,6 +102,8 @@ public class AssetServiceImpl implements AssetService{
             .map(InterestAsset::getAsset)
             .toList();
 
+        // log.warn("userInterestAssetList : {}", userInterestAssetList);
+
         // 관심자산이 없으면 바로 응답을 반환한다
         if(userInterestAssetList.isEmpty()){
             AssetResultDto result = AssetResultDto.builder()
@@ -115,6 +117,8 @@ public class AssetServiceImpl implements AssetService{
 
         List<LocalDateTime> twoValidDate = assetHistoryService.getValidDate(userInterestAssetList.get(0),
             LocalDateTime.now(), 2);
+
+        // log.warn("twoValidDate : {}",twoValidDate);
 
         // 환율을 가져오는 메서드
         Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
@@ -368,6 +372,10 @@ public class AssetServiceImpl implements AssetService{
 
         LocalDateTime endDate = LocalDateTime.now();
         LocalDateTime startDate = endDate.minusDays(5);
+
+        log.warn("startDate : {}",startDate);
+        log.warn("endDate : {}", endDate);
+
         List<AssetHistory> recentAssetHistoryList = assetHistoryRepository.findRecentHistoriesBetweenDates(asset,startDate,endDate);
         if (recentAssetHistoryList.size() < 2) throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
 
@@ -391,7 +399,7 @@ public class AssetServiceImpl implements AssetService{
         // 관심 자산에 대한 관련 뉴스 가져오기
         List<AssetNews> relatedAssetNews = assetNewsRepository.findByAssetIn(userInterestAssetList);
 
-        log.warn("자산관련 뉴스 : {}",relatedAssetNews);
+        // log.warn("자산관련 뉴스 : {}",relatedAssetNews);
 
         // 뉴스별로 관련된 AssetInfo와 함께 NewsInfo를 생성
         return relatedAssetNews.stream()
@@ -399,7 +407,7 @@ public class AssetServiceImpl implements AssetService{
                 News news = assetNews.getNews();
 
                 // 해당 뉴스와 관련된 자산 정보 생성
-                List<AssetInfo> relatedAssetInfoList = getRelatedAssetInfoList(news, assetHistoryMap, recentExchangeRate);
+                List<AssetInfo> relatedAssetInfoList = getRelatedAssetInfoList(userInterestAssetList,news, assetHistoryMap, recentExchangeRate);
 
                 // 뉴스 정보를 정제하고 NewsInfo 생성
                 String cleanedTitle = getCleanedTitle(news.getTitle());
@@ -415,9 +423,9 @@ public class AssetServiceImpl implements AssetService{
      * @param recentExchangeRate
      * @return
      */
-    private List<AssetInfo> getRelatedAssetInfoList(News news, Map<Asset, List<AssetHistory>> assetHistoryMap, Double recentExchangeRate) {
+    private List<AssetInfo> getRelatedAssetInfoList(List<Asset> userInterestAssetList,News news, Map<Asset, List<AssetHistory>> assetHistoryMap, Double recentExchangeRate) {
         // 뉴스와 연관된 모든 자산을 가져옴
-        List<AssetNews> assetNewsList = assetNewsRepository.findAllByNews(news);
+        List<AssetNews> assetNewsList = assetNewsRepository.findAllByNews(news,userInterestAssetList);
 
         // 연관된 자산을 기반으로 AssetInfo를 생성
         return assetNewsList.stream()
