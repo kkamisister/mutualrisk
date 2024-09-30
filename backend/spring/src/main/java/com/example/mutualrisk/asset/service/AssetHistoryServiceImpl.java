@@ -57,7 +57,7 @@ public class AssetHistoryServiceImpl implements AssetHistoryService {
     @Override
     // targetDate와 가장 가까운 영업일 날짜 n개를 반환하는 함수
     public List<LocalDateTime> getValidDate(Asset asset, LocalDateTime targetDate, int num) {
-        LocalDateTime startDate = targetDate.minusDays(5 * num);
+        LocalDateTime startDate = targetDate.minusDays(10 * num);
 
         List<AssetHistory> recentHistoriesBetweenDates = assetHistoryRepository.findRecentHistoriesBetweenDates(asset,
             startDate, targetDate);

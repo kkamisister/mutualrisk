@@ -366,15 +366,22 @@ public class AssetServiceImpl implements AssetService{
      */
     private AssetInfo getAssetInfo(Asset asset,Double recentExchangeRate) {
 
-        LocalDateTime endDate = LocalDateTime.now();
-        LocalDateTime startDate = endDate.minusDays(5);
-        List<AssetHistory> recentAssetHistoryList = assetHistoryRepository.findRecentHistoriesBetweenDates(asset,startDate,endDate);
-        if (recentAssetHistoryList.size() < 2) throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
+
+
+        LocalDateTime targetDate = LocalDateTime.now();
+        List<LocalDateTime> validDate = assetHistoryService.getValidDate(asset, targetDate, 2);
+        if (validDate.size() < 2) throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
 
         // Todo: recentDate와 now 비교 로직 추가
 //        LocalDate now = LocalDate.now();
 //        LocalDate recentDate = LocalDate.from(recentAssetHistoryList.getDate());
 
+        List<AssetHistory> recentAssetHistoryList = new ArrayList<>();
+        recentAssetHistoryList.add(assetHistoryRepository.findRecentHistoryOfAsset(asset, validDate.get(0))
+            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND)));
+
+        recentAssetHistoryList.add(assetHistoryRepository.findRecentHistoryOfAsset(asset, validDate.get(1))
+            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND)));
 
         return AssetInfo.of(asset, recentAssetHistoryList, recentExchangeRate);
     }
