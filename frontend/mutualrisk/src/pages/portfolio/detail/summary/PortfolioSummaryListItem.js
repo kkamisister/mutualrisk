@@ -12,29 +12,25 @@ const PortfolioSummaryListItem = ({ title, children }) => {
 				maxWidth: '160px',
 				transition:
 					'background-color 0.3s ease, color 0.3s ease, width 0.3s ease',
+				display: 'flex',
+				flexDirection: 'column',
+				justifyContent: 'space-between',
 				'&:hover': {
 					backgroundColor: colors.background.box,
 				},
 			}}>
-			{/* 소제목 공통 레이아웃 */}
 			<Typography
 				sx={{
 					fontSize: '13px',
 					fontWeight: 'bold',
 					color: colors.text.sub2,
-					marginBottom: '8px',
 				}}>
 				{title}
 			</Typography>
 
-			{/* 커스텀 콘텐츠 */}
 			<Box
 				sx={{
-					display: 'flex',
-					justifyContent: 'center',
-					alignItems: 'center',
-					flexDirection: 'column',
-					justifyContent: 'space-between',
+					flexGrow: 1,
 					height: '100%',
 				}}>
 				{children}

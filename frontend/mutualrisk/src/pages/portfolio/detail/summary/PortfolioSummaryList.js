@@ -46,6 +46,7 @@ const PortfolioSummaryList = () => {
 						16.3%
 					</Typography>
 				</PortfolioSummaryListItem>
+
 				{/* 위험도 박스 */}
 				<PortfolioSummaryListItem title="국내채권 대비 위험도">
 					<Box
@@ -53,7 +54,17 @@ const PortfolioSummaryList = () => {
 							display: 'flex',
 							justifyContent: 'center',
 							alignItems: 'center',
+							height: '100%',
 						}}>
+						<Box
+							sx={{
+								width: '30px', // 동그라미 크기 설정
+								height: '30px',
+								borderRadius: '50%', // 동그라미 모양 만들기
+								backgroundColor: 'green', // 동그라미 색상 설정
+								marginRight: '8px', // Typography와의 간격 설정
+							}}
+						/>
 						<Typography
 							sx={{
 								fontSize: '18px',
@@ -71,7 +82,17 @@ const PortfolioSummaryList = () => {
 							display: 'flex',
 							justifyContent: 'center',
 							alignItems: 'center',
+							height: '100%',
 						}}>
+						<Box
+							sx={{
+								width: '30px', // 동그라미 크기 설정
+								height: '30px',
+								borderRadius: '50%', // 동그라미 모양 만들기
+								backgroundColor: 'green', // 동그라미 색상 설정
+								marginRight: '8px', // Typography와의 간격 설정
+							}}
+						/>
 						<Typography
 							sx={{
 								fontSize: '18px',
@@ -89,7 +110,17 @@ const PortfolioSummaryList = () => {
 							display: 'flex',
 							justifyContent: 'center',
 							alignItems: 'center',
+							height: '100%',
 						}}>
+						<Box
+							sx={{
+								width: '30px', // 동그라미 크기 설정
+								height: '30px',
+								borderRadius: '50%', // 동그라미 모양 만들기
+								backgroundColor: 'green', // 동그라미 색상 설정
+								marginRight: '8px', // Typography와의 간격 설정
+							}}
+						/>
 						<Typography
 							sx={{
 								fontSize: '18px',
@@ -107,7 +138,17 @@ const PortfolioSummaryList = () => {
 							display: 'flex',
 							justifyContent: 'center',
 							alignItems: 'center',
+							height: '100%',
 						}}>
+						<Box
+							sx={{
+								width: '30px', // 동그라미 크기 설정
+								height: '30px',
+								borderRadius: '50%', // 동그라미 모양 만들기
+								backgroundColor: 'green', // 동그라미 색상 설정
+								marginRight: '8px', // Typography와의 간격 설정
+							}}
+						/>
 						<Typography
 							sx={{
 								fontSize: '18px',
