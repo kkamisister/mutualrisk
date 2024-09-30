@@ -3,6 +3,7 @@ import { Stack } from '@mui/material';
 import AssetRatioPieChart from 'pages/portfolio/detail/asset/AssetRatioPieChart';
 import AssetList from 'pages/portfolio/detail/asset/AssetList';
 import { colors } from 'constants/colors';
+import Title from 'components/title/Title';
 
 const AssetRatio = () => {
 	return (
@@ -14,6 +15,7 @@ const AssetRatio = () => {
 				borderRadius: '20px',
 				border: `solid 1px ${colors.point.stroke}`,
 			}}>
+			<Title text={'보유 자산 비율'} />
 			<Stack
 				spacing={2}
 				direction="row"

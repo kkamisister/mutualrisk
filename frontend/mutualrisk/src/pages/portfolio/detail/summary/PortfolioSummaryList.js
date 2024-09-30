@@ -65,14 +65,14 @@ const PortfolioSummaryList = () => {
 						16.3%
 					</Typography>
 				</PortfolioSummaryListItem>
+				{/* <PortfolioSummaryListItem />
 				<PortfolioSummaryListItem />
 				<PortfolioSummaryListItem />
 				<PortfolioSummaryListItem />
 				<PortfolioSummaryListItem />
 				<PortfolioSummaryListItem />
 				<PortfolioSummaryListItem />
-				<PortfolioSummaryListItem />
-				<PortfolioSummaryListItem />
+				<PortfolioSummaryListItem /> */}
 			</Stack>
 		</HorizontalScrollContainer>
 	);
