@@ -400,15 +400,46 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<PortfolioReturnDto> portfolioReturnList = new ArrayList<>();
         for (int dDate = 30; dDate >= 1; dDate--) {
             LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
-            Double valuation = getHistoricValuation(portfolioAssetList, assetList, targetDate);
-            portfolioReturnList.add(Performance.builder()
-                .time(targetDate)
-                .valuation(valuation)
+            Double returns = getPortfolioReturn(portfolioAssetList, assetList, targetDate, timeInterval);
+            portfolioReturnList.add(PortfolioReturnDto.builder()
+                .date(targetDate)
+                .portfolioReturns(returns)
                 .build());
         }
 
 
-        return new ResponseWithData<>(HttpStatus.OK.value(), "자산 평가액 조회 성공", portfolioReturnList);
+        return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 월별 수익률 조회 성공", portfolioReturnList);
+    }
+
+    private Double getPortfolioReturn(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList, LocalDateTime targetDate, TimeInterval timeInterval) {
+        List<Integer> quantityList = portfolioAssetList.stream()
+            .map(portfolioAsset -> getPastQuantity(portfolioAsset, targetDate))
+            .toList();
+
+        // 특정 날짜의 자산 가격을 가져옴
+        List<Double> assetPrices = assetHistoryService.getAssetHistoryList(assetList, targetDate)
+            .stream()
+            .map(AssetHistory::getPrice)
+            .toList();
+
+        Double valuation = IntStream.range(0, quantityList.size())
+            .mapToDouble(i -> quantityList.get(i) * assetPrices.get(i))
+            .sum();
+
+        // 다음 날짜 구하기
+        LocalDateTime nextDate = dateUtil.getFutureDate(targetDate, timeInterval, 1);
+        // 특정 날짜의 자산 가격을 가져옴
+        List<Double> nextAssetPrices = assetHistoryService.getAssetHistoryList(assetList, nextDate)
+            .stream()
+            .map(AssetHistory::getPrice)
+            .toList();
+
+        Double nextValuation = IntStream.range(0, quantityList.size())
+            .mapToDouble(i -> quantityList.get(i) * nextAssetPrices.get(i))
+            .sum();
+
+
+        return (nextValuation - valuation) / valuation * 100;
     }
 
     private Double getHistoricValuation(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList, LocalDateTime targetDate) {
@@ -418,12 +449,13 @@ public class PortfolioServiceImpl implements PortfolioService{
             .map(AssetHistory::getPrice)
             .toList();
 
+        List<Integer> quantityList = portfolioAssetList.stream()
+            .map(portfolioAsset -> getPastQuantity(portfolioAsset, targetDate))
+            .toList();
+
         // PortfolioAsset의 totalPurchaseQuantity와 assetPrices를 곱한 값을 합산
         return IntStream.range(0, assetPrices.size())
-            .mapToDouble(i -> {
-                int quantity = getPastQuantity(portfolioAssetList.get(i), targetDate);
-                return quantity * assetPrices.get(i);
-            })
+            .mapToDouble(i -> assetPrices.get(i) * quantityList.get(i))
             .sum();
     }
 
