@@ -39,11 +39,11 @@ public class AssetNewsRepositoryCustomImpl extends Querydsl4RepositorySupport im
     }
 
     @Override
-    public List<AssetNews> findAllByNews(News news) {
+    public List<AssetNews> findAllByNews(News news,List<Asset> userInterestAssetList) {
         return selectFrom(assetNews)
             .join(assetNews.asset, asset).fetchJoin()
             .join(assetNews.news, QNews.news).fetchJoin()
-            .where(assetNews.news.eq(news))
+            .where(assetNews.news.eq(news).and(assetNews.asset.in(userInterestAssetList)))
             .fetch();
     }
 
