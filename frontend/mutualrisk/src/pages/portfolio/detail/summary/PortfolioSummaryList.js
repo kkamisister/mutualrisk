@@ -8,25 +8,6 @@ const PortfolioSummaryList = () => {
 	return (
 		<HorizontalScrollContainer>
 			<Stack direction="row" spacing={1}>
-				{/* 위험도 박스 */}
-				<PortfolioSummaryListItem title="위험도">
-					<Box
-						sx={{
-							display: 'flex',
-							justifyContent: 'center',
-							alignItems: 'center',
-						}}>
-						<Typography
-							sx={{
-								fontSize: '18px',
-								color: 'green',
-								fontWeight: 'bold',
-							}}>
-							안정
-						</Typography>
-					</Box>
-				</PortfolioSummaryListItem>
-
 				{/* 평가 금액 박스 */}
 				<PortfolioSummaryListItem title="평가 금액">
 					<Typography
@@ -65,14 +46,78 @@ const PortfolioSummaryList = () => {
 						16.3%
 					</Typography>
 				</PortfolioSummaryListItem>
-				{/* <PortfolioSummaryListItem />
-				<PortfolioSummaryListItem />
-				<PortfolioSummaryListItem />
-				<PortfolioSummaryListItem />
-				<PortfolioSummaryListItem />
-				<PortfolioSummaryListItem />
-				<PortfolioSummaryListItem />
-				<PortfolioSummaryListItem /> */}
+				{/* 위험도 박스 */}
+				<PortfolioSummaryListItem title="국내채권 대비 위험도">
+					<Box
+						sx={{
+							display: 'flex',
+							justifyContent: 'center',
+							alignItems: 'center',
+						}}>
+						<Typography
+							sx={{
+								fontSize: '18px',
+								color: 'green',
+								fontWeight: 'bold',
+							}}>
+							안정
+						</Typography>
+					</Box>
+				</PortfolioSummaryListItem>
+
+				<PortfolioSummaryListItem title="해외채권 대비 위험도">
+					<Box
+						sx={{
+							display: 'flex',
+							justifyContent: 'center',
+							alignItems: 'center',
+						}}>
+						<Typography
+							sx={{
+								fontSize: '18px',
+								color: 'green',
+								fontWeight: 'bold',
+							}}>
+							안정
+						</Typography>
+					</Box>
+				</PortfolioSummaryListItem>
+
+				<PortfolioSummaryListItem title="S&P 대비 위험도">
+					<Box
+						sx={{
+							display: 'flex',
+							justifyContent: 'center',
+							alignItems: 'center',
+						}}>
+						<Typography
+							sx={{
+								fontSize: '18px',
+								color: 'green',
+								fontWeight: 'bold',
+							}}>
+							안정
+						</Typography>
+					</Box>
+				</PortfolioSummaryListItem>
+
+				<PortfolioSummaryListItem title="코스피 대비 위험도">
+					<Box
+						sx={{
+							display: 'flex',
+							justifyContent: 'center',
+							alignItems: 'center',
+						}}>
+						<Typography
+							sx={{
+								fontSize: '18px',
+								color: 'green',
+								fontWeight: 'bold',
+							}}>
+							안정
+						</Typography>
+					</Box>
+				</PortfolioSummaryListItem>
 			</Stack>
 		</HorizontalScrollContainer>
 	);
