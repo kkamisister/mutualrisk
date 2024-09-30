@@ -1,17 +1,14 @@
 import { useState } from 'react';
 import { Stack, IconButton, Typography } from '@mui/material';
-import { Box, Avatar, Snackbar, Paper } from '@mui/material';
 import { colors } from 'constants/colors';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import Select from 'react-select';
 import StockSearchModal from './StockSearchModal';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import StockBookmarkListItem from './StockBookmarkListItem';
-import useBookmarkStore from 'stores/useBookmarkStore';
-import { useQueryClient } from '@tanstack/react-query';
-
 import SuccessSnackbar from 'components/snackbar/SuccessSnackbar';
 import FailedSnackbar from 'components/snackbar/FailedSnackBar';
+
 const AddStockButton = ({ setOpenSearchModal }) => {
 	return (
 		<IconButton

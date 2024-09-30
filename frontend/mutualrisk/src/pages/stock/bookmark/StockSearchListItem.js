@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Box, Stack, Avatar, Snackbar, Paper } from '@mui/material';
+import { Box, Stack, Avatar } from '@mui/material';
 import { colors } from 'constants/colors';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
