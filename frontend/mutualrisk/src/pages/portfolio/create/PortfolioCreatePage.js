@@ -33,7 +33,6 @@ const PortfolioCreatePage = () => {
 	const handleItemsConfirm = () => {
 		setShowConditionSetting(true);
 	};
-
 	return (
 		<Box
 			sx={{
@@ -55,6 +54,7 @@ const PortfolioCreatePage = () => {
 					{showSelectedItems && (
 						<SelectedList
 							assets={selectedStocks}
+							onItemsConfirm={handleItemsConfirm}
 							onStockSelect={handleStockSelect}
 						/>
 					)}
