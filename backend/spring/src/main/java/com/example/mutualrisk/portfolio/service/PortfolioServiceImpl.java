@@ -394,13 +394,15 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         List<Asset> assetList = assetRepository.findAllById(assetIdList);
 
-        // 3. 포트폴리오 백테스팅 결과 저장
+        // 3. 포트폴리오 monthly return 구하기
         LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
 
         List<PortfolioReturnDto> portfolioReturnList = new ArrayList<>();
+
+        // 30달 전, 29달 전, ..., 1달 전의 데이터를 기준으로 수익률을 구한다
         for (int dDate = 30; dDate >= 1; dDate--) {
-            LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
-            Double returns = getPortfolioReturn(portfolioAssetList, assetList, targetDate, timeInterval);
+            LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);   // 데이터 기준일
+            Double returns = getPortfolioReturn(portfolioAssetList, assetList, targetDate, timeInterval);   // 데이터 기준일을 기준으로, return 구하기
             portfolioReturnList.add(PortfolioReturnDto.builder()
                 .date(targetDate)
                 .portfolioReturns(returns)
@@ -411,34 +413,46 @@ public class PortfolioServiceImpl implements PortfolioService{
         return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 월별 수익률 조회 성공", portfolioReturnList);
     }
 
+    /**
+     *
+     * @param portfolioAssetList : 포트폴리오에 담긴 asset List
+     * @param assetList : 포트폴리오에 담긴 asset List(Entity 버전)
+     * @param targetDate : 수익률을 계산할 날짜
+     * @param timeInterval : 일 단위 수익률을 계산할지, 월 단위 수익률을 계산할지, 년 단위 수익률을 계산할지
+     * @return
+     */
     private Double getPortfolioReturn(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList, LocalDateTime targetDate, TimeInterval timeInterval) {
+        // 1. targetDate를 기준으로, 각 자산들의 보유량이 얼마였는지를 계산
         List<Integer> quantityList = portfolioAssetList.stream()
             .map(portfolioAsset -> getPastQuantity(portfolioAsset, targetDate))
             .toList();
 
-        // 특정 날짜의 자산 가격을 가져옴
+        // 2. targetDate를 기준으로, 각 자산이 얼마였는지를 계산
         List<Double> assetPrices = assetHistoryService.getAssetHistoryList(assetList, targetDate)
             .stream()
             .map(AssetHistory::getPrice)
             .toList();
 
+        // 3. quantityList와 assetPrices를 이용하여 targetDate 기준 포트폴리오 평가액을 계산
         Double valuation = IntStream.range(0, quantityList.size())
             .mapToDouble(i -> quantityList.get(i) * assetPrices.get(i))
             .sum();
 
-        // 다음 날짜 구하기
+        // 4. 다음 날짜 구하기
         LocalDateTime nextDate = dateUtil.getFutureDate(targetDate, timeInterval, 1);
-        // 특정 날짜의 자산 가격을 가져옴
+
+        // 5. nextDate를 기준으로, 각 자산이 얼마였는지를 계산
         List<Double> nextAssetPrices = assetHistoryService.getAssetHistoryList(assetList, nextDate)
             .stream()
             .map(AssetHistory::getPrice)
             .toList();
 
+        // 6. quantityList와 nextAssetPrices를 이용하여 nextDate 기준 포트폴리오 평가액을 계산
         Double nextValuation = IntStream.range(0, quantityList.size())
             .mapToDouble(i -> quantityList.get(i) * nextAssetPrices.get(i))
             .sum();
 
-
+        // 7. 수익률 반환
         return (nextValuation - valuation) / valuation * 100;
     }
 
