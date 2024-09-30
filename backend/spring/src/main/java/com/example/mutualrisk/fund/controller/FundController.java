@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
-import com.example.mutualrisk.fund.dto.FundResponse;
-import com.example.mutualrisk.fund.dto.FundResponse.FundPortfolioRecord;
+import com.example.mutualrisk.fund.dto.FundResponse.FundReturnDto;
 import com.example.mutualrisk.fund.dto.FundResponse.FundResultDto;
 import com.example.mutualrisk.fund.dto.FundResponse.FundSummaryResultDto;
 import com.example.mutualrisk.fund.service.FundService;
@@ -71,14 +70,14 @@ public class FundController {
 		@ApiResponse(responseCode = "200", description = "변동기록 조회 성공"),
 	})
 	@GetMapping("/history")
-	public ResponseEntity<ResponseWithData> getHistory(@RequestParam("period") Integer period,
-		@RequestParam("company") @Parameter(description = "회사명", required = true) String company,
-		HttpServletRequest request){
+	public ResponseEntity<ResponseWithData<List<FundReturnDto>>> getHistory(@RequestParam("period") Integer period,
+                                                                            @RequestParam("company") @Parameter(description = "회사명", required = true) String company,
+                                                                            HttpServletRequest request){
 
 		Integer userId = (Integer)request.getAttribute("userId");
 		// log.info("user Id : {}",userId);
 
-		ResponseWithData<List<FundPortfolioRecord>> fundHistory = fundService.getHistory(userId, company, period);
+		ResponseWithData<List<FundReturnDto>> fundHistory = fundService.getHistory(userId, company, period);
 
 		return ResponseEntity.status(fundHistory.status())
 			.body(fundHistory);

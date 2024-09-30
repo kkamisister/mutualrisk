@@ -4,6 +4,7 @@ import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.Region;
 import com.example.mutualrisk.common.enums.TimeInterval;
+import com.example.mutualrisk.fund.dto.FundResponse.*;
 import com.example.mutualrisk.portfolio.entity.FictionalPerformance;
 import com.example.mutualrisk.portfolio.entity.FrontierPoint;
 import com.example.mutualrisk.portfolio.entity.PortfolioAsset;
@@ -93,6 +94,14 @@ public record PortfolioResponse() {
     public record FrontierDto (
         List<FrontierPoint> frontierPoints,
         FictionalPerformance optimalPerformance
+    ) {
+
+    }
+
+    @Builder
+    public record PortfolioReturnDto (
+        LocalDateTime date,
+        Double portfolioReturns
     ) {
 
     }
