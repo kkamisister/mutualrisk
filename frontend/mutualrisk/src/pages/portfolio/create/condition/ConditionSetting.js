@@ -10,8 +10,7 @@ const ConditionSetting = ({ assets }) => {
 	return (
 		<Box
 			sx={{
-				minHeight: '100vh',
-				p: 3,
+				minHeight: '80vh',
 			}}>
 			<Title
 				text="제약 조건"
@@ -19,7 +18,7 @@ const ConditionSetting = ({ assets }) => {
 			/>
 			<WidgetContainer
 				sx={{
-					minHeight: '100vh',
+					minHeight: '80vh',
 				}}>
 				<AssetConstraintList assets={assets} />
 			</WidgetContainer>

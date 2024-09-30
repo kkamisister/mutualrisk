@@ -35,39 +35,28 @@ const PortfolioCreatePage = () => {
 	};
 
 	return (
-		<Box>
+		<Box
+			sx={{
+				maxHeight: '100vh',
+				overflowY: 'auto',
+			}}>
 			<BoxTitle title="포트폴리오 제작" />
 			<Box display="flex" width="100%">
-				<Box
-					flex="4 1 0%"
-					sx={{
-						maxWidth: '40%',
-					}}>
+				<Box flex="4 1 0%" sx={{ minWidth: 0 }}>
 					<StockSearch
 						onConfirm={handleSearchConfirm}
 						selectedStocks={selectedStocks}
 						onStockSelect={handleStockSelect}
+						sx={{
+							maxHeight: '40vh',
+							overflowY: 'auto',
+						}}
 					/>
 					{showSelectedItems && (
-						<Box>
-							<Title text="담은 종목" />
-							<WidgetContainer>
-								<SelectedList
-									assets={selectedStocks}
-									onStockSelect={handleStockSelect}
-								/>
-								<Box
-									sx={{
-										display: 'flex',
-										justifyContent: 'center',
-									}}>
-									<BasicButton
-										text="다음 단계"
-										onClick={handleItemsConfirm}
-									/>
-								</Box>
-							</WidgetContainer>
-						</Box>
+						<SelectedList
+							assets={selectedStocks}
+							onStockSelect={handleStockSelect}
+						/>
 					)}
 				</Box>
 				<Box flex="6 1 0%">
