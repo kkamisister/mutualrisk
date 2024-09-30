@@ -102,8 +102,6 @@ public class AssetServiceImpl implements AssetService{
             .map(InterestAsset::getAsset)
             .toList();
 
-        // log.warn("userInterestAssetList : {}", userInterestAssetList);
-
         // 관심자산이 없으면 바로 응답을 반환한다
         if(userInterestAssetList.isEmpty()){
             AssetResultDto result = AssetResultDto.builder()
@@ -117,8 +115,6 @@ public class AssetServiceImpl implements AssetService{
 
         List<LocalDateTime> twoValidDate = assetHistoryService.getValidDate(userInterestAssetList.get(0),
             LocalDateTime.now(), 2);
-
-        // log.warn("twoValidDate : {}",twoValidDate);
 
         // 환율을 가져오는 메서드
         Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
@@ -370,19 +366,22 @@ public class AssetServiceImpl implements AssetService{
      */
     private AssetInfo getAssetInfo(Asset asset,Double recentExchangeRate) {
 
-        LocalDateTime endDate = LocalDateTime.now();
-        LocalDateTime startDate = endDate.minusDays(5);
 
-        log.warn("startDate : {}",startDate);
-        log.warn("endDate : {}", endDate);
 
-        List<AssetHistory> recentAssetHistoryList = assetHistoryRepository.findRecentHistoriesBetweenDates(asset,startDate,endDate);
-        if (recentAssetHistoryList.size() < 2) throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
+        LocalDateTime targetDate = LocalDateTime.now();
+        List<LocalDateTime> validDate = assetHistoryService.getValidDate(asset, targetDate, 2);
+        if (validDate.size() < 2) throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
 
         // Todo: recentDate와 now 비교 로직 추가
 //        LocalDate now = LocalDate.now();
 //        LocalDate recentDate = LocalDate.from(recentAssetHistoryList.getDate());
 
+        List<AssetHistory> recentAssetHistoryList = new ArrayList<>();
+        recentAssetHistoryList.add(assetHistoryRepository.findRecentHistoryOfAsset(asset, validDate.get(0))
+            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND)));
+
+        recentAssetHistoryList.add(assetHistoryRepository.findRecentHistoryOfAsset(asset, validDate.get(1))
+            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND)));
 
         return AssetInfo.of(asset, recentAssetHistoryList, recentExchangeRate);
     }
