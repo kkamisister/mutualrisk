@@ -7,6 +7,7 @@ import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
+import com.example.mutualrisk.fund.dto.FundResponse.*;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
 import com.example.mutualrisk.portfolio.service.PortfolioService;
 
@@ -135,6 +136,30 @@ public class PortfolioController {
         }
 
         ResponseWithData<PortfolioValuationDto> portfolioValuationDtoResponseWithData = portfolioService.getHistoricalValuation(timeInterval, measure, userId);
+
+        return ResponseEntity.status(portfolioValuationDtoResponseWithData.status())
+            .body(portfolioValuationDtoResponseWithData);
+    }
+
+    @Operation(summary = "포트폴리오 monthly return 조회", description = "포트폴리오의 월별 수익률을 반환")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "자산 평가액 조회 성공"),
+    })
+    @GetMapping("/monthly-return")
+    public ResponseEntity<ResponseWithData<List<PortfolioReturnDto>>> getMonthlyReturn(
+        @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString,
+        HttpServletRequest request) {
+        Integer userId = (Integer)request.getAttribute("userId");
+
+        // parameter(Enum) 초기화
+        PerformanceMeasure measure;
+        try {
+            measure = PerformanceMeasure.valueOf(measureString.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
+        }
+
+        ResponseWithData<List<PortfolioReturnDto>> portfolioValuationDtoResponseWithData = portfolioService.getHistoricalReturns(TimeInterval.MONTH, measure, userId);
 
         return ResponseEntity.status(portfolioValuationDtoResponseWithData.status())
             .body(portfolioValuationDtoResponseWithData);

@@ -15,6 +15,7 @@ import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.common.util.DateUtil;
+import com.example.mutualrisk.fund.dto.FundResponse.*;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 import com.example.mutualrisk.portfolio.entity.*;
@@ -377,6 +378,37 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         return new ResponseWithData<>(HttpStatus.OK.value(), "자산 평가액 조회 성공", data);
 
+    }
+
+    @Override
+    public ResponseWithData<List<PortfolioReturnDto>> getHistoricalReturns(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId) {
+        // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
+        Portfolio portfolio = portfolioRepository.getMyPortfolio(userId);
+
+        // 2. AssetList 구하기
+        List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
+
+        List<Integer> assetIdList = portfolioAssetList.stream()
+            .map(PortfolioAsset::getAssetId)
+            .toList();
+
+        List<Asset> assetList = assetRepository.findAllById(assetIdList);
+
+        // 3. 포트폴리오 백테스팅 결과 저장
+        LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
+
+        List<PortfolioReturnDto> portfolioReturnList = new ArrayList<>();
+        for (int dDate = 30; dDate >= 1; dDate--) {
+            LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
+            Double valuation = getHistoricValuation(portfolioAssetList, assetList, targetDate);
+            portfolioReturnList.add(Performance.builder()
+                .time(targetDate)
+                .valuation(valuation)
+                .build());
+        }
+
+
+        return new ResponseWithData<>(HttpStatus.OK.value(), "자산 평가액 조회 성공", portfolioReturnList);
     }
 
     private Double getHistoricValuation(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList, LocalDateTime targetDate) {

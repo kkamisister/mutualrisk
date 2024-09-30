@@ -5,7 +5,6 @@ import static com.example.mutualrisk.asset.dto.AssetResponse.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.example.mutualrisk.asset.dto.AssetResponse;
 import com.example.mutualrisk.fund.entity.Fund;
 import com.example.mutualrisk.fund.entity.FundAsset;
 import com.example.mutualrisk.sector.entity.Sector;
@@ -133,15 +132,15 @@ public record FundResponse() {
 
 	@Builder
 	@Schema(name = "펀드 평가액 기록 데이터",description = "포트폴리오의 기간 별 평가액 데이터")
-	public record FundPortfolioRecord(
-		SubmissionDate submissionDate,
+	public record PortfolioReturnDto(
+		YearQuarter submissionDate,
 		Double fundReturns,
 		Double sp500Returns
 	){
 
-		public static FundPortfolioRecord of(SubmissionDate submissionDate,Double fundReturns,Double sp500returns){
-			return FundPortfolioRecord.builder()
-				.submissionDate(submissionDate)
+		public static PortfolioReturnDto of(YearQuarter yearQuarter, Double fundReturns, Double sp500returns){
+			return PortfolioReturnDto.builder()
+				.submissionDate(yearQuarter)
 				.fundReturns(fundReturns)
 				.sp500Returns(sp500returns)
 				.build();
@@ -150,14 +149,14 @@ public record FundResponse() {
 
 	@Builder
 	@Schema(name = "제출일 데이터", description = "제출일(연도,분기)를 표현하는 데이터")
-	public record SubmissionDate(
+	public record YearQuarter(
 		String year,
 		String quarter
 	){
 
-		public static SubmissionDate of(LocalDateTime submissionDate){
+		public static YearQuarter of(LocalDateTime submissionDate){
 
-			return SubmissionDate.builder()
+			return YearQuarter.builder()
 				.year(String.valueOf(submissionDate.getYear()))
 				.quarter(parseQuarter(submissionDate))
 				.build();
