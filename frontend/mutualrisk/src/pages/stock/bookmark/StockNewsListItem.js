@@ -2,6 +2,9 @@ import React from 'react';
 import { Avatar, Stack, Chip, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import { useLocation } from 'react-router-dom';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 
 const newsSampleData = {
 	title: '가계빚 상승세 눈에 띄게 줄었다…“한국도 금리인하 여건 갖춰져”',
@@ -19,8 +22,9 @@ const newsSampleData = {
 		},
 	],
 };
-const StockNewsListItem = () => {
-	const location = useLocation();
+
+const StockNewsListItem = ({ news }) => {
+	console.log(news);
 	return (
 		<Stack
 			direction="row"
@@ -34,8 +38,7 @@ const StockNewsListItem = () => {
 				cursor: 'pointer',
 			}}
 			onClick={() => {
-				console.log('dddd');
-				window.open(newsSampleData.link, '_blank');
+				window.open(news.link, '_blank');
 			}}>
 			<Stack direction="column" spacing={0.3}>
 				<Typography
@@ -44,17 +47,20 @@ const StockNewsListItem = () => {
 						color: colors.text.main,
 						fontWeight: 'bold',
 					}}>
-					{newsSampleData.title}
+					{news.title}
 				</Typography>
 				<Typography
 					sx={{
 						fontSize: '12px',
 						color: colors.text.sub1,
 					}}>
-					{newsSampleData.pubDate} · {newsSampleData.publisher}
+					{news.publishedAt}
 				</Typography>
-				<Stack direction="row">
-					{newsSampleData.relatedAssets.map(data => {
+				<Stack
+					direction="row"
+					spacing={1}
+					sx={{ flexWrap: 'wrap', alignContent: 'stretch' }}>
+					{news.relatedAssets.map(data => {
 						const label = `${data.name} ${data.dailyPriceChangeRate}%`;
 						return (
 							<Chip
@@ -79,12 +85,17 @@ const StockNewsListItem = () => {
 					})}
 				</Stack>
 			</Stack>
-			<Avatar
-				variant="rounded"
-				alt="뉴스 이미지"
-				src={newsSampleData.thumbnail}
-				sx={{ height: '70px', width: 'auto' }}
-			/>
+			{true ? (
+				''
+			) : (
+				<img
+					variant="rounded"
+					alt="뉴스 이미지"
+					src={news.thumbnailUrl}
+					sx={{ height: '70px', width: 'auto' }}
+					crossOrigin="anonymous"
+				/>
+			)}
 		</Stack>
 	);
 };
