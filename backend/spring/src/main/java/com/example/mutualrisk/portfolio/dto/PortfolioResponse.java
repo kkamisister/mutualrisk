@@ -17,7 +17,16 @@ import java.util.List;
 public record PortfolioResponse() {
 
     @Builder
-    @Schema(name = "포트폴리오 검색 결과 데이터", description = "유저의 포트폴리오 조회 시 반환되는 데이터")
+    @Schema(name = "포트폴리오의 요약 정보 데이터", description = "유저의 포트폴리오 전체 조회 시 반환되는 데이터")
+    public record SimplePortfolioDto(
+        String id,
+        Integer version
+    ) {
+
+    }
+
+    @Builder
+    @Schema(name = "포트폴리오 검색 결과 데이터", description = "유저의 개별 포트폴리오 조회 시 반환되는 데이터")
     public record PortfolioResultDto(
         Boolean hasPortfolio,
         PortfolioInfo portfolio

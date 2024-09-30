@@ -22,4 +22,6 @@ public interface PortfolioService {
     ResponseWithData<PortfolioValuationDto> getHistoricalValuation(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId);
 
     ResponseWithData<List<PortfolioReturnDto>> getHistoricalReturns(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId);
+
+    ResponseWithData<List<SimplePortfolioDto>> getAllUserPortfolio(Integer userId);
 }

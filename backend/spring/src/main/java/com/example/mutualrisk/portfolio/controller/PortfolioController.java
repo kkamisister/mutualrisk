@@ -36,7 +36,27 @@ public class PortfolioController {
 
     private final PortfolioService portfolioService;
 
+    @Operation(summary = "유저 전체 포트폴리오 조회", description = "유저가 만든 전체 포트폴리오 내역을 조회한다")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "유저 전체 포트폴리오 조회 성공")
+    })
     @GetMapping("/my")
+    public ResponseEntity<ResponseWithData<List<SimplePortfolioDto>>> getAllUserPortfolio(HttpServletRequest request) {
+        Integer userId = (Integer)request.getAttribute("userId");
+
+        ResponseWithData<List<SimplePortfolioDto>> allUserPortfolio = portfolioService.getAllUserPortfolio(userId);
+
+        return ResponseEntity.status(allUserPortfolio.status()).body(allUserPortfolio);
+    }
+
+    /**
+     * 포트폴리오 세부 정보를 반환하는 메서드
+     */
+    @Operation(summary = "포트폴리오 세부 정보 조회", description = "유저의 특정 버전에 해당하는 포트폴리오를 조회한다")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "포트폴리오 세부 정보 조회 성공")
+    })
+    @GetMapping("/my-asdf")
     public ResponseEntity<ResponseWithData<PortfolioResultDto>> getUserPortfolio(HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
 
