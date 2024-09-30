@@ -24,13 +24,19 @@ const StockBookmarkPage = () => {
 			<Grid item xs={4.9}>
 				<Stack spacing={1}>
 					<TitleDivider text="관심 종목" />
-					<StockBookmarkList assetList={data.assets || []} />
+					<StockBookmarkList
+						isLoading={isLoading}
+						assetList={data.assets || []}
+					/>
 				</Stack>
 			</Grid>
 			<Grid item xs={6.9}>
 				<Stack spacing={1}>
 					<TitleDivider text="나만의 뉴스" />
-					<StockNewsList newsList={data.news || []} />
+					<StockNewsList
+						isLoading={isLoading}
+						newsList={data.news || []}
+					/>
 				</Stack>
 			</Grid>
 		</Grid>
