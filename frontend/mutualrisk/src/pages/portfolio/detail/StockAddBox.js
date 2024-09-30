@@ -111,6 +111,9 @@ const StockAddBox = () => {
 					cursor: 'pointer',
 					marginLeft: '10px',
 					fontSize: '30px',
+					'&:hover': {
+						color: colors.text.sub2,
+					},
 				}}
 			/>
 		</Box>
