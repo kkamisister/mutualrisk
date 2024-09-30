@@ -13,7 +13,7 @@ public interface FundService {
 
 	ResponseWithData<FundResultDto> getFund(Integer userId,String fundId);
 
-	ResponseWithData<List<PortfolioReturnDto>> getHistory(Integer userId, String company, Integer period);
+	ResponseWithData<List<FundReturnDto>> getHistory(Integer userId, String company, Integer period);
 
 
 }

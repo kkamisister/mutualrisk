@@ -132,14 +132,14 @@ public record FundResponse() {
 
 	@Builder
 	@Schema(name = "펀드 평가액 기록 데이터",description = "포트폴리오의 기간 별 평가액 데이터")
-	public record PortfolioReturnDto(
+	public record FundReturnDto(
 		YearQuarter submissionDate,
 		Double fundReturns,
 		Double sp500Returns
 	){
 
-		public static PortfolioReturnDto of(YearQuarter yearQuarter, Double fundReturns, Double sp500returns){
-			return PortfolioReturnDto.builder()
+		public static FundReturnDto of(YearQuarter yearQuarter, Double fundReturns, Double sp500returns){
+			return FundReturnDto.builder()
 				.submissionDate(yearQuarter)
 				.fundReturns(fundReturns)
 				.sp500Returns(sp500returns)

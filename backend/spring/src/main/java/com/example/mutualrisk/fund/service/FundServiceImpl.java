@@ -208,7 +208,7 @@ public class FundServiceImpl implements FundService {
 	 * @return
 	 */
 	@Override
-	public ResponseWithData<List<PortfolioReturnDto>> getHistory(Integer userId, String company, Integer period) {
+	public ResponseWithData<List<FundReturnDto>> getHistory(Integer userId, String company, Integer period) {
 
 		// S&P 500 자산을 가지고온다
 		Asset sp500 = assetRepository.findById(3621)
@@ -217,12 +217,12 @@ public class FundServiceImpl implements FundService {
 		// 입력받은 펀드의 현재시점으로부터 period 전의 펀드 데이터를 구한다
 		List<Fund> fundsByPeriod = fundRepository.getFundsByPeriod(company, period);
 
-		List<PortfolioReturnDto> portfolioReturnDtoList = IntStream.range(0, fundsByPeriod.size() - 1)
+		List<FundReturnDto> fundReturnDtoList = IntStream.range(0, fundsByPeriod.size() - 1)
 			.mapToObj(i -> {
 				var fund = fundsByPeriod.get(i);
 				Double fundReturn = getFundReturn(fund, 3);
 				Double sp500Return = getAssetReturn(sp500, fund.getSubmissionDate().withHour(0), 3);
-				return PortfolioReturnDto.builder()
+				return FundReturnDto.builder()
 					.submissionDate(YearQuarter.of(fund.getSubmissionDate()))
 					.fundReturns(fundReturn)
 					.sp500Returns(sp500Return)
@@ -230,7 +230,7 @@ public class FundServiceImpl implements FundService {
 			})
 			.toList();
 
-		return new ResponseWithData<>(HttpStatus.OK.value(), "데이터 정상 반환", portfolioReturnDtoList);
+		return new ResponseWithData<>(HttpStatus.OK.value(), "데이터 정상 반환", fundReturnDtoList);
 	}
 
 
