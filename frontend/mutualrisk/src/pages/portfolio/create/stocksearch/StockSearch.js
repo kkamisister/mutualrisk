@@ -7,7 +7,7 @@ import StockSearchBar from './StockSearchBar';
 import Title from 'components/title/Title';
 import CloseIcon from '@mui/icons-material/Close';
 
-const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
+const StockSearch = ({ onConfirm, selectedStocks, onStockSelect, sx }) => {
 	const mockData = {
 		assets: [
 			{
@@ -152,14 +152,14 @@ const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
 		onConfirm([...selectedStocks, ...newStocks]);
 	};
 	return (
-		<Box>
-			<Box sx={{ py: '20px' }}>
-				<Title text="종목 검색" />
-			</Box>
+		<Box
+			sc={{
+				...sx,
+			}}>
+			<Title text="종목 검색" />
 			<Box
 				sx={{
 					bgcolor: colors.background.white,
-					my: 2,
 					borderRadius: '16px',
 					border: `solid 1px ${colors.point.stroke}`,
 					p: 2,

@@ -13,31 +13,21 @@ import { colors } from 'constants/colors';
 import Title from 'components/title/Title';
 import SearchIcon from '@mui/icons-material/Search';
 import StockSearchListItem from './StockSearchListItem';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchAssetsByKeyword } from 'libs/api';
 
-const StockSearchModal = ({ open, handleClose }) => {
+const StockSearchModal = ({
+	open,
+	handleClose,
+	setOpenSuccessSnackbar,
+	setOpenFailedSnackbar,
+	assetList,
+}) => {
 	const [keyword, setKeyword] = useState('');
 
-	const getSearchResultData = async keyword => {
-		if (!keyword) return { data: { assets: [] } }; // 빈 키워드일 경우 빈 결과 반환
-		const response = await fetch(
-			`https://j11a607.p.ssafy.io/api/v1/asset/keyword?keyword=${keyword}`,
-			{
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/x-www-form-urlencoded',
-					Authorization: 'Bearer dummyAccessToken',
-				},
-				credentials: 'include',
-			}
-		);
-		const data = await response.json();
-		return data.data.assets;
-	};
-
 	const { isLoading, data: searchResult = [] } = useQuery({
-		queryKey: ['searchResults', keyword], // keyword를 queryKey에 포함하여 키워드가 변경되면 새로운 요청 실행
-		queryFn: () => getSearchResultData(keyword),
+		queryKey: ['stockSearchResult', keyword], // keyword를 queryKey에 포함하여 키워드가 변경되면 새로운 요청 실행
+		queryFn: () => fetchAssetsByKeyword(keyword),
 		enabled: !!keyword, // 키워드가 있을 때만 요청 실행
 	});
 
@@ -116,10 +106,28 @@ const StockSearchModal = ({ open, handleClose }) => {
 					)}
 					{!isLoading && keyword !== '' && (
 						<Stack
-							spacing={1.5}
-							sx={{ overflow: 'scroll', overflowX: 'hidden' }}>
+							sx={{
+								overflow: 'scroll',
+								overflowX: 'hidden',
+								'&::-webkit-scrollbar': {
+									display: 'none',
+								},
+								'-ms-overflow-style': 'none',
+								'scrollbar-width': 'none',
+							}}>
 							{searchResult.map(data => (
-								<StockSearchListItem key={data.assetId} data={data} />
+								<StockSearchListItem
+									key={data.assetId}
+									data={data}
+									isAdded={
+										assetList.filter(asset => {
+											console.log(asset.assedId, data.assetId);
+											return asset.assetId === data.assetId;
+										}).length !== 0
+									}
+									setOpenSuccessSnackbar={setOpenSuccessSnackbar}
+									setOpenFailedSnackbar={setOpenFailedSnackbar}
+								/>
 							))}
 						</Stack>
 					)}

@@ -6,6 +6,8 @@ import Select from 'react-select';
 import StockSearchModal from './StockSearchModal';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import StockBookmarkListItem from './StockBookmarkListItem';
+import SuccessSnackbar from 'components/snackbar/SuccessSnackbar';
+import FailedSnackbar from 'components/snackbar/FailedSnackBar';
 
 const AddStockButton = ({ setOpenSearchModal }) => {
 	return (
@@ -24,9 +26,18 @@ const AddStockButton = ({ setOpenSearchModal }) => {
 			<Stack
 				direction="row"
 				spacing={0.5}
-				sx={{ justifyContent: 'center', alignItems: 'center' }}>
-				<AddCircleOutlineIcon fontSize="large" />
-				<Typography sx={{ fontWeight: 500, color: colors.text.sub1 }}>
+				sx={{
+					height: '40px',
+					justifyContent: 'center',
+					alignItems: 'center',
+				}}>
+				<AddCircleOutlineIcon />
+				<Typography
+					sx={{
+						fontSize: '14px',
+						fontWeight: 500,
+						color: colors.text.sub1,
+					}}>
 					추가하기
 				</Typography>
 			</Stack>
@@ -40,10 +51,27 @@ const options = [
 	{ value: 'size', label: '시가총액' },
 ];
 
-const StockBookmarkList = () => {
+const StockBookmarkList = ({ assetList }) => {
 	const [selectedOption, setSelectedOption] = useState(options[0]);
 	const [openSearchModal, setOpenSearchModal] = useState(false);
 	const [bookmarkListEdit, setBookmarkListEdit] = useState(false);
+
+	const [openSuccessSnackbar, setOpenSuccessSnackbar] = useState(false); // 성공했을 경우 열리는 Snackbar 상태
+	const [openFailedSnackbar, setOpenFailedSnackbar] = useState(false); // 성공했을 경우 열리는 Snackbar 상태
+
+	const handleSuccessSnackbarClose = (event, reason) => {
+		if (reason === 'clickaway') {
+			return;
+		}
+		setOpenSuccessSnackbar(false);
+	};
+
+	const handleFailedSnackbarClose = (event, reason) => {
+		if (reason === 'clickaway') {
+			return;
+		}
+		setOpenFailedSnackbar(false);
+	};
 
 	return (
 		<Stack
@@ -71,7 +99,7 @@ const StockBookmarkList = () => {
 			</Stack>
 			<AddStockButton setOpenSearchModal={setOpenSearchModal} />
 
-			{[0, 0, 0, 0, 0].map(() => {
+			{assetList.map(asset => {
 				return (
 					<Stack
 						direction="row"
@@ -90,7 +118,7 @@ const StockBookmarkList = () => {
 								<RemoveCircleIcon sx={{ color: colors.point.red }} />
 							</Stack>
 						)}
-						<StockBookmarkListItem />
+						<StockBookmarkListItem asset={asset} />
 					</Stack>
 				);
 			})}
@@ -100,6 +128,21 @@ const StockBookmarkList = () => {
 				handleClose={() => {
 					setOpenSearchModal(false);
 				}}
+				setOpenSuccessSnackbar={setOpenSuccessSnackbar}
+				setOpenFailedSnackbar={setOpenFailedSnackbar}
+				assetList={assetList}
+			/>
+			<SuccessSnackbar
+				message="북마크에 추가하였습니다"
+				openSnackbar={openSuccessSnackbar}
+				// openSnackbar={true}
+				handleSnackbarClose={handleSuccessSnackbarClose}
+			/>
+			<FailedSnackbar
+				message="북마크에서 제거하였습니다"
+				openSnackbar={openFailedSnackbar}
+				// openSnackbar={true}
+				handleSnackbarClose={handleFailedSnackbarClose}
 			/>
 		</Stack>
 	);
