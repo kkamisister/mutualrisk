@@ -14,6 +14,7 @@ const FundStockListItem = () => {
 	return (
 		<Stack
 			direction="row"
+			spacing={0.5}
 			sx={{
 				backgroundColor: colors.background.box,
 				padding: '10px',

@@ -5,15 +5,14 @@ import { colors } from 'constants/colors';
 const AssetListItem = ({ asset }) => {
 	return (
 		<Stack
-			spacing={1}
 			direction="row"
 			sx={{
-				width: '700px',
+				width: '500px',
 				maxWidth: '100%',
 				display: 'flex',
-				justifyContent: 'space-between',
+				justifyContent: 'space-evenly',
 				alignItems: 'center',
-				marginBottom: '18px',
+				marginBottom: '9px',
 			}}>
 			<Box
 				sx={{
@@ -22,13 +21,11 @@ const AssetListItem = ({ asset }) => {
 					alignItems: 'center',
 					backgroundColor: colors.background.box,
 					borderRadius: '20px',
-					padding: '15px',
-					marginBottom: '15px',
-					boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+					padding: '10px',
+					marginRight: '8px',
 					flex: 1, // 부모 높이를 차지하게 설정
-					height: '80px',
+					height: '50px',
 					minHeight: '0', // 부모 높이에 따라 높이 제한
-					maxWidth: '75%',
 				}}>
 				{/* 좌측 아이콘 및 정보 */}
 				<Box
@@ -38,7 +35,7 @@ const AssetListItem = ({ asset }) => {
 					<Avatar
 						src={asset.imagePath}
 						alt={asset.name}
-						sx={{ width: '56px', height: '56px', marginRight: '15px' }}
+						sx={{ width: '40px', height: '40px', marginRight: '15px' }}
 					/>
 					<Box
 						sx={{
@@ -46,11 +43,11 @@ const AssetListItem = ({ asset }) => {
 							flexDirection: 'column',
 							justifyContent: 'space-evenly',
 						}}>
-						<Typography sx={{ fontSize: '20px', fontWeight: 'bold' }}>
+						<Typography sx={{ fontSize: '16px', fontWeight: 'bold' }}>
 							{asset.name}
 						</Typography>
 						<Typography
-							sx={{ fontSize: '16px', color: colors.text.sub2 }}>
+							sx={{ fontSize: '13px', color: colors.text.sub2 }}>
 							{asset.ticker}({asset.market})
 						</Typography>
 					</Box>
@@ -63,28 +60,28 @@ const AssetListItem = ({ asset }) => {
 						flexDirection: 'column',
 						justifyContent: 'space-evenly',
 						textAlign: 'right',
-						marginRight: '20px',
+						// marginRight: '20px',
 					}}>
 					<Typography
-						sx={{ color: 'red', fontWeight: 'bold', fontSize: '18px' }}>
+						sx={{ color: 'red', fontWeight: 'bold', fontSize: '16px' }}>
 						+{asset.changeAmount}원 ({asset.changeRate}%)
 					</Typography>
-					<Typography sx={{ fontSize: '18px', color: colors.text.sub2 }}>
+					<Typography sx={{ fontSize: '13px', color: colors.text.sub2 }}>
 						{asset.currentPrice}원
 					</Typography>
 				</Box>
 			</Box>
 			<Box
 				sx={{
-					backgroundColor: '#101C4E',
+					backgroundColor: '#73748B',
 					borderRadius: '20px',
 					color: '#FFFFFF',
-					padding: '15px',
+					padding: '10px',
 					minWidth: '60px',
 					textAlign: 'center',
-					fontSize: '24px',
+					fontSize: '20px',
 					fontWeight: 'bold',
-					height: '80px',
+					height: '50px',
 					minHeight: '0', // 부모 높이에 따라 높이 제한
 					maxWidth: '30%',
 					alignContent: 'center',

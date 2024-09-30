@@ -7,12 +7,18 @@ import StockBookmarkPage from 'pages/stock/bookmark/StockBookmarkPage';
 import FundPage from 'pages/fund/FundPage';
 import PortfolioCreatePage from 'pages/portfolio/create/PortfolioCreatePage';
 import PortfolioDetailPage from 'pages/portfolio/detail/PortfolioDetailPage';
+import RebalanceMainPage from 'pages/portfolio/rebalance/main/RebalanceMainPage';
+import RebalanceResultPage from 'pages/portfolio/rebalance/result/RebalanceResultPage';
 import DashboardLayout from 'layouts/DashboardLayout';
 import MainLayout from 'layouts/MainLayout';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
+const queryClient = new QueryClient();
 
 const App = () => {
 	return (
-		<>
+		<QueryClientProvider client={queryClient}>
 			<BrowserRouter>
 				<Routes>
 					<Route element={<MainLayout />}>
@@ -27,8 +33,11 @@ const App = () => {
 							path="/portfolio/detail"
 							element={<PortfolioDetailPage />}></Route>
 						<Route
-							path="/portfolio/rebalance"
-							element={<StockDetailPage />}></Route>
+							path="/rebalance"
+							element={<RebalanceMainPage />}></Route>
+						<Route
+							path="/rebalance/result"
+							element={<RebalanceResultPage />}></Route>
 						<Route
 							path="/portfolio/create"
 							element={<PortfolioCreatePage />}></Route>
@@ -43,7 +52,8 @@ const App = () => {
 					</Route>
 				</Routes>
 			</BrowserRouter>
-		</>
+			<ReactQueryDevtools />
+		</QueryClientProvider>
 	);
 };
 

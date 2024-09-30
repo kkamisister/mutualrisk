@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Box, Button, Stack } from '@mui/material';
+import { Box, IconButton, Stack, Typography } from '@mui/material';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AssetListItem from 'pages/portfolio/detail/asset/AssetListItem';
 
 const AssetList = () => {
@@ -81,14 +83,17 @@ const AssetList = () => {
 	];
 
 	const [currentPage, setCurrentPage] = useState(0);
-	const itemsPerPage = 3;
+	const itemsPerPage = 5;
+
+	// 전체 페이지 수 계산
+	const totalPages = Math.ceil(assets.length / itemsPerPage);
 
 	// 현재 페이지에 표시할 항목들
 	const startIndex = currentPage * itemsPerPage;
 	const currentAssets = assets.slice(startIndex, startIndex + itemsPerPage);
 
 	const handleNextPage = () => {
-		if ((currentPage + 1) * itemsPerPage < assets.length) {
+		if (currentPage + 1 < totalPages) {
 			setCurrentPage(prev => prev + 1);
 		}
 	};
@@ -102,9 +107,8 @@ const AssetList = () => {
 	return (
 		<Stack
 			sx={{
-				height: '100%',
-				width: '50%',
-				minWidth: '400px',
+				height: '500px',
+				position: 'relative',
 			}}>
 			<Box
 				sx={{
@@ -113,9 +117,13 @@ const AssetList = () => {
 					flexDirection: 'column',
 					justifyContent: 'space-between',
 				}}>
-				<Box sx={{ marginTop: '20px', minWidth: 0, flex: 1 }}>
+				<Box
+					sx={{
+						marginTop: '20px',
+						minWidth: 0,
+						flex: 1,
+					}}>
 					<Box sx={{ flex: 1 }}>
-						{/* 여기서 currentAssets.map을 사용하여 현재 페이지의 항목들만 렌더링 */}
 						{currentAssets.map((asset, index) => (
 							<AssetListItem key={index} asset={asset} />
 						))}
@@ -125,21 +133,33 @@ const AssetList = () => {
 				<Box
 					sx={{
 						display: 'flex',
-						justifyContent: 'space-between',
-						marginTop: '10px',
+						justifyContent: 'center',
+						alignItems: 'center',
 					}}>
-					<Button
-						variant="contained"
+					{/* 왼쪽 화살표 */}
+					<IconButton
+						onClick={handlePrevPage}
 						disabled={currentPage === 0}
-						onClick={handlePrevPage}>
-						이전
-					</Button>
-					<Button
-						variant="contained"
-						disabled={(currentPage + 1) * itemsPerPage >= assets.length}
-						onClick={handleNextPage}>
-						다음
-					</Button>
+						sx={{
+							color: currentPage === 0 ? 'grey' : 'black',
+						}}>
+						<ChevronLeftIcon fontSize="large" />
+					</IconButton>
+
+					{/* 현재 페이지 / 전체 페이지 */}
+					<Typography variant="body1" sx={{ mx: 2 }}>
+						{currentPage + 1} / {totalPages}
+					</Typography>
+
+					{/* 오른쪽 화살표 */}
+					<IconButton
+						onClick={handleNextPage}
+						disabled={currentPage + 1 >= totalPages}
+						sx={{
+							color: currentPage + 1 >= totalPages ? 'grey' : 'black',
+						}}>
+						<ChevronRightIcon fontSize="large" />
+					</IconButton>
 				</Box>
 			</Box>
 		</Stack>

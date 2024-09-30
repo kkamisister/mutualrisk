@@ -1,11 +1,14 @@
 import React from 'react';
-import BoxTitle from 'components/title/BoxTitle';
 import TitleDivider from 'components/title/TitleDivider';
 import { Stack } from '@mui/material';
 import { colors } from 'constants/colors';
 import StockAddBox from 'pages/portfolio/detail/StockAddBox';
 import PortfolioSummaryList from 'pages/portfolio/detail/summary/PortfolioSummaryList';
 import AssetRatio from 'pages/portfolio/detail/asset/AssetRatio';
+import EfficientFrontier from 'pages/portfolio/detail/graph/EfficientFrontier';
+import BackTesting from 'pages/portfolio/detail/graph/BackTesting';
+import EquitySectors from 'pages/portfolio/detail/graph/EquitySectors';
+import MonthlyReturns from 'pages/portfolio/detail/graph/MonthlyReturns';
 
 const PortfolioDetailPage = () => {
 	return (
@@ -22,17 +25,22 @@ const PortfolioDetailPage = () => {
 			</Stack>
 
 			{/* 기타 그래프 섹션 */}
+			{/* 보유 자산 비율 */}
 			<Stack spacing={3}>
-				<BoxTitle title="보유 자산 비율" />
 				<AssetRatio />
 			</Stack>
+			{/* Efficien Frontier */}
 			<Stack spacing={3}>
-				<BoxTitle title="그래프1" />
-				<AssetRatio />
+				<EfficientFrontier />
 			</Stack>
 			<Stack spacing={3}>
-				<BoxTitle title="그래프2" />
-				<AssetRatio />
+				<BackTesting />
+			</Stack>
+			<Stack spacing={3}>
+				<EquitySectors />
+			</Stack>
+			<Stack spacing={3}>
+				<MonthlyReturns />
 			</Stack>
 		</Stack>
 	);

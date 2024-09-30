@@ -2,22 +2,35 @@ import React from 'react';
 import { Stack } from '@mui/material';
 import AssetRatioPieChart from 'pages/portfolio/detail/asset/AssetRatioPieChart';
 import AssetList from 'pages/portfolio/detail/asset/AssetList';
+import { colors } from 'constants/colors';
+import Title from 'components/title/Title';
 
 const AssetRatio = () => {
 	return (
 		<Stack
-			spacing={2}
-			direction="row"
+			spacing={1}
 			sx={{
-				width: '100%',
-				minWidth: '1000px',
-				height: '100%',
-				maxHeight: '100%',
-				alignItems: 'stretch',
-				flexWrap: 'wrap',
+				backgroundColor: colors.background.white,
+				padding: '20px',
+				borderRadius: '20px',
+				border: `solid 1px ${colors.point.stroke}`,
 			}}>
-			<AssetRatioPieChart sx={{ flex: 1 }} />
-			<AssetList sx={{ flex: 1 }} />
+			<Title text={'보유 자산 비율'} />
+			<Stack
+				spacing={2}
+				direction="row"
+				sx={{
+					width: '100%',
+					height: '100%',
+					maxHeight: '100%',
+					display: 'flex',
+					justifyContent: 'space-evenly',
+					alignItems: 'center',
+					flexWrap: 'nowrap',
+				}}>
+				<AssetRatioPieChart sx={{ flex: 1 }} />
+				<AssetList sx={{ flex: 1 }} />
+			</Stack>
 		</Stack>
 	);
 };

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import StockList from 'pages/portfolio/create/stocksearch/StockList';
 import BasicButton from 'components/button/BasicButton';
 import { colors } from 'constants/colors';
 import StockSearchBar from './StockSearchBar';
+import Title from 'components/title/Title';
+import CloseIcon from '@mui/icons-material/Close';
 
-const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
+const StockSearch = ({ onConfirm, selectedStocks, onStockSelect, sx }) => {
 	const mockData = {
 		assets: [
 			{
@@ -131,33 +133,75 @@ const StockSearch = ({ onConfirm, selectedStocks, onStockSelect }) => {
 		],
 	};
 
+	const [tempStocks, setTempStocks] = useState([]);
+	const handleTempStocks = stock => {
+		if (tempStocks.find(selected => selected.assetId === stock.assetId)) {
+			setTempStocks(
+				tempStocks.filter(selected => selected.assetId !== stock.assetId)
+			);
+		} else {
+			setTempStocks([...tempStocks, stock]);
+		}
+	};
+
+	const confirmSelectedStocks = () => {
+		const newStocks = tempStocks.filter(
+			stock =>
+				!selectedStocks.some(selected => selected.assetId === stock.assetId)
+		);
+		onConfirm([...selectedStocks, ...newStocks]);
+	};
 	return (
-		<Box>
+		<Box
+			sc={{
+				...sx,
+			}}>
+			<Title text="종목 검색" />
 			<Box
 				sx={{
-					fontSize: '20px',
-					fontWeight: 'bold',
-					color: colors.text.main,
+					bgcolor: colors.background.white,
+					borderRadius: '16px',
+					border: `solid 1px ${colors.point.stroke}`,
+					p: 2,
 				}}>
-				{'종목 검색'}
+				<StockSearchBar />
+				{mockData.assets ? (
+					<StockList
+						assets={mockData.assets}
+						selectedStocks={tempStocks}
+						onStockSelect={handleTempStocks}
+						sx={{
+							display: 'flex',
+							flexDirection: 'row',
+							overflowX: 'auto',
+							whiteSpace: 'nowrap',
+						}}
+					/>
+				) : (
+					<Box
+						sx={{
+							display: 'flex',
+							flexDirection: 'column',
+							color: colors.text.sub1,
+							p: 4,
+							justifyContent: 'center',
+							alignItems: 'center',
+							textAlign: 'center',
+						}}>
+						<CloseIcon sx={{ fontSize: '100px' }} />
+						<Typography
+							sx={{
+								fontWeight: 'bold',
+								fontSize: '16px',
+							}}>
+							검색 결과가 없습니다.
+						</Typography>
+					</Box>
+				)}
+				<Box sx={{ display: 'flex', justifyContent: 'center' }}>
+					<BasicButton text="추가" onClick={confirmSelectedStocks} />
+				</Box>
 			</Box>
-			<StockSearchBar />
-			<StockList
-				assets={mockData.assets}
-				selectedStocks={selectedStocks}
-				onStockSelect={onStockSelect}
-				sx={{
-					display: 'flex',
-					flexDirection: 'row',
-					overflowX: 'auto',
-					whiteSpace: 'nowrap',
-				}}
-			/>
-			<BasicButton
-				onClick={() => onConfirm(selectedStocks)}
-				sx={{ margin: '20px auto' }}>
-				추가
-			</BasicButton>
 		</Box>
 	);
 };
