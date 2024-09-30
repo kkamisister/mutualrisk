@@ -8,13 +8,14 @@ import WidgetContainer from 'components/container/WidgetConatiner';
 const SelectedList = ({ assets, onItemsConfirm, onStockSelect }) => {
 	return (
 		<Box>
-			{assets && (
+			{assets.length > 0 && (
 				<>
 					<Title text="담은 종목" />
 					<WidgetContainer
 						sx={{
 							maxHeight: '40vh',
 							overflowY: 'auto',
+							p: 2,
 						}}>
 						{assets.map(asset => (
 							<SelectedListItem
@@ -26,14 +27,14 @@ const SelectedList = ({ assets, onItemsConfirm, onStockSelect }) => {
 								onClick={() => onStockSelect(asset)}
 							/>
 						))}
+						<Box
+							sx={{
+								display: 'flex',
+								justifyContent: 'center',
+							}}>
+							<BasicButton text="다음 단계" onClick={onItemsConfirm} />
+						</Box>
 					</WidgetContainer>
-					<Box
-						sx={{
-							display: 'flex',
-							justifyContent: 'center',
-						}}>
-						<BasicButton text="다음 단계" onClick={onItemsConfirm} />
-					</Box>
 				</>
 			)}
 		</Box>
