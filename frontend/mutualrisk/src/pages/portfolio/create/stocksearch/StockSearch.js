@@ -7,7 +7,7 @@ import StockSearchBar from './StockSearchBar';
 import Title from 'components/title/Title';
 import CloseIcon from '@mui/icons-material/Close';
 
-const StockSearch = ({ onConfirm, selectedStocks, onStockSelect, sx }) => {
+const StockSearch = ({ onConfirm, selectedStocks, sx }) => {
 	const [tempStocks, setTempStocks] = useState([]);
 	const [searchResult, setSearchResult] = useState([]);
 
@@ -75,9 +75,12 @@ const StockSearch = ({ onConfirm, selectedStocks, onStockSelect, sx }) => {
 						</Typography>
 					</Box>
 				)}
-				<Box sx={{ display: 'flex', justifyContent: 'center' }}>
-					<BasicButton text="추가" onClick={confirmSelectedStocks} />
-				</Box>
+
+				{searchResult.length > 0 && (
+					<Box sx={{ display: 'flex', justifyContent: 'center' }}>
+						<BasicButton text="추가" onClick={confirmSelectedStocks} />
+					</Box>
+				)}
 			</Box>
 		</Box>
 	);
