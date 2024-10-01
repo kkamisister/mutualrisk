@@ -3,7 +3,6 @@ package com.example.mutualrisk.asset.service;
 import static com.example.mutualrisk.asset.dto.AssetRequest.*;
 import static com.example.mutualrisk.asset.dto.AssetResponse.*;
 
-import com.example.mutualrisk.asset.dto.AssetResponse;
 import com.example.mutualrisk.asset.dto.AssetResponse.AssetResultDto;
 import com.example.mutualrisk.asset.entity.*;
 import com.example.mutualrisk.asset.entity.ETFDetail;
@@ -16,7 +15,6 @@ import com.example.mutualrisk.asset.repository.StockDetailRepository;
 import com.example.mutualrisk.asset.repository.StockTrendRepository;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
-import com.example.mutualrisk.common.email.service.EmailService;
 import com.example.mutualrisk.common.enums.Order;
 import com.example.mutualrisk.common.enums.OrderCondition;
 import com.example.mutualrisk.common.exception.ErrorCode;
@@ -33,12 +31,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -442,8 +437,9 @@ public class AssetServiceImpl implements AssetService{
      * @param asset
      * @return
      */
-    private static AssetInfo getAssetInfo(Map<Asset, List<AssetHistory>> assetHistoryMap, Double recentExchangeRate,
-        Asset asset) {
+    @Override
+    public AssetInfo getAssetInfo(Map<Asset, List<AssetHistory>> assetHistoryMap, Double recentExchangeRate,
+                                  Asset asset) {
         // 해당 자산에 대응하는 AssetHistory를 가져옴
         List<AssetHistory> historiesForAsset = assetHistoryMap.get(asset);
 

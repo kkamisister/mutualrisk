@@ -1,10 +1,12 @@
 package com.example.mutualrisk.portfolio.service;
 
+import com.example.mutualrisk.asset.dto.AssetResponse.*;
 import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.asset.entity.AssetHistory;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
 import com.example.mutualrisk.asset.service.AssetHistoryService;
+import com.example.mutualrisk.asset.service.AssetService;
 import com.example.mutualrisk.common.dto.CommonResponse.*;
 import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.email.dto.EmailMessage;
@@ -39,6 +41,7 @@ import java.util.stream.IntStream;
 @Slf4j
 @RequiredArgsConstructor
 public class PortfolioServiceImpl implements PortfolioService{
+    private final AssetService assetService;
     private final AssetHistoryService assetHistoryService;
 
     private final PortfolioRepository portfolioRepository;
@@ -62,7 +65,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
         List<Asset> assetList = getAssetsFromPortfolio(portfolioAssetList);
         // 자산들의 구매 금액을 저장하는 리스트
-        List<Double> assetValuationList = calculatePurchaseAmounts(portfolioAssetList, assetList);
+        List<Double> assetValuationList = getAssetValuationList(portfolioAssetList, assetList);
         // 포트폴리오에 속해 있는 자산 리스트
 
         double totalValuation = assetValuationList.stream()
@@ -72,7 +75,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 3. 각 값의 비율을 계산해서 weights 리스트에 추가
         List<Double> weights = calculateWeights(assetValuationList, totalValuation);
 
-        List<PortfolioAssetInfo> portfolioAssetInfoList = buildPortfolioAssetInfoList(assetList, weights, portfolioAssetList, assetValuationList);
+        List<PortfolioAssetInfo> portfolioAssetInfoList = getPortfolioAssetInfos(userId, portfolioId);
 
         PortfolioPerformance portfolioPerformance = getPortfolioPerformance(assetList, weights, totalValuation);
 
@@ -500,6 +503,64 @@ public class PortfolioServiceImpl implements PortfolioService{
         return new ResponseWithData<>(HttpStatus.OK.value(), "유저 전체 포트폴리오 조회 성공", data);
     }
 
+    @Override
+    public ResponseWithData<List<PortfolioAssetInfo>> getAssetInfoList(Integer userId, String portfolioId) {
+        List<PortfolioAssetInfo> portfolioAssetInfoList = getPortfolioAssetInfos(userId, portfolioId);
+
+        return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 종목 정보 정상 반환", portfolioAssetInfoList);
+
+    }
+
+    private List<PortfolioAssetInfo> getPortfolioAssetInfos(Integer userId, String portfolioId) {
+        // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
+        Portfolio portfolio = getMyPortfolioById(userId, portfolioId);
+
+        // 2. 현재 유저 포트폴리오에 있는 자산 목록을 가져 온다
+        List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
+        List<Asset> assetList = getAssetsFromPortfolio(portfolioAssetList);
+
+        // 3. 자산들 중, 첫번째 자산의 최근종가일 2개를 가지고온다
+        // Todo : KR,US의 리스트를 따로 구분하여, 각각의 최근종가일을 구분하여 가져오기
+
+        List<LocalDateTime> twoValidDate = assetHistoryService.getValidDate(assetList.get(0),
+            LocalDateTime.now(), 2);
+
+        // 4. 환율을 가져온다
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+        // 5. 관심자산의 최근 종가를 가지고 온다
+        List<AssetHistory> recentHistory = assetHistoryRepository.findRecentHistoryOfAssetsBetweenDates(
+            assetList, twoValidDate.get(1), twoValidDate.get(0));
+
+        // 6. AssetHistory를 Asset별로 그룹핑한다
+        Map<Asset, List<AssetHistory>> assetHistoryMap = recentHistory.stream()
+            .collect(Collectors.groupingBy(AssetHistory::getAsset));
+
+        // log.warn("그룹핑 완료 : {}",assetHistoryMap);
+
+        // 7. Asset을 각각의 AssetHistory와 매핑하여 AssetInfo 생성
+        List<AssetInfo> assetInfoList = assetList.stream()
+            .map(asset -> {
+                // Asset에 대응하는 최근 2개의 AssetHistory를 가져온다
+                return assetService.getAssetInfo(assetHistoryMap, recentExchangeRate, asset);
+            })
+            .toList();
+
+        // 8. valuationList 생성하기
+        List<Double> valuationList = getAssetValuationList(portfolioAssetList, assetList);
+        double totalValuation = valuationList.stream().mapToDouble(Double::doubleValue).sum();
+
+        // 각 자산의 평가액을 총합으로 나눠서 weights 리스트를 생성
+        List<Double> weights = valuationList.stream()
+            .map(valuation -> valuation / totalValuation)
+            .toList();
+
+        List<PortfolioAssetInfo> portfolioAssetInfoList = IntStream.range(0, assetInfoList.size())
+            .mapToObj(i -> PortfolioAssetInfo.of(assetInfoList.get(i), weights.get(i), valuationList.get(i)))
+            .toList();
+        return portfolioAssetInfoList;
+    }
+
     /**
      *
      * @param portfolioAssetList : 포트폴리오에 담긴 asset List
@@ -640,20 +701,18 @@ public class PortfolioServiceImpl implements PortfolioService{
         return new ResponseWithData<>(HttpStatus.OK.value(), "정상적인 응답을 반환하였습니다", portfolioResultDto);
     }
 
-    private static List<PortfolioAssetInfo> buildPortfolioAssetInfoList(List<Asset> assetList, List<Double> weights, List<PortfolioAsset> portfolioAssetList, List<Double> assetValuationList) {
-
-        return IntStream.range(0, assetList.size())
-            .mapToObj(i -> PortfolioAssetInfo.of(portfolioAssetList.get(i), assetList.get(i), weights.get(i), assetValuationList.get(i)))
-            .toList();
-    }
-
     private static List<Double> calculateWeights(List<Double> purchaseAmounts, double totalAmount) {
         return purchaseAmounts.stream()
             .map(amount -> amount / totalAmount)
             .toList();
     }
 
-    private List<Double> calculatePurchaseAmounts(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList) {
+    /**
+     * 각 자산별 평가액 리스트를 반환하는 함수
+     * @param portfolioAssetList : 자산에 대한 정보 (List<PortfolioAsset> 형식)
+     * @param assetList : 자산에 대한 정보(List<Asset> 형식)
+     */
+    private List<Double> getAssetValuationList(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList) {
         Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
         return IntStream.range(0, portfolioAssetList.size())
