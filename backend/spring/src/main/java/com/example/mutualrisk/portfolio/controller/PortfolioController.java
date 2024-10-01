@@ -142,7 +142,7 @@ public class PortfolioController {
         @ApiResponse(responseCode = "200", description = "자산 평가액 조회 성공"),
     })
     @GetMapping("/valuation")
-    public ResponseEntity<ResponseWithData<PortfolioValuationDto>> getValuation(@RequestParam(value = "portfolioId") String portfolioId, @RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
+    public ResponseEntity<ResponseWithData<PortfolioValuationDto>> getValuation(@RequestParam(value = "portfolioId") String portfolioId, @RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "VALUATION") String measureString, HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
 
         // parameter(Enum) 초기화
