@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar, Box, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import CustomButton from 'components/button/BasicButton';
 import ChangeCircleOutlinedIcon from '@mui/icons-material/ChangeCircleOutlined';
@@ -106,10 +106,14 @@ const StockAddBox = () => {
 				onClick={() => console.log('icon Clicked')}
 				sx={{
 					position: 'absolute',
-					right: '20px',
-					color: colors.text.sub2,
+					right: '40px',
+					color: colors.text.sub1,
 					cursor: 'pointer',
 					marginLeft: '10px',
+					fontSize: '30px',
+					'&:hover': {
+						color: colors.text.sub2,
+					},
 				}}
 			/>
 		</Box>

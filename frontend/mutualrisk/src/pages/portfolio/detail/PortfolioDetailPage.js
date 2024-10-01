@@ -12,36 +12,22 @@ import MonthlyReturns from 'pages/portfolio/detail/graph/MonthlyReturns';
 
 const PortfolioDetailPage = () => {
 	return (
-		<Stack spacing={6} sx={{ backgroundColor: colors.background.primary }}>
+		<Stack spacing={2} sx={{ backgroundColor: colors.background.primary }}>
 			<StockAddBox />
 
 			{/* 포트폴리오 현황 요약 */}
-			<Stack spacing={2}>
+			<Stack spacing={1}>
 				<TitleDivider
 					text="포트폴리오 현황 요약"
 					caption="(최근 업데이트: 2024/12/31)"
 				/>
 				<PortfolioSummaryList />
 			</Stack>
-
-			{/* 기타 그래프 섹션 */}
-			{/* 보유 자산 비율 */}
-			<Stack spacing={3}>
-				<AssetRatio />
-			</Stack>
-			{/* Efficien Frontier */}
-			<Stack spacing={3}>
-				<EfficientFrontier />
-			</Stack>
-			<Stack spacing={3}>
-				<BackTesting />
-			</Stack>
-			<Stack spacing={3}>
-				<EquitySectors />
-			</Stack>
-			<Stack spacing={3}>
-				<MonthlyReturns />
-			</Stack>
+			<AssetRatio />
+			<EfficientFrontier />
+			<BackTesting />
+			<EquitySectors />
+			<MonthlyReturns />
 		</Stack>
 	);
 };
