@@ -2,18 +2,8 @@ import React from 'react';
 import SearchIcon from '@mui/icons-material/Search';
 import { TextField, Box } from '@mui/material';
 import { colors } from 'constants/colors';
-import useStockSearch from 'hooks/useStockSearch';
-import { useState } from 'react';
 
-const StockSearchBar = ({ onSearchResult }) => {
-	const { keyword, setKeyword, isLoading, searchResult } = useStockSearch();
-
-	React.useEffect(() => {
-		if (onSearchResult) {
-			onSearchResult(searchResult);
-		}
-	}, [searchResult, onSearchResult]);
-
+const StockSearchBar = ({ onKeywordChange }) => {
 	return (
 		<Box
 			sx={{
@@ -32,7 +22,7 @@ const StockSearchBar = ({ onSearchResult }) => {
 			<TextField
 				placeholder="종목 이름 또는 종목 코드를 입력하세요"
 				onChange={event => {
-					setKeyword(event.target.value);
+					onKeywordChange(event.target.value);
 				}}
 				fullWidth
 				sx={{
