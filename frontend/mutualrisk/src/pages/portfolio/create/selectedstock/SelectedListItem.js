@@ -1,41 +1,25 @@
-import { Avatar, Box, Stack, Typography } from '@mui/material';
+import { Stack, Box, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import CloseIcon from '@mui/icons-material/Close';
+import StockItemCard from 'components/card/StockItemCard';
 
 const SelectedListItem = ({ asset, clicked, onClick }) => {
+	const imageURL = `https://j11a607.p.ssafy.io${asset.imagePath}/${asset.imageName}`;
+	const price = Math.floor(asset.price).toLocaleString();
+	const dailyPriceChange = Math.floor(asset.dailyPriceChange).toLocaleString();
+
 	return (
-		<Stack
-			direction="row"
-			alignItems="center"
-			sx={{
-				bgcolor: colors.background.box,
-				borderRadius: '10px',
-				padding: '10px',
-				m: 1,
-				position: 'relative',
-			}}>
-			<Avatar
-				alt={asset.name}
-				src={`${asset.imagePath}/${asset.imageName}`}
-				sx={{
-					m: 1,
-				}}
-			/>
-			<Box>
-				<Box display="flex">
-					<Typography
-						sx={{
-							color: colors.text.main,
-							fontWeight: 'bold',
-						}}>
-						{asset.name}
-					</Typography>
-					<Typography sx={{ color: colors.text.sub2 }}>
-						{asset.code}(asset.market)
-					</Typography>
-				</Box>
-				<Box display="flex">
-					<Typography>{asset.price}원</Typography>
+		<StockItemCard
+			code={asset.code}
+			name={asset.name}
+			market={asset.market}
+			image={imageURL}>
+			<Stack
+				direction="row"
+				justifyContent="space-between"
+				alignItems="center">
+				<Stack sx={{ textAlign: 'right' }}>
+					<Typography>{price}원</Typography>
 					<Typography
 						sx={{
 							color:
@@ -46,25 +30,23 @@ const SelectedListItem = ({ asset, clicked, onClick }) => {
 									: colors.text.sub2,
 							fontSize: 12,
 						}}>
-						{asset.dailyPriceChange}원 ({asset.dailyPriceChangeRate}%)
+						{dailyPriceChange}원 ({asset.dailyPriceChangeRate}%)
 					</Typography>
-				</Box>
-			</Box>
-			<CloseIcon
-				onClick={onClick}
-				sx={{
-					position: 'absolute',
-					top: 0,
-					right: 0,
-					color: colors.text.sub2,
-					p: 1,
-					fontSize: 16,
-					'&:hover': {
-						color: colors.text.main,
-					},
-				}}
-			/>
-		</Stack>
+				</Stack>
+
+				<CloseIcon
+					onClick={onClick}
+					sx={{
+						color: colors.text.sub2,
+						p: 1,
+						fontSize: 16,
+						'&:hover': {
+							color: colors.text.main,
+						},
+					}}
+				/>
+			</Stack>
+		</StockItemCard>
 	);
 };
 
