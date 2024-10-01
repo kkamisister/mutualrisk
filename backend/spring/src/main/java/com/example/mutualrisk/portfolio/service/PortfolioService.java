@@ -6,6 +6,8 @@ import com.example.mutualrisk.common.dto.CommonResponse.*;
 import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.fund.dto.FundResponse.*;
+import com.example.mutualrisk.portfolio.dto.PortfolioRequest;
+import com.example.mutualrisk.portfolio.dto.PortfolioRequest.PortfolioInitDto;
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 
 
@@ -22,4 +24,6 @@ public interface PortfolioService {
     ResponseWithData<PortfolioValuationDto> getHistoricalValuation(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId);
 
     ResponseWithData<List<PortfolioReturnDto>> getHistoricalReturns(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId);
+
+    ResponseWithData<PortfolioAnalysis> initPortfolio(PortfolioInitDto initInfo);
 }
