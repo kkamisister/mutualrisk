@@ -1,6 +1,7 @@
 package com.example.mutualrisk.portfolio.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.Id;
 import lombok.*;

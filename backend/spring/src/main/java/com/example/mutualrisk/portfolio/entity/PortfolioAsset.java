@@ -10,6 +10,7 @@ import java.util.List;
 @Builder
 public class PortfolioAsset {
     private Integer assetId;
+    private String code;
     private Integer totalPurchaseQuantity;
     private Double totalPurchasePrice;
 }
