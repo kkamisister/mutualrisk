@@ -45,10 +45,12 @@ const App = () => {
 							path="/stock/bookmark"
 							element={<StockBookmarkPage />}></Route>
 						<Route
-							path="/stock/detail/:id"
+							path="/stock/detail/:assetId"
 							element={<StockDetailPage />}></Route>
 						<Route path="/fund/list" element={<FundPage />}></Route>
-						<Route path="/fund/detail/:id" element={<FundPage />}></Route>
+						<Route
+							path="/fund/detail/:fundId"
+							element={<FundPage />}></Route>
 					</Route>
 				</Routes>
 			</BrowserRouter>
