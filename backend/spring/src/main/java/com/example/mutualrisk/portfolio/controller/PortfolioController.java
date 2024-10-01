@@ -36,11 +36,31 @@ public class PortfolioController {
 
     private final PortfolioService portfolioService;
 
+    @Operation(summary = "유저 전체 포트폴리오 조회", description = "유저가 만든 전체 포트폴리오 내역을 조회한다")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "유저 전체 포트폴리오 조회 성공")
+    })
     @GetMapping("/my")
-    public ResponseEntity<ResponseWithData<PortfolioResultDto>> getUserPortfolio(HttpServletRequest request) {
+    public ResponseEntity<ResponseWithData<List<SimplePortfolioDto>>> getAllUserPortfolio(HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
 
-        ResponseWithData<PortfolioResultDto> portfolioInfo = portfolioService.getPortfolioInfo(userId);
+        ResponseWithData<List<SimplePortfolioDto>> allUserPortfolio = portfolioService.getAllUserPortfolio(userId);
+
+        return ResponseEntity.status(allUserPortfolio.status()).body(allUserPortfolio);
+    }
+
+    /**
+     * 포트폴리오 세부 정보를 반환하는 메서드
+     */
+    @Operation(summary = "포트폴리오 세부 정보 조회", description = "유저의 특정 버전에 해당하는 포트폴리오를 조회한다")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "포트폴리오 세부 정보 조회 성공")
+    })
+    @GetMapping("/detail")
+    public ResponseEntity<ResponseWithData<PortfolioResultDto>> getUserPortfolio(@RequestParam(value = "portfolioId") String portfolioId, HttpServletRequest request) {
+        Integer userId = (Integer)request.getAttribute("userId");
+
+        ResponseWithData<PortfolioResultDto> portfolioInfo = portfolioService.getPortfolioInfo(userId, portfolioId);
 
         return ResponseEntity.status(portfolioInfo.status()).body(portfolioInfo);
     }
@@ -70,7 +90,7 @@ public class PortfolioController {
         @ApiResponse(responseCode = "200", description = "백테스팅 결과 조회 성공")
     })
     @GetMapping("/backtest")
-    public ResponseEntity<ResponseWithData<PortfolioValuationDto>> getUserPortfolioReturn(@RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
+    public ResponseEntity<ResponseWithData<PortfolioValuationDto>> getUserPortfolioReturn(@RequestParam(value = "portfolioId") String portfolioId, @RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
 
         // parameter(Enum) 초기화
@@ -83,7 +103,7 @@ public class PortfolioController {
             throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
         }
 
-        ResponseWithData<PortfolioValuationDto> portfolioBacktestingResultDto = portfolioService.getUserPortfolioPerformance(timeInterval, measure, userId);
+        ResponseWithData<PortfolioValuationDto> portfolioBacktestingResultDto = portfolioService.getUserPortfolioPerformance(timeInterval, measure, userId, portfolioId);
 
         return ResponseEntity.status(portfolioBacktestingResultDto.status()).body(portfolioBacktestingResultDto);
     }
@@ -93,11 +113,11 @@ public class PortfolioController {
         @ApiResponse(responseCode = "200", description = "섹터 조회 성공"),
     })
     @GetMapping("/sector")
-    public ResponseEntity<ResponseWithData<List<SectorInfo>>> getUserPortfolioSector(HttpServletRequest request) {
+    public ResponseEntity<ResponseWithData<List<SectorInfo>>> getUserPortfolioSector(@RequestParam(value = "portfolioId") String portfolioId, HttpServletRequest request) {
 
         Integer userId = (Integer)request.getAttribute("userId");
 
-        ResponseWithData<List<SectorInfo>> userPortfolioSector = portfolioService.getUserPortfolioSector(userId);
+        ResponseWithData<List<SectorInfo>> userPortfolioSector = portfolioService.getUserPortfolioSector(userId, portfolioId);
 
         return ResponseEntity.status(userPortfolioSector.status())
             .body(userPortfolioSector);
@@ -108,10 +128,10 @@ public class PortfolioController {
         @ApiResponse(responseCode = "200", description = "효율적 포트폴리오 곡선 데이터 정상 반환"),
     })
     @GetMapping("/frontier")
-    public ResponseEntity<ResponseWithData<FrontierDto>> getFrontierPoints(HttpServletRequest request) {
+    public ResponseEntity<ResponseWithData<FrontierDto>> getFrontierPoints(@RequestParam(value = "portfolioId") String portfolioId, HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
 
-        ResponseWithData<FrontierDto> frontierDtoResponseWithData = portfolioService.getFrontierPoints(userId);
+        ResponseWithData<FrontierDto> frontierDtoResponseWithData = portfolioService.getFrontierPoints(userId, portfolioId);
 
         return ResponseEntity.status(frontierDtoResponseWithData.status())
             .body(frontierDtoResponseWithData);
@@ -122,7 +142,7 @@ public class PortfolioController {
         @ApiResponse(responseCode = "200", description = "자산 평가액 조회 성공"),
     })
     @GetMapping("/valuation")
-    public ResponseEntity<ResponseWithData<PortfolioValuationDto>> getValuation(@RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
+    public ResponseEntity<ResponseWithData<PortfolioValuationDto>> getValuation(@RequestParam(value = "portfolioId") String portfolioId, @RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
 
         // parameter(Enum) 초기화
@@ -135,7 +155,7 @@ public class PortfolioController {
             throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
         }
 
-        ResponseWithData<PortfolioValuationDto> portfolioValuationDtoResponseWithData = portfolioService.getHistoricalValuation(timeInterval, measure, userId);
+        ResponseWithData<PortfolioValuationDto> portfolioValuationDtoResponseWithData = portfolioService.getHistoricalValuation(timeInterval, measure, userId, portfolioId);
 
         return ResponseEntity.status(portfolioValuationDtoResponseWithData.status())
             .body(portfolioValuationDtoResponseWithData);
@@ -147,6 +167,7 @@ public class PortfolioController {
     })
     @GetMapping("/monthly-return")
     public ResponseEntity<ResponseWithData<List<PortfolioReturnDto>>> getMonthlyReturn(
+        @RequestParam(value = "portfolioId") String portfolioId,
         @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString,
         HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
@@ -159,7 +180,7 @@ public class PortfolioController {
             throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
         }
 
-        ResponseWithData<List<PortfolioReturnDto>> portfolioValuationDtoResponseWithData = portfolioService.getHistoricalReturns(TimeInterval.MONTH, measure, userId);
+        ResponseWithData<List<PortfolioReturnDto>> portfolioValuationDtoResponseWithData = portfolioService.getHistoricalReturns(TimeInterval.MONTH, measure, userId, portfolioId);
 
         return ResponseEntity.status(portfolioValuationDtoResponseWithData.status())
             .body(portfolioValuationDtoResponseWithData);

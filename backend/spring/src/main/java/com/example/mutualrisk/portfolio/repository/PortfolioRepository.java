@@ -1,8 +1,12 @@
 package com.example.mutualrisk.portfolio.repository;
 
 import com.example.mutualrisk.portfolio.entity.Portfolio;
-import org.springframework.stereotype.Repository;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public interface PortfolioRepository {
-    Portfolio getMyPortfolio(Integer userId);
+    List<Portfolio> getMyPortfolioList(Integer userId);
+
+    Portfolio getPortfolioById(String id);
 }

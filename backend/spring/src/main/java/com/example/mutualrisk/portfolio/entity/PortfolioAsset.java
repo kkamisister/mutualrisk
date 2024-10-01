@@ -11,8 +11,6 @@ import java.util.List;
 public class PortfolioAsset {
     private Integer assetId;
     private String code;
-    private String name;
     private Integer totalPurchaseQuantity;
     private Double totalPurchasePrice;
-    private List<PortfolioPurchaseInfo> purchaseInfos;
 }

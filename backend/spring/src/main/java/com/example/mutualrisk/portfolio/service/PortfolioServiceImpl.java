@@ -15,7 +15,6 @@ import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.common.util.DateUtil;
-import com.example.mutualrisk.fund.dto.FundResponse.*;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 import com.example.mutualrisk.portfolio.entity.*;
@@ -58,10 +57,10 @@ public class PortfolioServiceImpl implements PortfolioService{
 
 
     @Override
-    public ResponseWithData<PortfolioResultDto> getPortfolioInfo(Integer userId) {
+    public ResponseWithData<PortfolioResultDto> getPortfolioInfo(Integer userId, String portfolioId) {
 
         // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
-        Portfolio portfolio = portfolioRepository.getMyPortfolio(userId);
+        Portfolio portfolio = getMyPortfolioById(userId, portfolioId);
 
         // 2-1. userId에 해당하는 포트폴리오가 없을 경우
         if (portfolio == null) {
@@ -88,6 +87,12 @@ public class PortfolioServiceImpl implements PortfolioService{
         return buildPortfolioResponse(portfolio, portfolioAssetInfoList, portfolioPerformance);
     }
 
+    private Portfolio getMyPortfolioById(Integer userId, String portfolioId) {
+        Portfolio portfolio = portfolioRepository.getPortfolioById(portfolioId);
+        if (portfolio == null || portfolio.getUserId().equals(userId)) throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
+        return portfolio;
+    }
+
     /**
      * 전체 유저를 대상으로 포트폴리오의 비중을 재계산하여, +-10%p 이상의 변동이 있거나
      * 유저가 설정한 상한,하한을 초과한 종목이 있을경우 유저에게 메일을 보낸다
@@ -101,11 +106,11 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 각 유저의 포트폴리오를 가지고온다
         for(User user: users){
-            Portfolio portfolio = portfolioRepository.getMyPortfolio(user.getId());
+            Portfolio curPortfolio = getCurrentPortfolio(user);
             // 유저의 포트폴리오가 없는경우 패스
-            if(ObjectUtils.isEmpty(portfolio))continue;
+            if(ObjectUtils.isEmpty(curPortfolio))continue;
 
-            List<PortfolioAsset> assets = portfolio.getAsset();
+            List<PortfolioAsset> assets = curPortfolio.getAsset();
 
             // 오늘일자 기준 포트폴리오 자산의 (자산코드,총가격)
             Map<String, Double> recentAssetPrice = getTodayValueOfHoldings(assets);
@@ -138,8 +143,13 @@ public class PortfolioServiceImpl implements PortfolioService{
              */
 
             // 종목 코드와 비중을 비교하기 위해 자산 리스트와 포트폴리오 정보를 매핑
-            List<String> assetCodes = assets.stream()
-                .map(PortfolioAsset::getCode)
+            List<Integer> assetIds = assets.stream()
+                .map(PortfolioAsset::getAssetId)
+                .toList();
+
+            List<String> assetCodes = assetRepository.findAllById(assetIds)
+                .stream()
+                .map(Asset::getCode)
                 .toList();
 
             // lowerBound, upperBound, weights와 최근 비중을 비교
@@ -152,9 +162,9 @@ public class PortfolioServiceImpl implements PortfolioService{
             for (int i = 0; i < assetCodes.size(); i++) {
                 String code = assetCodes.get(i);
                 Double recentWeight = recentAssetWeights.get(code); // 최근 비중
-                Double lowerBound = portfolio.getLowerBound().get(i); // 포트폴리오의 하한선
-                Double upperBound = portfolio.getUpperBound().get(i); // 포트폴리오의 상한선
-                Double originWeight = portfolio.getWeights().get(i); // 포트폴리오의 기존 비중
+                Double lowerBound = curPortfolio.getLowerBound().get(i); // 포트폴리오의 하한선
+                Double upperBound = curPortfolio.getUpperBound().get(i); // 포트폴리오의 상한선
+                Double originWeight = curPortfolio.getWeights().get(i); // 포트폴리오의 기존 비중
 
                 // 1. lower bound와 upper bound를 넘는 종목 찾기
                 if (recentWeight < lowerBound) {
@@ -211,10 +221,17 @@ public class PortfolioServiceImpl implements PortfolioService{
         return new ResponseWithMessage(HttpStatus.OK.value(),"메일발송에 성공하였습니다");
     }
 
+    private Portfolio getCurrentPortfolio(User user) {
+        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(user.getId());
+        if (myPortfolioList.isEmpty()) return null;
+
+        return myPortfolioList.get(0);
+    }
+
     @Override
-    public ResponseWithData<PortfolioValuationDto> getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId) {
+    public ResponseWithData<PortfolioValuationDto> getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId, String portfolioId) {
         // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
-        Portfolio portfolio = portfolioRepository.getMyPortfolio(userId);
+        Portfolio portfolio = getMyPortfolioById(userId, portfolioId);
 
         // 2. AssetList 구하기
         List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
@@ -250,18 +267,20 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     /**
      * 유저의 포트폴리오가 가진 섹터 비중을 반환하는 메서드
+     *
      * @param userId
+     * @param portfolioId
      * @return
      */
     @Override
-    public ResponseWithData<List<SectorInfo>> getUserPortfolioSector(Integer userId) {
+    public ResponseWithData<List<SectorInfo>> getUserPortfolioSector(Integer userId, String portfolioId) {
 
         // 유저를 가져온다
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new MutualRiskException(ErrorCode.USER_NOT_FOUND));
 
         // 유저가 가진 포트폴리오를 가져온다
-        Portfolio myPortfolio = portfolioRepository.getMyPortfolio(userId);
+        Portfolio myPortfolio = getMyPortfolioById(userId, portfolioId);
 
         if(ObjectUtils.isEmpty(myPortfolio)){
             // 유저가 가진 포트폴리오가 없는 경우, 에러
@@ -327,9 +346,9 @@ public class PortfolioServiceImpl implements PortfolioService{
     }
 
     @Override
-    public ResponseWithData<FrontierDto> getFrontierPoints(Integer userId) {
+    public ResponseWithData<FrontierDto> getFrontierPoints(Integer userId, String portfolioId) {
         // 1. 유저가 가진 포트폴리오를 가져온다
-        Portfolio myPortfolio = portfolioRepository.getMyPortfolio(userId);
+        Portfolio myPortfolio = getMyPortfolioById(userId, portfolioId);
 
         List<FrontierPoint> frontierPoints = myPortfolio.getFrontierPoints();
         FictionalPerformance fictionalPerformance = myPortfolio.getFictionalPerformance();
@@ -343,9 +362,9 @@ public class PortfolioServiceImpl implements PortfolioService{
     }
 
     @Override
-    public ResponseWithData<PortfolioValuationDto> getHistoricalValuation(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId) {
+    public ResponseWithData<PortfolioValuationDto> getHistoricalValuation(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId, String portfolioId) {
         // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
-        Portfolio portfolio = portfolioRepository.getMyPortfolio(userId);
+        Portfolio portfolio = getMyPortfolioById(userId, portfolioId);
 
         // 2. AssetList 구하기
         List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
@@ -381,9 +400,9 @@ public class PortfolioServiceImpl implements PortfolioService{
     }
 
     @Override
-    public ResponseWithData<List<PortfolioReturnDto>> getHistoricalReturns(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId) {
+    public ResponseWithData<List<PortfolioReturnDto>> getHistoricalReturns(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId, String portfolioId) {
         // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
-        Portfolio portfolio = portfolioRepository.getMyPortfolio(userId);
+        Portfolio portfolio = getMyPortfolioById(userId, portfolioId);
 
         // 2. AssetList 구하기
         List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
@@ -411,6 +430,20 @@ public class PortfolioServiceImpl implements PortfolioService{
 
 
         return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 월별 수익률 조회 성공", portfolioReturnList);
+    }
+
+    @Override
+    public ResponseWithData<List<SimplePortfolioDto>> getAllUserPortfolio(Integer userId) {
+        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
+        List<SimplePortfolioDto> data = myPortfolioList.stream()
+            .map(portfolio -> SimplePortfolioDto.builder()
+                .id(portfolio.getId())
+                .version(portfolio.getVersion())
+                .build())
+            .toList();
+
+
+        return new ResponseWithData<>(HttpStatus.OK.value(), "유저 전체 포트폴리오 조회 성공", data);
     }
 
     /**
@@ -474,14 +507,7 @@ public class PortfolioServiceImpl implements PortfolioService{
     }
 
     private int getPastQuantity(PortfolioAsset portfolioAsset, LocalDateTime targetDate) {
-        List<PortfolioPurchaseInfo> purchaseInfos = portfolioAsset.getPurchaseInfos();
-        int quantity = 0;
-        for (PortfolioPurchaseInfo purchaseInfo : purchaseInfos) {
-            if (purchaseInfo.getPurchaseDate().atStartOfDay().isAfter(targetDate)) break;
-            quantity += purchaseInfo.getPurchaseQuantity();
-
-        }
-        return quantity;
+        return portfolioAsset.getTotalPurchaseQuantity();
     }
 
     // 백테스팅 그래프를 위한 메서드
@@ -522,10 +548,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
                     // log.warn("recentAssetPrice : {}",todayAsset.getRecentPrice());
 
-                    double totalPurchaseQuantity = asset.getPurchaseInfos().stream()
-                        .map(PortfolioPurchaseInfo::getPurchaseQuantity)
-                        .mapToDouble(Double::valueOf)
-                        .sum();
+                    double totalPurchaseQuantity = asset.getTotalPurchaseQuantity();
 
                     return totalPurchaseQuantity * todayAsset.getRecentPrice();
                 },
