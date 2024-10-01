@@ -1,15 +1,41 @@
 import React, { useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, CircularProgress } from '@mui/material';
 import StockList from 'pages/portfolio/create/stocksearch/StockList';
 import BasicButton from 'components/button/BasicButton';
 import { colors } from 'constants/colors';
 import StockSearchBar from './StockSearchBar';
 import Title from 'components/title/Title';
 import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
+import useStockSearch from 'hooks/useStockSearch';
 
-const StockSearch = ({ onConfirm, selectedStocks, sx }) => {
+const SearchStatusBox = ({ Icon, text }) => {
+	return (
+		<Box
+			sx={{
+				display: 'flex',
+				flexDirection: 'column',
+				color: colors.text.sub1,
+				p: 4,
+				justifyContent: 'center',
+				alignItems: 'center',
+				textAlign: 'center',
+			}}>
+			<Icon sx={{ fontSize: '100px' }} />
+			<Typography
+				sx={{
+					fontWeight: 'bold',
+					fontSize: '16px',
+				}}>
+				{text}
+			</Typography>
+		</Box>
+	);
+};
+
+const StockSearch = ({ onConfirm, selectedStocks, onStockSelect, sx }) => {
 	const [tempStocks, setTempStocks] = useState([]);
-	const [searchResult, setSearchResult] = useState([]);
+	const { keyword, setKeyword, isLoading, searchResult } = useStockSearch();
 
 	const handleTempStocks = stock => {
 		if (tempStocks.find(selected => selected.assetId === stock.assetId)) {
@@ -41,46 +67,34 @@ const StockSearch = ({ onConfirm, selectedStocks, sx }) => {
 					border: `solid 1px ${colors.point.stroke}`,
 					p: 2,
 				}}>
-				<StockSearchBar onSearchResult={setSearchResult} />
-				{searchResult.length > 0 ? (
+				<StockSearchBar onKeywordChange={setKeyword} />
+
+				{!isLoading && keyword === '' && (
+					<SearchStatusBox Icon={SearchIcon} text="종목을 검색하세요." />
+				)}
+
+				{isLoading && (
+					<SearchStatusBox Icon={CircularProgress} text="로딩 중입니다." />
+				)}
+
+				{!isLoading && keyword && searchResult.length === 0 && (
+					<SearchStatusBox
+						Icon={CloseIcon}
+						text="검색 결과가 존재하지 않습니다."
+					/>
+				)}
+
+				{!isLoading && searchResult.length > 0 && (
 					<StockList
 						assets={searchResult}
 						selectedStocks={tempStocks}
 						onStockSelect={handleTempStocks}
-						sx={{
-							display: 'flex',
-							flexDirection: 'row',
-							overflowX: 'auto',
-							whiteSpace: 'nowrap',
-						}}
 					/>
-				) : (
-					<Box
-						sx={{
-							display: 'flex',
-							flexDirection: 'column',
-							color: colors.text.sub1,
-							p: 4,
-							justifyContent: 'center',
-							alignItems: 'center',
-							textAlign: 'center',
-						}}>
-						<CloseIcon sx={{ fontSize: '100px' }} />
-						<Typography
-							sx={{
-								fontWeight: 'bold',
-								fontSize: '16px',
-							}}>
-							검색 결과가 없습니다.
-						</Typography>
-					</Box>
 				)}
 
-				{searchResult.length > 0 && (
-					<Box sx={{ display: 'flex', justifyContent: 'center' }}>
-						<BasicButton text="추가" onClick={confirmSelectedStocks} />
-					</Box>
-				)}
+				<Box sx={{ display: 'flex', justifyContent: 'center' }}>
+					<BasicButton text="추가" onClick={confirmSelectedStocks} />
+				</Box>
 			</Box>
 		</Box>
 	);
