@@ -85,16 +85,18 @@ const StockSearch = ({ onConfirm, selectedStocks, onStockSelect, sx }) => {
 				)}
 
 				{!isLoading && searchResult.length > 0 && (
-					<StockList
-						assets={searchResult}
-						selectedStocks={tempStocks}
-						onStockSelect={handleTempStocks}
-					/>
-				)}
+					<>
+						<StockList
+							assets={searchResult}
+							selectedStocks={tempStocks}
+							onStockSelect={handleTempStocks}
+						/>
 
-				<Box sx={{ display: 'flex', justifyContent: 'center' }}>
-					<BasicButton text="추가" onClick={confirmSelectedStocks} />
-				</Box>
+						<Box sx={{ display: 'flex', justifyContent: 'center' }}>
+							<BasicButton text="추가" onClick={confirmSelectedStocks} />
+						</Box>
+					</>
+				)}
 			</Box>
 		</Box>
 	);
