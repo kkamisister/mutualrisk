@@ -10,18 +10,18 @@ import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 
 
 public interface PortfolioService {
-    ResponseWithData<PortfolioResultDto> getPortfolioInfo(Integer userId);
+    ResponseWithData<PortfolioResultDto> getPortfolioInfo(Integer userId, String portfolioId);
     ResponseWithMessage sendRefreshMail();
 
-    ResponseWithData<PortfolioValuationDto> getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId);
+    ResponseWithData<PortfolioValuationDto> getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId, String portfolioId);
 
-    ResponseWithData<List<SectorInfo>> getUserPortfolioSector(Integer userId);
+    ResponseWithData<List<SectorInfo>> getUserPortfolioSector(Integer userId, String portfolioId);
 
-    ResponseWithData<FrontierDto> getFrontierPoints(Integer userId);
+    ResponseWithData<FrontierDto> getFrontierPoints(Integer userId, String portfolioId);
 
-    ResponseWithData<PortfolioValuationDto> getHistoricalValuation(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId);
+    ResponseWithData<PortfolioValuationDto> getHistoricalValuation(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId, String portfolioId);
 
-    ResponseWithData<List<PortfolioReturnDto>> getHistoricalReturns(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId);
+    ResponseWithData<List<PortfolioReturnDto>> getHistoricalReturns(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId, String portfolioId);
 
     ResponseWithData<List<SimplePortfolioDto>> getAllUserPortfolio(Integer userId);
 }
