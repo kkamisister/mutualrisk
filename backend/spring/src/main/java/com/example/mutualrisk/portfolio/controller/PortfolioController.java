@@ -2,6 +2,7 @@ package com.example.mutualrisk.portfolio.controller;
 
 import java.util.List;
 
+import com.example.mutualrisk.asset.dto.AssetResponse.*;
 import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.common.exception.ErrorCode;
@@ -165,6 +166,7 @@ public class PortfolioController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "자산 평가액 조회 성공"),
     })
+
     @GetMapping("/monthly-return")
     public ResponseEntity<ResponseWithData<List<PortfolioReturnDto>>> getMonthlyReturn(
         @RequestParam(value = "portfolioId") String portfolioId,
@@ -184,5 +186,17 @@ public class PortfolioController {
 
         return ResponseEntity.status(portfolioValuationDtoResponseWithData.status())
             .body(portfolioValuationDtoResponseWithData);
+    }
+
+    @GetMapping("/assets")
+    public ResponseEntity<ResponseWithData<List<PortfolioAssetInfo>>> getPortfolioAssetList(
+        @RequestParam(value = "portfolioId") String portfolioId,
+        HttpServletRequest request) {
+        Integer userId = (Integer)request.getAttribute("userId");
+
+        ResponseWithData<List<PortfolioAssetInfo>> portfolioAssetInfo = portfolioService.getAssetInfoList(userId, portfolioId);
+
+        return ResponseEntity.status(portfolioAssetInfo.status())
+            .body(portfolioAssetInfo);
     }
 }

@@ -24,4 +24,6 @@ public interface PortfolioService {
     ResponseWithData<List<PortfolioReturnDto>> getHistoricalReturns(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId, String portfolioId);
 
     ResponseWithData<List<SimplePortfolioDto>> getAllUserPortfolio(Integer userId);
+
+    ResponseWithData<List<PortfolioAssetInfo>> getAssetInfoList(Integer userId, String portfolioId);
 }
