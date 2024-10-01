@@ -32,9 +32,6 @@ public class ResponseHandler<T> implements ResponseBodyAdvice<T> {
         ErrorCode errorCode = e.getErrorCode();
         ResponseWithMessage responseWithMessage = new ResponseWithMessage(errorCode.getHttpStatus().value(), errorCode.getMessage());
 
-        System.out.println("responseWithMessage.status() = " + responseWithMessage.status());
-        System.out.println("responseWithMessage.message() = " + responseWithMessage.message());
-
         return new ResponseEntity<>(responseWithMessage, errorCode.getHttpStatus());
     }
 

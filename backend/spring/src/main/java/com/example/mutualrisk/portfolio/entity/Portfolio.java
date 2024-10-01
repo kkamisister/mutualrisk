@@ -21,7 +21,7 @@ public class Portfolio {
 	@Field("userId")
 	private Integer userId;
 	private Integer version;
-	private boolean isActive;
+	private Boolean isActive;
 	private LocalDateTime createdAt;
 	private LocalDateTime deletedAt;
 
