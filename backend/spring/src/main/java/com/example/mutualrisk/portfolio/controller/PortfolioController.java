@@ -8,8 +8,9 @@ import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
-import com.example.mutualrisk.fund.dto.FundResponse.*;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
+import com.example.mutualrisk.portfolio.dto.PortfolioRequest;
+import com.example.mutualrisk.portfolio.dto.PortfolioRequest.PortfolioInitDto;
 import com.example.mutualrisk.portfolio.service.PortfolioService;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -36,6 +37,15 @@ import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 public class PortfolioController {
 
     private final PortfolioService portfolioService;
+
+	@PostMapping("/init")
+	public ResponseEntity<ResponseWithData<PortfolioAnalysis>> initUserPortfolio(@RequestBody PortfolioInitDto initInfo) {
+
+		ResponseWithData<PortfolioAnalysis> portfolioInfo = portfolioService.initPortfolio(initInfo);
+
+		return ResponseEntity.status(portfolioInfo.status())
+			.body(portfolioInfo);
+	}
 
     @Operation(summary = "유저 전체 포트폴리오 조회", description = "유저가 만든 전체 포트폴리오 내역을 조회한다")
     @ApiResponses(value = {

@@ -15,9 +15,13 @@ import com.example.mutualrisk.common.enums.Region;
 import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
+import com.example.mutualrisk.common.fastapi.FastApiService;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.common.util.DateUtil;
+import com.example.mutualrisk.fund.dto.FundResponse.*;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
+import com.example.mutualrisk.portfolio.dto.PortfolioRequest;
+import com.example.mutualrisk.portfolio.dto.PortfolioRequest.PortfolioInitDto;
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 import com.example.mutualrisk.portfolio.entity.*;
 import com.example.mutualrisk.portfolio.repository.PortfolioRepository;
@@ -28,14 +32,23 @@ import com.example.mutualrisk.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -50,6 +63,9 @@ public class PortfolioServiceImpl implements PortfolioService{
     private final ExchangeRatesRepository exchangeRatesRepository;
     private final UserRepository userRepository;
 
+    private final FastApiService fastApiService;
+
+
     private final DateUtil dateUtil;
 
     // 메일발송을 위한 서비스
@@ -62,6 +78,11 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
         Portfolio portfolio = getMyPortfolioById(userId, portfolioId);
 
+        // 2-1. userId에 해당하는 포트폴리오가 없을 경우
+        if (portfolio == null) {
+            return buildPortfolioResponse();
+        }
+        // 2-2. userId에 해당하는 포트폴리오가 존재할 경우
         List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
         List<Asset> assetList = getAssetsFromPortfolio(portfolioAssetList);
         // 자산들의 구매 금액을 저장하는 리스트
@@ -559,6 +580,140 @@ public class PortfolioServiceImpl implements PortfolioService{
             .mapToObj(i -> PortfolioAssetInfo.of(assetInfoList.get(i), weights.get(i), valuationList.get(i)))
             .toList();
         return portfolioAssetInfoList;
+    }
+
+    /**
+     * 유저의 포트폴리오 제작 요청을 받아서 포트폴리오의 퍼포먼스,비중 및 추천 자산을 반환하는 메서드
+     * @param initInfo
+     * @return
+     */
+    @Override
+    @Transactional
+    public ResponseWithData<PortfolioAnalysis> initPortfolio(PortfolioInitDto initInfo) {
+
+        // 유저가 설정한 자산 목록과 제약조건을 fastapi 서버로 보내기 위한 요청을 만들어야한다
+
+
+        // 유저가 입력한 자산의 expected_return을 가지고 와야한다
+        // 입력받은 순서 그대로 리스트안에 넣기 위해 정렬해야함
+        List<Asset> findAssets = assetRepository.findAllById(initInfo.assetIds())
+            .stream()
+            .sorted(Comparator.comparing(asset -> initInfo.assetIds().indexOf(asset.getId())))
+            .collect(Collectors.toList());
+
+        // 각 자산의 예상 수익
+        List<Double> expectedReturns = findAssets.stream()
+            .map(Asset::getExpectedReturn)
+            .toList();
+
+        // 가져올 자산의 기간을 설정한다
+        LocalDateTime endDate = LocalDateTime.now();
+        LocalDateTime startDate = endDate.minusYears(2);
+
+        // 기간 내의 가격 기록을 가지고온다
+        List<AssetHistory> historyOfAssets = assetHistoryRepository.findRecentHistoryOfAssetsBetweenDates(
+            findAssets, startDate, endDate);
+
+        // historyOfAssets를 순회하면서, (자산,[가격리스트])의 맵을 만든다
+        Map<Asset,List<Double>> assetPriceList = new HashMap<>();
+        for(AssetHistory assetHistory : historyOfAssets) {
+            Asset asset = assetHistory.getAsset();
+
+            if(!assetPriceList.containsKey(asset)) {
+                assetPriceList.put(asset, new ArrayList<>());
+            }
+            else{ // 각 자산별로 가격의 리스트를 생성한다
+                assetPriceList.get(asset).add(assetHistory.getPrice());
+            }
+        }
+
+        // 각 자산별 리스트를 돌면서, 가장 길이가 짧은 가격 리스트를 반환한다
+        int minLen = Integer.MAX_VALUE;
+        for(Entry<Asset,List<Double>> entry : assetPriceList.entrySet()) {
+            List<Double> priceList = entry.getValue();
+
+            minLen = Math.min(minLen,priceList.size());
+        }
+
+        // 각 자산별로 minLen길이만큼 잘라서 리스트에 넣는다
+        List<List<Double>> pricesDataFrame = new ArrayList<>();
+        for(Entry<Asset,List<Double>> entry : assetPriceList.entrySet()) {
+            List<Double> priceList = entry.getValue();
+
+            pricesDataFrame.add(priceList.subList(0,minLen));
+        }
+
+        // 이제 (expectedReturns,priceDataFrame,lowerBounds,upperBounds) 의 JSON을
+        // https://j11a607.p.ssafy.io/fastapi/v1/portfolio 로 보내서 결과를 받아온다
+
+        // JSON 요청 본문을 만든다
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("expected_returns", expectedReturns);
+        requestBody.put("prices_dataFrame", pricesDataFrame);
+        requestBody.put("lower_bounds", initInfo.lowerBounds());
+        requestBody.put("upper_bounds", initInfo.upperBounds());
+
+        // FastAPI 서버로 요청을 보낸다
+        try {
+            // FastApiService를 사용하여 요청을 보낸다
+            Map<String, Object> responseBody = fastApiService.sendPortfolioData(requestBody);
+
+            // 퍼포먼스를 가지고 온다
+            Map<String, Double> fictionalPerformance = (Map<String, Double>)responseBody.get("fictionalPerformance");
+
+            Double expectedReturn = fictionalPerformance.get("expectedReturn");
+            Double volatility = fictionalPerformance.get("volatility");
+
+            // 퍼포먼스를 저장한다
+            PortfolioPerformance performance = PortfolioPerformance.builder()
+                .expectedReturn(expectedReturn)
+                .volatility(volatility)
+                .build();
+
+            // 각 자산의 가중치를 가지고온다
+            Map<String, Double> weights = (Map<String, Double>)responseBody.get("weights");
+            int totalCash = initInfo.totalCash();
+            List<RecommendAssetInfo> recommendAssetInfos = new ArrayList<>();
+
+            // 환율을 가지고온다
+            Double exchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+            for(Entry<String, Double> entry : weights.entrySet()) {
+
+                // 자산 비중을 가지고 온다
+                Asset asset = findAssets.get(Integer.parseInt(entry.getKey()));
+                Double weight = entry.getValue();
+
+                // 구매량을 결정해야한다
+                // 구매량은, (전체 현금 보유량 * 자산 비중 / 해당 자산의 가격) 을 반올림 한 값으로 한다
+                int purchaseNum = 0;
+                if(asset.getRegion() ==  Region.KR){
+                    purchaseNum = (int)Math.round(totalCash * weight / asset.getRecentPrice());
+                }
+                else{
+                    purchaseNum = (int)Math.round(totalCash * weight / (asset.getRecentPrice() * exchangeRate));
+                }
+
+                RecommendAssetInfo recommendAssetInfo = RecommendAssetInfo.of(asset,weight,purchaseNum);
+                recommendAssetInfos.add(recommendAssetInfo);
+            }
+
+            // 기존 포트폴리오로 측정한 퍼포먼스와 추천자산 비중을 반환한다
+            PortfolioAnalysis original = PortfolioAnalysis.of(performance,recommendAssetInfos);
+
+
+            // 여기에는 추천종목을 고려한 DTO를 반환
+            CalculatedPortfolio calculatedPortfolio = CalculatedPortfolio.builder()
+                .original(original)
+                //나중에 추천종목 생기면 여기에 추가해서 리턴하기
+                .build();
+
+            return new ResponseWithData(HttpStatus.OK.value(),"포트폴리오 제작 미리보기 입니다",calculatedPortfolio);
+        } catch (RuntimeException e) {
+            // 예외 처리
+            log.error("FastAPI 서버와의 통신 중 오류가 발생했습니다.", e);
+            throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
+        }
     }
 
     /**

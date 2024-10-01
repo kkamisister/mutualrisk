@@ -126,4 +126,59 @@ public record PortfolioResponse() {
     ) {
 
     }
+
+    @Builder
+    public record CalculatedPortfolio(
+        PortfolioAnalysis original,
+        PortfolioAnalysis recommendation
+    ){
+
+    }
+
+    @Builder
+    public record PortfolioAnalysis(
+        PortfolioPerformance performance,
+        List<RecommendAssetInfo> assets
+    ){
+        public static PortfolioAnalysis of(PortfolioPerformance performance, List<RecommendAssetInfo> assets) {
+            return PortfolioAnalysis.builder()
+                .performance(performance)
+                .assets(assets)
+                .build();
+        }
+
+    }
+
+    @Builder
+    public record RecommendAssetInfo(
+        Integer assetId,
+        String name,
+        String code,
+        String imagePath,
+        String imageName,
+        Double price,
+        String region,
+        Double weight,
+        Integer purchaseNum
+    ){
+        public static RecommendAssetInfo of(Asset asset,Double weight,Integer purchaseNum){
+
+            String imageName = asset.getCode()+".png";
+
+            return RecommendAssetInfo.builder()
+                .assetId(asset.getId())
+                .name(asset.getName())
+                .code(asset.getCode())
+                .imagePath(asset.getImagePath())
+                .imageName(imageName)
+                .price(asset.getRecentPrice())
+                .region(asset.getRegion().toString())
+                .weight(weight)
+                .purchaseNum(purchaseNum)
+                .build();
+
+        }
+    }
+
+
 }
