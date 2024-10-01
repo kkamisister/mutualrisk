@@ -85,6 +85,8 @@ const PortfolioAssetList = () => {
 		<Stack
 			sx={{
 				height: '400px',
+				width: '350px',
+				minWidth: '300px',
 				overflow: 'hidden', // 컨테이너 영역을 넘지 않게 설정
 				padding: '10px',
 			}}>

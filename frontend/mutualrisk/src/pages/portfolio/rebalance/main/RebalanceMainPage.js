@@ -1,10 +1,14 @@
 import React from 'react';
+import TitleDivider from 'components/title/TitleDivider';
 import { Stack, Box, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import CustomButton from 'components/button/BasicButton';
 import Title from 'components/title/Title';
 import { useNavigate } from 'react-router-dom';
-import CurrentPortfolio from 'pages/portfolio/rebalance/main/CurrentPortfolio';
+import PortfolioPieChart from 'pages/portfolio/rebalance/main/piechart/PortfolioPieChart';
+import PortfolioAssetList from 'pages/portfolio/rebalance/main/piechart/PortfolioAssetList';
+import PortfolioSummary from 'pages/portfolio/rebalance/main/summary/PortfolioSummary';
+import WidgetContainer from 'components/container/WidgetConatiner';
 
 const RebalanceMainPage = () => {
 	const navigate = useNavigate();
@@ -12,15 +16,16 @@ const RebalanceMainPage = () => {
 	return (
 		<Stack
 			direction={'column'}
-			spacing={3}
+			spacing={2}
 			sx={{
 				minWidth: '1000px',
 				display: 'flex',
 				alignContent: 'space-evenly',
 			}}>
+			<TitleDivider text="리밸런싱" />
 			<Stack
 				direction={'column'}
-				spacing={2}
+				spacing={1}
 				sx={{
 					minWidth: '300px',
 					backgroundColor: colors.background.white,
@@ -51,7 +56,34 @@ const RebalanceMainPage = () => {
 						최근 리밸런싱 : 2024/08/30{' '}
 					</Typography>
 				</Box>
-				<CurrentPortfolio />
+				<Stack
+					spacing={2}
+					direction="row"
+					sx={{
+						width: '100%',
+						height: '100%',
+						maxHeight: '100%',
+						display: 'flex',
+						justifyContent: 'space-evenly',
+						alignItems: 'center',
+						flexWrap: 'nowrap',
+					}}>
+					<WidgetContainer sx={{ flexWrap: 'nowrap' }}>
+						<Box
+							sx={{
+								display: 'flex',
+								flexDirection: 'row', // 가로 정렬
+								width: '100%', // 너비를 100%로 설정하여 공간 활용
+								justifyContent: 'space-between', // 두 컴포넌트 사이의 간격을 조절
+								alignItems: 'center', // 세로 정렬 정중앙
+							}}>
+							<PortfolioPieChart sx={{ flex: 1 }} />
+							<PortfolioAssetList sx={{ flex: 1 }} />
+						</Box>
+					</WidgetContainer>
+
+					<PortfolioSummary />
+				</Stack>
 			</Stack>
 			<Stack
 				direction={'row'}
