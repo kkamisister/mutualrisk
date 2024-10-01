@@ -62,11 +62,6 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
         Portfolio portfolio = getMyPortfolioById(userId, portfolioId);
 
-        // 2-1. userId에 해당하는 포트폴리오가 없을 경우
-        if (portfolio == null) {
-            return buildPortfolioResponse();
-        }
-        // 2-2. userId에 해당하는 포트폴리오가 존재할 경우
         List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
         List<Asset> assetList = getAssetsFromPortfolio(portfolioAssetList);
         // 자산들의 구매 금액을 저장하는 리스트
@@ -89,7 +84,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     private Portfolio getMyPortfolioById(Integer userId, String portfolioId) {
         Portfolio portfolio = portfolioRepository.getPortfolioById(portfolioId);
-        if (portfolio == null || portfolio.getUserId().equals(userId)) throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
+        if (portfolio == null || !portfolio.getUserId().equals(userId)) throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
         return portfolio;
     }
 
