@@ -73,7 +73,7 @@ const AssetListItem = ({ asset }) => {
 			</Box>
 			<Box
 				sx={{
-					backgroundColor: '#73748B',
+					backgroundColor: colors.main.primary400,
 					borderRadius: '20px',
 					color: '#FFFFFF',
 					padding: '10px',
@@ -82,7 +82,7 @@ const AssetListItem = ({ asset }) => {
 					fontSize: '20px',
 					fontWeight: 'bold',
 					height: '50px',
-					minHeight: '0', // 부모 높이에 따라 높이 제한
+					minHeight: '0',
 					maxWidth: '30%',
 					alignContent: 'center',
 				}}>
