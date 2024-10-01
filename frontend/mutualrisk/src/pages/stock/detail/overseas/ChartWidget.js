@@ -2,12 +2,7 @@
 import { colors } from 'constants/colors';
 import React, { useEffect, useRef, memo } from 'react';
 
-const stockInfo = {
-	ticker: 'NVDA',
-	market: 'NASDAQ',
-};
-
-function TradingViewWidget() {
+function ChartWidget({ market, code }) {
 	const container = useRef();
 
 	useEffect(() => {
@@ -19,7 +14,7 @@ function TradingViewWidget() {
 		script.innerHTML = `
         {
           "autosize": true,
-          "symbol": "${stockInfo.market}:${stockInfo.ticker}",
+          "symbol": "${market}:${code}",
           "timezone": "Asia/Seoul",
           "theme": "light",
           "style": "1",
@@ -62,4 +57,4 @@ function TradingViewWidget() {
 	);
 }
 
-export default memo(TradingViewWidget);
+export default memo(ChartWidget);
