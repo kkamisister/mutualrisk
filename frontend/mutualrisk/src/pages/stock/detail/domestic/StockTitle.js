@@ -20,12 +20,12 @@ const stockInfo = {
 		'https://thumb.tossinvest.com/image/resized/96x0/https%3A%2F%2Fstatic.toss.im%2Fpng-icons%2Fsecurities%2Ficn-sec-fill-NAS00208X-E0.png',
 };
 
-const StockInfoSummary = ({ title, data }) => {
+const StockTitle = ({ name, code, market, imageUrl }) => {
 	return (
 		<Stack
 			direction="row"
 			sx={{
-				justifyContent: 'flex-start',
+				justifyContent: 'center',
 				alignItems: 'center',
 				borderRadius: '10px',
 				backgroundColor: colors.background.white,
@@ -38,6 +38,8 @@ const StockInfoSummary = ({ title, data }) => {
 					padding: '15px',
 					width: 'fit-content',
 					height: 'fit-content',
+					justifyContent: 'center',
+					alignItems: 'center',
 				}}>
 				<Box
 					sx={{
@@ -48,29 +50,19 @@ const StockInfoSummary = ({ title, data }) => {
 					}}>
 					<img
 						style={{ width: '100%', height: '100%' }}
-						src={stockInfo.imageURL}
+						src={imageUrl}
 						alt="주식 아이콘"
 					/>
 				</Box>
 				<Stack direction="column" spacing={0.4}>
-					<SubTitle
-						text={`${stockInfo.name}(${stockInfo.market} · ${stockInfo.ticker})`}
-					/>
+					<SubTitle text={`${name}(${code})`} />
 					<Box
 						sx={{
 							fontSize: '14px',
 							color: colors.text.sub1,
 							fontWeight: '500',
 						}}>
-						{stockInfo.sector}
-					</Box>
-					<Box
-						sx={{
-							fontSize: '14px',
-							color: colors.text.sub1,
-							fontWeight: '500',
-						}}>
-						{stockInfo.industry}
+						{market}
 					</Box>
 				</Stack>
 			</Stack>
@@ -78,4 +70,4 @@ const StockInfoSummary = ({ title, data }) => {
 	);
 };
 
-export default StockInfoSummary;
+export default StockTitle;
