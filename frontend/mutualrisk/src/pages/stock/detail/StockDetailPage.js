@@ -1,17 +1,11 @@
-import React, { useState } from 'react';
-import { Stack, Box } from '@mui/material';
-import TradingViewWidget from './overseas/ChartWidget';
+import React from 'react';
+import { Stack } from '@mui/material';
 import TitleDivider from 'components/title/TitleDivider';
-import { colors } from 'constants/colors';
-import Button from '@mui/material/Button';
-import ExchangeRateWidget from './overseas/ExchangeRateWidget';
-import SymbolInfoWidget from './overseas/SymbolInfoWidget';
-import OverseasInfoTab from './overseas/OverseasInfoTab';
-import StockNewsTab from './StockNewsTab';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAssetByAssetId } from 'utils/apis/asset';
 import OverseasDetailPage from './overseas/OverseasDetailPage';
+import DomesticDetailPage from './domestic/DomesticDetailPage';
 
 const StockDetailPage = () => {
 	const params = useParams();
@@ -23,12 +17,16 @@ const StockDetailPage = () => {
 			assets: [{ market: null }],
 		},
 	});
+
 	return (
 		<Stack sx={{ height: '100%' }} spacing={1}>
 			<TitleDivider text="주식 상세 정보" />
-			{data.assets[0].market === 'NASDAQ' && (
+			{['AMEX', 'NASDAQ', 'NYSE'].includes(data.assets[0].market) && (
 				<OverseasDetailPage assetInfo={data} />
 			)}
+			{['KOSPI', 'KOSDAQ', 'KONEX', 'ETF'].includes(
+				data.assets[0].market
+			) && <DomesticDetailPage assetInfo={data} />}
 		</Stack>
 	);
 };
