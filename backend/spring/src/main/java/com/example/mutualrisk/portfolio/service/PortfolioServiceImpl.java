@@ -371,7 +371,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 3. 현재 조회 중인 포트폴리오를, myPortfolioList에서 찾는다
         int idx = 0;
-        while (!myPortfolioList.get(idx).getUserId().equals(userId)) {
+        while (!myPortfolioList.get(idx).getId().equals(portfolioId)) {
             idx++;
         }
 
@@ -415,6 +415,7 @@ public class PortfolioServiceImpl implements PortfolioService{
                 .build());
         }
 
+        Collections.reverse(performances);
 
         PortfolioValuationDto data = PortfolioValuationDto.builder()
             .portfolioId(portfolio.getId())
@@ -432,23 +433,48 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
         Portfolio portfolio = getMyPortfolioById(userId, portfolioId);
 
-        // 2. AssetList 구하기
-        List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
+        // 2. 유저의 포트폴리오 리스트 받아오기
+        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
 
-        List<Integer> assetIdList = portfolioAssetList.stream()
-            .map(PortfolioAsset::getAssetId)
-            .toList();
+        // 3. 현재 조회 중인 포트폴리오를, myPortfolioList에서 찾는다
+        int idx = 0;
+        while (!myPortfolioList.get(idx).getId().equals(portfolioId)) {
+            idx++;
+        }
 
-        List<Asset> assetList = assetRepository.findAllById(assetIdList);
-
-        // 3. 포트폴리오 monthly return 구하기
-        LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
+        // 4. 계산을 시작할 날짜 구하기
+        // 4-1. 현재 조회 중인 포트폴리오가, 가장 최신일 경우 : endDate를 현재 시간으로 설정
+        // 4-2. 현재 조회 중인 포트폴리오가, 과거 포트폴리오일 경우 : endDate를 그 포트폴리오가 교체된 시간으로 설정
+        LocalDateTime endDate = myPortfolioList.get(idx).getIsActive().equals(Boolean.TRUE)?
+            LocalDateTime.now().withDayOfMonth(1):
+            myPortfolioList.get(idx).getDeletedAt().withDayOfMonth(1);
 
         List<PortfolioReturnDto> portfolioReturnList = new ArrayList<>();
-
         // 30달 전, 29달 전, ..., 1달 전의 데이터를 기준으로 수익률을 구한다
-        for (int dDate = 30; dDate >= 1; dDate--) {
-            LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);   // 데이터 기준일
+        Portfolio curPortfolio;
+        for (int dDate = 1; dDate <= 30; dDate++) {
+            // 구하기를 원하는 날짜
+            LocalDateTime targetDate = dateUtil.getPastDate(endDate, timeInterval, dDate);
+
+            // targetDate 기준으로, 유저의 포트폴리오가 어떤 거였는지를 찾는다
+            while (idx < myPortfolioList.size() && myPortfolioList.get(idx).getCreatedAt().isAfter(targetDate)) {
+                idx++;
+            }
+
+            // targetDate에 유저의 포트폴리오가 존재하지 않았을 경우 : break
+            if (idx == myPortfolioList.size()) break;
+
+            curPortfolio = myPortfolioList.get(idx);
+
+            // 2. AssetList 구하기
+            List<PortfolioAsset> portfolioAssetList = curPortfolio.getAsset();
+
+            List<Integer> assetIdList = portfolioAssetList.stream()
+                .map(PortfolioAsset::getAssetId)
+                .toList();
+
+            List<Asset> assetList = assetRepository.findAllById(assetIdList);
+
             Double returns = getPortfolioReturn(portfolioAssetList, assetList, targetDate, timeInterval);   // 데이터 기준일을 기준으로, return 구하기
             portfolioReturnList.add(PortfolioReturnDto.builder()
                 .date(targetDate)
@@ -456,7 +482,7 @@ public class PortfolioServiceImpl implements PortfolioService{
                 .build());
         }
 
-
+        Collections.reverse(portfolioReturnList);
         return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 월별 수익률 조회 성공", portfolioReturnList);
     }
 
