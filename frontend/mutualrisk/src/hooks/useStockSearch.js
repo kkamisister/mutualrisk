@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchAssetsByKeyword } from 'libs/api';
+import { fetchAssetsByKeyword } from 'utils/apis/asset';
 
 const useStockSearch = () => {
 	const [keyword, setKeyword] = useState('');
