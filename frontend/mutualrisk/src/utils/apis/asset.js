@@ -25,7 +25,7 @@ export const fetchAssetsByKeyword = async keyword => {
  */
 export const fetchAssetByAssetId = async assetId => {
 	const response = await axiosInstance.get(`/asset/${assetId}`);
-	return response.data.data.assets || [];
+	return response.data.data || [];
 };
 
 /**
@@ -59,7 +59,7 @@ export const fetchEtfByAssetId = async assetId => {
  * @param {{assetId, period}}
  * @returns {Object} - Response 내 data 객체, API 문서 참조
  */
-export const fetchAssetHistoryByAssetId = async ({assetId, period}) => {
+export const fetchAssetHistoryByAssetId = async ({ assetId, period }) => {
 	const response = await axiosInstance.get(
 		`/asset/history/${assetId}?period=${period}`
 	);

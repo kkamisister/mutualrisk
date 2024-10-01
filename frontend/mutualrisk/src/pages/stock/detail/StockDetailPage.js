@@ -1,103 +1,34 @@
 import React, { useState } from 'react';
 import { Stack, Box } from '@mui/material';
-import TradingViewWidget from './TradingViewWidget';
-import StockNewsList from './StockNewsList';
-import StockInfoSummary from './StockInfoSummary';
+import TradingViewWidget from './overseas/ChartWidget';
 import TitleDivider from 'components/title/TitleDivider';
 import { colors } from 'constants/colors';
 import Button from '@mui/material/Button';
-import ExchangeRateWidget from './ExchangeRateWidget';
-import StockPrice from './StockPrice';
-
-const StockMenuButton = ({ label, value, disabled, onChange, selected }) => {
-	return (
-		<Button
-			sx={{
-				backgroundColor: selected
-					? colors.background.white
-					: colors.background.primary,
-				width: 'fit-content',
-				borderRadius: '100px',
-				color: colors.text.main,
-				paddingLeft: '20px',
-				paddingRight: '20px',
-				fontWeight: 500,
-				fontSize: '13px',
-			}}
-			disabled={disabled}
-			onClick={() => onChange(value)}>
-			{label}
-		</Button>
-	);
-};
+import ExchangeRateWidget from './overseas/ExchangeRateWidget';
+import SymbolInfoWidget from './overseas/SymbolInfoWidget';
+import OverseasInfoTab from './overseas/OverseasInfoTab';
+import StockNewsTab from './StockNewsTab';
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { fetchAssetByAssetId } from 'utils/apis/asset';
+import OverseasDetailPage from './overseas/OverseasDetailPage';
 
 const StockDetailPage = () => {
-	const [tabMenu, setTabMenu] = useState('chart');
-
+	const params = useParams();
+	const assetId = params.assetId;
+	const { isLoading, data } = useQuery({
+		queryKey: ['assetDetail', assetId], // keyword를 queryKey에 포함하여 키워드가 변경되면 새로운 요청 실행
+		queryFn: () => fetchAssetByAssetId(assetId),
+		placeholderData: {
+			assets: [{ market: null }],
+		},
+	});
 	return (
 		<Stack sx={{ height: '100%' }} spacing={1}>
 			<TitleDivider text="주식 상세 정보" />
-			<Stack direction="row" spacing={1}>
-				<StockInfoSummary />
-				<StockPrice />
-				<ExchangeRateWidget />
-			</Stack>
-
-			<Stack
-				direction="row"
-				spacing={1}
-				sx={{
-					backgroundColor: colors.background.primary,
-					width: 'fit-content',
-					borderRadius: '100px',
-					border: `1px solid ${colors.point.stroke}`,
-				}}>
-				<StockMenuButton
-					label="차트 · 호가"
-					value="chart"
-					onChange={setTabMenu}
-					selected={tabMenu === 'chart'}
-				/>
-				<StockMenuButton
-					label="종목 정보"
-					value="info"
-					disabled
-					onChange={setTabMenu}
-					selected={tabMenu === 'info'}
-				/>
-				<StockMenuButton
-					label="뉴스 · 공시"
-					value="news"
-					onChange={setTabMenu}
-					selected={tabMenu === 'news'}
-				/>
-			</Stack>
-			{tabMenu === 'chart' && (
-				<Box
-					sx={{
-						height: '700px',
-						width: '100%',
-						overflow: 'hidden',
-						borderRadius: '15px',
-						backgroundColor: colors.background.white,
-						border: `1px solid ${colors.point.stroke}`,
-					}}>
-					<TradingViewWidget />
-				</Box>
+			{data.assets[0].market === 'NASDAQ' && (
+				<OverseasDetailPage assetInfo={data} />
 			)}
-			{tabMenu === 'info' && (
-				<Box
-					sx={{
-						height: '700px',
-						width: '100%',
-						overflow: 'hidden',
-						borderRadius: '15px',
-						border: `1px solid ${colors.point.stroke}`,
-					}}>
-					주식 관련 정보(미확정)
-				</Box>
-			)}
-			{tabMenu === 'news' && <StockNewsList />}
 		</Stack>
 	);
 };
