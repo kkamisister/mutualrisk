@@ -133,13 +133,15 @@ async def optimize_portfolio(request: Request):
     # 각 포트폴리오에 대해 샤프 비율 계산
     sharp_ratios = rdd.map(calculate_sharp_ratio).collect()
     
-    # 가장 높은 샤프 비율을 가진 자산 선택
-    max_sharp_ratio = max(sharp_ratios, key=lambda x: x[1])
+    # 샤프 비율이 높은 상위 5개 자산 선택
+    top_5_sharp_ratios = sorted(sharp_ratios, key=lambda x: x[1], reverse=True)[:5]
     
     # 결과를 Spring 서버로 전송
+    top_5_assets = [{"new_asset": asset, "sharp_ratio": ratio} for asset, ratio in top_5_sharp_ratios]
+    
     async with httpx.AsyncClient() as client:
-        response = await client.post(spring_url, json={"new_asset": max_sharp_ratio[0], "sharp_ratio": max_sharp_ratio[1]})
+        response = await client.post(spring_url, json={"top_5_assets": top_5_assets})
         response.raise_for_status()  # 에러 처리
 
-    return {"message": "Successfully optimized and sent to Spring", "new_asset": max_sharp_ratio[0], "sharp_ratio": max_sharp_ratio[1]}
+    return {"message": "Successfully optimized and sent to Spring", "top_5_assets": top_5_assets}
 
