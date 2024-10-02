@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from pypfopt import EfficientFrontier
 from pyspark.sql import SparkSession
+from tqdm import tqdm
 
 app = FastAPI()
 
@@ -63,7 +64,7 @@ all_assets = [row['id'] for row in all_assets_df.collect()]  # 자산 id 리스�
 cov_matrix_dict = {asset_id: [0] * len(all_assets) for asset_id in all_assets}
 
 # 2-4. asset_id_1 값을 1부터 max_id까지 순차적으로 변경하면서 데이터 가져오기 및 공분산 딕셔너리 채우기
-for asset_id_1 in range(1, max_id + 1):
+for asset_id_1 in tqdm(range(1, max_id + 1)):
     sql_cov = f"""
     SELECT asset_id_1, asset_id_2, covariance 
     FROM asset_covariance 
