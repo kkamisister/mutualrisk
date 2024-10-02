@@ -15,6 +15,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import StockSearchListItem from './StockSearchListItem';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAssetsByKeyword } from 'utils/apis/asset';
+import SearchOffIcon from '@mui/icons-material/SearchOff';
 
 const StockSearchModal = ({
 	open,
@@ -70,7 +71,7 @@ const StockSearchModal = ({
 							),
 						}}
 						fullWidth
-						placeholder="종목 검색"
+						placeholder="티커 · 종목명 입력"
 						id="fullWidth"
 						size="small"
 						value={keyword}
@@ -90,7 +91,7 @@ const StockSearchModal = ({
 								}}
 							/>
 							<Typography color={colors.text.sub1}>
-								{'종목 정보를 입력해주세요!'}
+								{'종목 정보를 입력해주세요'}
 							</Typography>
 						</Stack>
 					)}
@@ -104,7 +105,7 @@ const StockSearchModal = ({
 							<CircularProgress size="30px" />
 						</Stack>
 					)}
-					{!isLoading && keyword !== '' && (
+					{!isLoading && keyword !== '' && searchResult.length > 0 && (
 						<Stack
 							sx={{
 								overflow: 'scroll',
@@ -129,6 +130,24 @@ const StockSearchModal = ({
 									setOpenRemoveSnackbar={setOpenRemoveSnackbar}
 								/>
 							))}
+						</Stack>
+					)}
+					{!isLoading && keyword !== '' && searchResult.length === 0 && (
+						<Stack
+							sx={{
+								alignItems: 'center',
+								justifyContent: 'center',
+								height: '100%',
+							}}>
+							<SearchOffIcon
+								sx={{
+									color: colors.text.sub2,
+									fontSize: '60px',
+								}}
+							/>
+							<Typography color={colors.text.sub1}>
+								{'관련 종목이 없어요'}
+							</Typography>
 						</Stack>
 					)}
 				</Stack>
