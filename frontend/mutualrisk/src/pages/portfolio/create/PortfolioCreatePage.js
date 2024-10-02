@@ -6,7 +6,7 @@ import ConditionSetting from 'pages/portfolio/create/condition/ConditionSetting'
 import { colors } from 'constants/colors';
 import SelectedList from 'pages/portfolio/create/selectedstock/SelectedList';
 import AssetInputModal from 'pages/portfolio/create/AssetInputModal';
-import useAssetStore from 'stores/useAsssetStore';
+import useAssetStore from 'stores/useAssetStore';
 
 const PortfolioCreatePage = () => {
 	const [showSelectedItems, setShowSelectedItems] = useState(false);
@@ -14,10 +14,10 @@ const PortfolioCreatePage = () => {
 	const [selectedStocks, setSelectedStocks] = useState([]);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
-	const userAssets = useAssetStore(state => state.assets);
+	const userAssets = useAssetStore(state => state.totalCash);
 
 	useEffect(() => {
-		if (userAssets.length === 0) {
+		if (userAssets === 0) {
 			setIsModalOpen(true);
 		}
 	}, [userAssets]);
@@ -59,7 +59,7 @@ const PortfolioCreatePage = () => {
 			}}>
 			<BoxTitle title="포트폴리오 제작" />
 			{/* 자산 정보 박스 */}
-			{userAssets.length > 0 && (
+			{userAssets !== 0 && (
 				<Box
 					sx={{
 						display: 'flex',
@@ -79,7 +79,7 @@ const PortfolioCreatePage = () => {
 							fontWeight: 'bold',
 							color: colors.text.main,
 						}}>
-						현재 자산: {userAssets[0].value.toLocaleString()} 원
+						현재 자산: {userAssets.value.toLocaleString()} 원
 					</Typography>
 					<Button variant="outlined" onClick={handleEditAssets}>
 						수정하기
