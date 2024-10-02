@@ -560,9 +560,6 @@ public class PortfolioServiceImpl implements PortfolioService{
         Double createValuation = calculateValuation(pAssets, findAssets, targetDate);
 
         // 4. 위험률 대비 수익률 : sharpe_ratio
-        Double sharpeRatio = userPortfolio.getFictionalPerformance().getSharpeRatio();
-        }
-        // 3. 위험률 대비 수익률 : sharpe_ratio
         Double sharpeRatio = userPortfolio.getFictionalPerformance().sharpeRatio();
 
         // 전체 시장을 가지고와서, 각 시장에 Map을 이용해서 구분해보자
@@ -714,7 +711,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         Double volatility = fictionalPerformanceMap.get("volatility");
 
         // 퍼포먼스를 저장한다
-        PortfolioResponse.PortfolioPerformance fictionalPerformance = PortfolioResponse.PortfolioPerformance.builder()
+        PortfolioPerformance fictionalPerformance = PortfolioPerformance.builder()
             .expectedReturn(expectedReturn)
             .volatility(volatility)
             .build();
@@ -1247,7 +1244,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             ));
     }
 
-    private ResponseWithData<PortfolioResultDto> buildPortfolioResponse(Portfolio portfolio, List<PortfolioAssetInfo> portfolioAssetInfoList, PortfolioResponse.PortfolioPerformance portfolioPerformance) {
+    private ResponseWithData<PortfolioResultDto> buildPortfolioResponse(Portfolio portfolio, List<PortfolioAssetInfo> portfolioAssetInfoList, PortfolioPerformance portfolioPerformance) {
         PortfolioInfo portfolioInfo = PortfolioInfo.builder()
             .portfolioId(portfolio.getId())
             .performance(portfolioPerformance)
