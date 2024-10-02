@@ -33,14 +33,27 @@ const PortfolioCreatePage = () => {
 					selected => selected.assetId !== stock.assetId
 				)
 			);
-			setOpenAddSnackbar(true);
+			setOpenRemoveSnackbar(true);
 		} else {
 			setSelectedStocks([...selectedStocks, stock]);
-			setOpenRemoveSnackbar(true);
 		}
+	};
+	const handleAddSnackbarClose = (event, reason) => {
+		if (reason === 'clickaway') {
+			return;
+		}
+		setOpenAddSnackbar(false);
+	};
+
+	const handleRemoveSnackbarClose = (event, reason) => {
+		if (reason === 'clickaway') {
+			return;
+		}
+		setOpenRemoveSnackbar(false);
 	};
 
 	const handleSearchConfirm = selectedItems => {
+		setOpenAddSnackbar(true);
 		setSelectedStocks(selectedItems);
 		setShowSelectedItems(true);
 	};
@@ -95,10 +108,12 @@ const PortfolioCreatePage = () => {
 			<SuccessSnackbar
 				message="담은 종목에 추가하였습니다"
 				openSnackbar={openAddSnackbar}
+				handleSnackbarClose={handleAddSnackbarClose}
 			/>
 			<SuccessSnackbar
 				message="담은 종목에서 제거하였습니다"
 				openSnackbar={openRemoveSnackbar}
+				handleSnackbarClose={handleRemoveSnackbarClose}
 			/>
 		</Box>
 	);
