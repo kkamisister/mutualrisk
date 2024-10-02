@@ -1,8 +1,10 @@
 import React from 'react';
 import { Stack } from '@mui/material';
 import { colors } from 'constants/colors';
-import StockNewsListItem from './StockNewsListItem';
-const StockNewsList = ({ newsList }) => {
+import StockNewsItemCard from 'components/card/StockNewsItemCard';
+import NewsSkeletonCard from 'components/card/NewsSkeletonCard';
+
+const StockNewsList = ({ isLoading, newsList }) => {
 	return (
 		<Stack
 			spacing={1}
@@ -12,8 +14,14 @@ const StockNewsList = ({ newsList }) => {
 				borderRadius: '10px',
 				border: `solid 1px ${colors.point.stroke}`,
 			}}>
-			{newsList.map(news => (
-				<StockNewsListItem news={news} />
+			{isLoading &&
+				Array(10)
+					.fill(0)
+					.map((_, index) => {
+						return <NewsSkeletonCard key={index} />;
+					})}
+			{newsList.map((news, index) => (
+				<StockNewsItemCard key={index} news={news} />
 			))}
 		</Stack>
 	);

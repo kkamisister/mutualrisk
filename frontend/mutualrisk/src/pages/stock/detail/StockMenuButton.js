@@ -13,7 +13,7 @@ const StockMenuButton = ({ label, value, disabled, onChange, selected }) => {
 				color: colors.text.main,
 				paddingLeft: '20px',
 				paddingRight: '20px',
-				fontWeight: 500,
+				fontWeight: 600,
 				fontSize: '13px',
 			}}
 			disabled={disabled}

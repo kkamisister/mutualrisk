@@ -24,7 +24,7 @@ export const createPortfolio = async ({
 	upperBounds,
 	exactProportion,
 }) => {
-	return axiosInstance.post('/portfolio', {
+	return axiosInstance.post('/portfolio/init', {
 		totalCash,
 		assetIds,
 		lower_bounds: lowerBounds,

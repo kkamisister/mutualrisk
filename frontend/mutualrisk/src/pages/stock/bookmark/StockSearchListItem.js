@@ -3,7 +3,7 @@ import { colors } from 'constants/colors';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
 import StarIcon from '@mui/icons-material/Star';
-import { addBookmark, removeBookmark } from 'libs/api';
+import { addBookmark, removeBookmark } from 'utils/apis/interest';
 
 const StockSearchListItem = ({
 	data,
@@ -21,6 +21,17 @@ const StockSearchListItem = ({
 			queryClient.invalidateQueries('bookmark');
 			setOpenSuccessSnackbar(true);
 		},
+		// Optimistic 처리를 위해 onMutate 사용
+		onMutate: assetId => {
+			const queryAssetList = queryClient.getQueryData(['stockSearchResult']); // queryClient 내 저장되어 있는 assetList 값
+
+			return () =>
+				queryClient.setQueryData(() =>
+					queryAssetList.filter(asset => {
+						return asset !== assetId;
+					})
+				);
+		},
 	});
 	const addMutation = useMutation({
 		mutationFn: addBookmark,
@@ -28,6 +39,17 @@ const StockSearchListItem = ({
 			// 북마크 추가 후에 북마크 리스트를 다시 가져오기
 			queryClient.invalidateQueries('bookmark');
 			setOpenSuccessSnackbar(true);
+		},
+		// Optimistic 처리를 위해 onMutate 사용
+		onMutate: assetId => {
+			const queryAssetList = queryClient.getQueryData(['stockSearchResult']); // queryClient 내 저장되어 있는 assetList 값
+
+			return () =>
+				queryClient.setQueryData(() =>
+					queryAssetList.filter(asset => {
+						return asset === assetId;
+					})
+				);
 		},
 	});
 	const handleAddBookmark = assetId => {
@@ -74,19 +96,27 @@ const StockSearchListItem = ({
 				<StarIcon
 					fontSize="large"
 					onClick={() => {
-						console.log(data);
 						handleRemoveBookmark(data.assetId);
 					}}
-					sx={{ color: colors.point.yellow, cursor: 'pointer' }}
+					sx={{
+						color: colors.point.yellow,
+						cursor: 'pointer',
+						'&:hover': { color: colors.point.yellowHover },
+						transition: '0.3s',
+					}}
 				/>
 			) : (
 				<StarOutlineIcon
 					onClick={() => {
-						console.log(data);
 						handleAddBookmark(data.assetId);
 					}}
 					fontSize="large"
-					sx={{ color: colors.text.main, cursor: 'pointer' }}
+					sx={{
+						color: colors.text.main,
+						cursor: 'pointer',
+						'&:hover': { color: colors.text.sub2 },
+						transition: '0.3s',
+					}}
 				/>
 			)}
 		</Stack>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Stack, Avatar } from '@mui/material';
 import { colors } from 'constants/colors';
+import { useNavigate } from 'react-router-dom';
 const stockInfoSample = {
 	title: '엔비디아',
 	market: 'NASDAQ',
@@ -11,7 +12,8 @@ const stockInfoSample = {
 	imageURL:
 		'https://thumb.tossinvest.com/image/resized/96x0/https%3A%2F%2Fstatic.toss.im%2Fpng-icons%2Fsecurities%2Ficn-sec-fill-NAS00208X-E0.png',
 };
-const StockItemCard = ({ code, name, market, image, children }) => {
+const StockItemCard = ({ assetId, code, name, market, image, children }) => {
+	const navigate = useNavigate();
 	return (
 		<Stack
 			direction="row"
@@ -23,6 +25,15 @@ const StockItemCard = ({ code, name, market, image, children }) => {
 				justifyContent: 'space-between',
 				alignItems: 'center',
 				width: '100%',
+				'&:hover': {
+					backgroundColor: colors.point.stroke,
+				},
+				transition: 'all 0.3s ease', // transition 적용
+				cursor: 'pointer',
+			}}
+			onClick={() => {
+				// assetId를 주면 navigate 활성화
+				if (assetId !== undefined) navigate(`/stock/detail/${assetId}`);
 			}}>
 			<Stack
 				direction="row"

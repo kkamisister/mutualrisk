@@ -1,11 +1,12 @@
 import React from 'react';
-import { Box, Stack, Avatar } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import { colors } from 'constants/colors';
 import StockItemCard from 'components/card/StockItemCard';
 
 const StockBookmarkListItem = ({ asset }) => {
 	return (
 		<StockItemCard
+			assetId={asset.assetId}
 			code={asset.code}
 			name={asset.name}
 			market={asset.market}
@@ -15,7 +16,7 @@ const StockBookmarkListItem = ({ asset }) => {
 				spacing={0.5}
 				sx={{
 					justifyContent: 'space-between',
-					alignItems: 'center',
+					alignItems: 'flex-end',
 				}}>
 				<Box sx={{ fontSize: '12px', color: colors.text.main }}>
 					{Math.round(asset.price).toLocaleString()} KRW
