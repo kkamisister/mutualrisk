@@ -38,6 +38,25 @@ public class PortfolioController {
 
     private final PortfolioService portfolioService;
 
+    @Operation(summary = "유저 포트폴리오 현황 요약", description = "버전에따른 포트폴리오 현황을 반환한다")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "포트폴리오 현황조회 성공")
+    })
+    @GetMapping("/summary")
+    public ResponseEntity<ResponseWithData<PortfolioStatusSummary>> UserPortfolioSummary(@RequestParam("ver") Integer version,HttpServletRequest request){
+
+        Integer userId = (Integer) request.getAttribute("userId");
+
+        ResponseWithData<PortfolioStatusSummary> portfolioSummary = portfolioService.userPortfolioSummary(userId,version);
+
+        return ResponseEntity.status(portfolioSummary.status())
+            .body(portfolioSummary);
+    }
+
+    @Operation(summary = "유저 포트폴리오 제작 미리보기", description = "포트폴리오 제작 버튼을 누르면 예상 비중을 반환한다")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "포트폴리오 미리보기 성공")
+    })
 	@PostMapping("/init")
 	public ResponseEntity<ResponseWithData<PortfolioAnalysis>> initUserPortfolio(@RequestBody PortfolioInitDto initInfo) {
 
