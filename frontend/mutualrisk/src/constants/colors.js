@@ -37,4 +37,9 @@ export const colors = {
 		blue: '#1D66FA',
 		stroke: '#DDE1E6',
 	},
+	graph: {
+		green: '#03b26c',
+		yellow: '#fe9800',
+		blue: '#3182f6',
+	},
 };
