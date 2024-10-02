@@ -2,6 +2,7 @@ package com.example.mutualrisk.portfolio.entity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import jakarta.persistence.Id;
 import lombok.*;
@@ -31,4 +32,19 @@ public class Portfolio {
 	private List<Double> weights;
 	private FictionalPerformance fictionalPerformance;
 	private List<FrontierPoint> frontierPoints;
+
+	/**
+	 * 포트폴리오의 구성 자산 목록을 받아올 때, id순으로 정렬시키는 로직 추가
+	 * 해당하는 asset을 asset Entity에서 조회할 때, 순서가 동일하도록 하기 위함
+	 */
+	public List<PortfolioAsset> getAsset() {
+		// 리스트 복사본 생성
+		List<PortfolioAsset> sortedList = new ArrayList<>(this.asset);
+
+		// 복사된 리스트를 정렬
+		sortedList.sort(Comparator.comparingInt(PortfolioAsset::getAssetId));
+
+		// 정렬된 리스트 반환
+		return sortedList;
+	}
 }

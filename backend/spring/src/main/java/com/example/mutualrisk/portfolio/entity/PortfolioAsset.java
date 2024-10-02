@@ -13,4 +13,14 @@ public class PortfolioAsset {
     private String code;
     private Integer totalPurchaseQuantity;
     private Double totalPurchasePrice;
+
+    @Override
+    public String toString() {
+        return "PortfolioAsset{" +
+            "assetId=" + assetId +
+            ", code='" + code + '\'' +
+            ", totalPurchaseQuantity=" + totalPurchaseQuantity +
+            ", totalPurchasePrice=" + totalPurchasePrice +
+            '}';
+    }
 }

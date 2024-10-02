@@ -760,7 +760,7 @@ public class PortfolioServiceImpl implements PortfolioService{
     }
 
     private Double getHistoricValuation(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList, LocalDateTime targetDate) {
-        // 특정 날짜의 자산 가격을 가져옴
+//         특정 날짜의 자산 가격을 가져옴
         List<Double> assetPrices = assetHistoryService.getAssetHistoryList(assetList, targetDate)
             .stream()
             .map(AssetHistory::getPrice)
