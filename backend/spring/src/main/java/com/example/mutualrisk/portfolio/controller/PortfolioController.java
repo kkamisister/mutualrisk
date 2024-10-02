@@ -82,15 +82,21 @@ public class PortfolioController {
         return null;
     }
 
+    /**
+     * 유저가 만든 전체 포트폴리오 리스트 조회
+     * - 포트폴리오는, 버전 기준 내림차순으로 정렬되어서 보여진다
+     * - 포트폴리오 리스트에 들어가는 정보 : id, name, version, createdAt
+     * - 추가로, recentValuation(가장 최근 포트폴리오의, 현재 기준 자산 평가액)을 반환
+     */
     @Operation(summary = "유저 전체 포트폴리오 조회", description = "유저가 만든 전체 포트폴리오 내역을 조회한다")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "유저 전체 포트폴리오 조회 성공")
     })
     @GetMapping("/my")
-    public ResponseEntity<ResponseWithData<List<SimplePortfolioDto>>> getAllUserPortfolio(HttpServletRequest request) {
+    public ResponseEntity<ResponseWithData<PortfolioTotalSearchDto>> getAllUserPortfolio(HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
 
-        ResponseWithData<List<SimplePortfolioDto>> allUserPortfolio = portfolioService.getAllUserPortfolio(userId);
+        ResponseWithData<PortfolioTotalSearchDto> allUserPortfolio = portfolioService.getAllUserPortfolio(userId);
 
         return ResponseEntity.status(allUserPortfolio.status()).body(allUserPortfolio);
     }

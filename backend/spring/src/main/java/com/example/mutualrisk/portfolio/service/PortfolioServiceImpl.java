@@ -982,17 +982,54 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     @Override
     @Transactional(readOnly = true)
-    public ResponseWithData<List<SimplePortfolioDto>> getAllUserPortfolio(Integer userId) {
+    public ResponseWithData<PortfolioTotalSearchDto> getAllUserPortfolio(Integer userId) {
         List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
-        List<SimplePortfolioDto> data = myPortfolioList.stream()
-            .map(portfolio -> SimplePortfolioDto.builder()
-                .id(portfolio.getId())
-                .version(portfolio.getVersion())
-                .build())
+        List<SimplePortfolioDto> simplePortfolioDtoList = myPortfolioList.stream()
+            .map(SimplePortfolioDto::from)
             .toList();
 
+        // 1. 유저의 포트폴리오가 존재하지 않을 경우
+        if (simplePortfolioDtoList.isEmpty()) {
+            PortfolioTotalSearchDto portfolioTotalSearchDto = PortfolioTotalSearchDto.builder()
+                .hasPortfolio(Boolean.FALSE)
+                .portfolioList(simplePortfolioDtoList)
+                .build();
 
-        return new ResponseWithData<>(HttpStatus.OK.value(), "유저 전체 포트폴리오 조회 성공", data);
+            return new ResponseWithData<>(HttpStatus.OK.value(), "유저 전체 포트폴리오 조회 성공", portfolioTotalSearchDto);
+        }
+        // 2. 유저의 포트폴리오가 존재할 경우
+        else {
+            // 유저의 가장 최신 포트폴리오의, 평가 금액 구하기
+            Portfolio recentPortfolio = myPortfolioList.get(0);
+
+            Double recentValuation = getRecentValuationOfPortfolio(recentPortfolio);
+
+            PortfolioTotalSearchDto portfolioTotalSearchDto = PortfolioTotalSearchDto.builder()
+                .hasPortfolio(Boolean.TRUE)
+                .recentValuation(recentValuation)
+                .portfolioList(simplePortfolioDtoList)
+                .build();
+
+            return new ResponseWithData<>(HttpStatus.OK.value(), "유저 전체 포트폴리오 조회 성공", portfolioTotalSearchDto);
+        }
+    }
+
+    /**
+     * 포트폴리오의, 현재 가격 기준 자산 평가액을 반환하는 함수
+     */
+    private Double getRecentValuationOfPortfolio(Portfolio recentPortfolio) {
+
+        List<PortfolioAsset> portfolioAssetList = recentPortfolio.getAsset();
+        List<Integer> assetIdList = portfolioAssetList.stream()
+            .map(PortfolioAsset::getAssetId)
+            .toList();
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+        List<Asset> assetList = assetRepository.findAllById(assetIdList);
+
+        // 각 asset에 대해, totalPurchaseQuantity * recentPrice를 해서 더해 준다(이게 평가액임)
+        return IntStream.range(0, portfolioAssetList.size())
+            .mapToDouble(i -> portfolioAssetList.get(i).getTotalPurchaseQuantity() * assetList.get(i).getRecentPrice(recentExchangeRate))
+            .sum();
     }
 
     @Override
