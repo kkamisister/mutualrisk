@@ -78,4 +78,9 @@ public class Asset extends BaseEntity {
 			", volatility  =" + volatility +
 			'}';
 	}
+
+	public Double getRecentPrice(Double exchangeRate) {
+		if (this.region.equals(Region.KR)) return this.recentPrice;
+		else return this.recentPrice * exchangeRate;
+	}
 }
