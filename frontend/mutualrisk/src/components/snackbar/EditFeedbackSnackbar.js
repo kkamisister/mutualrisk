@@ -3,7 +3,6 @@ import { Box, Snackbar, Stack } from '@mui/material';
 import { colors } from 'constants/colors';
 
 const EditFeedbackSnackbar = ({ children, open, onClose }) => {
-	console.log(children);
 	return (
 		<Snackbar
 			anchorOrigin={{ vertical: 'top', horizontal: 'center' }}

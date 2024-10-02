@@ -85,7 +85,6 @@ const Sidebar = ({ onHoverChange }) => {
 					padding: '10px',
 				}}>
 				{SidebarItemInfoArray.map(info => {
-					console.log(location.pathname, info.move);
 					return (
 						<SidebarItem
 							title={info.title}

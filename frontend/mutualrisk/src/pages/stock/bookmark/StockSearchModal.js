@@ -13,14 +13,14 @@ import { colors } from 'constants/colors';
 import Title from 'components/title/Title';
 import SearchIcon from '@mui/icons-material/Search';
 import StockSearchListItem from './StockSearchListItem';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchAssetsByKeyword } from 'libs/api';
+import { useQuery } from '@tanstack/react-query';
+import { fetchAssetsByKeyword } from 'utils/apis/asset';
 
 const StockSearchModal = ({
 	open,
 	handleClose,
-	setOpenSuccessSnackbar,
-	setOpenFailedSnackbar,
+	setOpenAddSnackbar,
+	setOpenRemoveSnackbar,
 	assetList,
 }) => {
 	const [keyword, setKeyword] = useState('');
@@ -125,8 +125,8 @@ const StockSearchModal = ({
 											return asset.assetId === data.assetId;
 										}).length !== 0
 									}
-									setOpenSuccessSnackbar={setOpenSuccessSnackbar}
-									setOpenFailedSnackbar={setOpenFailedSnackbar}
+									setOpenAddSnackbar={setOpenAddSnackbar}
+									setOpenRemoveSnackbar={setOpenRemoveSnackbar}
 								/>
 							))}
 						</Stack>
