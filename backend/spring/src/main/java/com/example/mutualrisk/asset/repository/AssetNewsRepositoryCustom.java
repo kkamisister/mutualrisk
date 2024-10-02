@@ -10,7 +10,5 @@ import java.util.Optional;
 public interface AssetNewsRepositoryCustom {
     List<AssetNews> findByAssetIn(List<Asset> userInterestAssetList);
 
-    List<AssetNews> findByAsset(Asset asset);
-
     List<AssetNews> findAllByNews(News news,List<Asset> userInterestAssetList);
 }

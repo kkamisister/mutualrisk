@@ -13,7 +13,6 @@ import static com.example.mutualrisk.asset.entity.QAssetNews.*;
 import static com.example.mutualrisk.asset.entity.QNews.*;
 
 import java.util.List;
-import java.util.Optional;
 
 public class AssetNewsRepositoryCustomImpl extends Querydsl4RepositorySupport implements AssetNewsRepositoryCustom{
 
@@ -21,20 +20,9 @@ public class AssetNewsRepositoryCustomImpl extends Querydsl4RepositorySupport im
     public List<AssetNews> findByAssetIn(List<Asset> userInterestAssetList) {
         return selectFrom(assetNews)
             .join(assetNews.news, news).fetchJoin()
-            // .join(assetNews.asset, asset).fetchJoin()
             .where(assetNews.asset.in(userInterestAssetList))
             .orderBy(assetNews.news.publishedAt.desc())
-            .limit(10)
-            .fetch();
-    }
-
-    @Override
-    public List<AssetNews> findByAsset(Asset asset) {
-        return selectFrom(assetNews)
-            .join(assetNews.news,news).fetchJoin()
-            .where(assetNews.asset.eq(asset))
-            .orderBy(assetNews.news.publishedAt.desc())
-            .limit(10)
+            .limit(25)
             .fetch();
     }
 
