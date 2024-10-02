@@ -4,15 +4,12 @@ import com.example.mutualrisk.asset.dto.AssetResponse.*;
 import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.TimeInterval;
-import com.example.mutualrisk.portfolio.entity.FictionalPerformance;
 import com.example.mutualrisk.portfolio.entity.FrontierPoint;
-import com.example.mutualrisk.portfolio.entity.PortfolioAsset;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.IntStream;
 
 public record PortfolioResponse() {
 
@@ -49,6 +46,7 @@ public record PortfolioResponse() {
     public record PortfolioPerformance(
         Double expectedReturn,
         Double volatility,
+        Double sharpeRatio,
         Double valuation
     ) {
 
@@ -114,7 +112,7 @@ public record PortfolioResponse() {
     @Schema(name = "효율적 포트폴리오 곡선을 나타내는 데이터")
     public record FrontierDto (
         List<FrontierPoint> frontierPoints,
-        FictionalPerformance optimalPerformance
+        PortfolioPerformance optimalPerformance
     ) {
 
     }
@@ -137,12 +135,14 @@ public record PortfolioResponse() {
 
     @Builder
     public record PortfolioAnalysis(
+        PortfolioPerformance fictionalPerformance,
         PortfolioPerformance performance,
         List<RecommendAssetInfo> assets
     ){
-        public static PortfolioAnalysis of(PortfolioPerformance performance, List<RecommendAssetInfo> assets) {
+        public static PortfolioAnalysis of(PortfolioPerformance fictionalPerformance, PortfolioPerformance portfolioPerformance, List<RecommendAssetInfo> assets) {
             return PortfolioAnalysis.builder()
-                .performance(performance)
+                .fictionalPerformance(fictionalPerformance)
+                .performance(portfolioPerformance)
                 .assets(assets)
                 .build();
         }
@@ -200,6 +200,17 @@ public record PortfolioResponse() {
         public static RiskRatio of(Integer total,Integer rank){
             return new RiskRatio(total,rank);
         }
+    }
+
+    /**
+     * asset + weights 를 담고 있는 dto
+     * 포트폴리오의 expected_return과, volatility를 구하기 위해 사용한다
+     */
+    public record AssetWeightDto(
+        Asset asset,
+        Double weight
+    ) {
+        public static AssetWeightDto of(Asset asset, Double weight) { return new AssetWeightDto(asset, weight);}
     }
 
 
