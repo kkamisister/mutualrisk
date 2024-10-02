@@ -64,7 +64,7 @@ const RebalanceMainPage = () => {
 						height: '100%',
 						maxHeight: '100%',
 						display: 'flex',
-						justifyContent: 'space-evenly',
+						justifyContent: 'space-between',
 						alignItems: 'center',
 						flexWrap: 'nowrap',
 					}}>
