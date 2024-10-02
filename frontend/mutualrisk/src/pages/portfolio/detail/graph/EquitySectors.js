@@ -43,7 +43,7 @@ const EquitySectors = () => {
 
 	return (
 		<WidgetContainer>
-			<Title text={'Equity Sectors'} />
+			<Title text={'종목 섹터'} />
 			<ResponsiveContainer width="100%" height={400}>
 				<PieChart>
 					<Pie
