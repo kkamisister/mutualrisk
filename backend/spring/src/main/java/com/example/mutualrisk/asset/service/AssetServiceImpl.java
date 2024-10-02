@@ -31,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -214,7 +216,6 @@ public class AssetServiceImpl implements AssetService{
 
         return new ResponseWithMessage(HttpStatus.OK.value(),"관심종목에서 삭제되었습니다.");
     }
-
     /**
      * 입력받은 코드에 대한 자산을 반환하는 메서드
      * @param assetId
@@ -231,13 +232,16 @@ public class AssetServiceImpl implements AssetService{
         // 환율을 가져오는 메서드
         Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
-        // 최근 영업일 2개를 가져오는 메서드
+        // // 최근 영업일 2개를 가져오는 메서드
         List<LocalDateTime> twoValidDate = assetHistoryService.getValidDate(findAsset,
             LocalDateTime.now(), 2);
-
-        // 관심자산의 최근 종가를 가지고 온다
+        //
+        // // 관심자산의 최근 종가를 가지고 온다
         List<AssetHistory> recentHistory = assetHistoryRepository.findRecentHistoryOfAssetsBetweenDates(
-            List.of(findAsset), twoValidDate.get(1), twoValidDate.get(0));
+            List.of(findAsset), twoValidDate.get(1), twoValidDate.get(0))
+            .stream()
+            .sorted(Comparator.comparing(AssetHistory::getDate).reversed())
+            .toList();
 
         // 1. AssetHistory를 Asset별로 그룹핑한다
         Map<Asset, List<AssetHistory>> assetHistoryMap = recentHistory.stream()
@@ -250,8 +254,6 @@ public class AssetServiceImpl implements AssetService{
                 return getAssetInfo(assetHistoryMap, recentExchangeRate, asset);
             })
             .toList();
-
-        // log.warn("자산정보 생성 : {}",assetInfoList);
 
         // 관심자산과 연관된 뉴스를 가지고온다
         List<NewsInfo> newsList = getRelatedNewsList(List.of(findAsset),assetHistoryMap,recentExchangeRate);

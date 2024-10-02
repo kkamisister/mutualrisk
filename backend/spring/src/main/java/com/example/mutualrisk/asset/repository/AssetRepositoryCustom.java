@@ -10,4 +10,6 @@ public interface AssetRepositoryCustom {
 
     List<Asset> findAssetListWithIndustryAndSectorByIds(List<Integer> ids);
 
+    List<Asset> findAssetsNotInList(List<Integer> ids);
+
 }

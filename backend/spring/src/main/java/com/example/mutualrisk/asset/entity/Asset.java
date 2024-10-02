@@ -61,6 +61,9 @@ public class Asset extends BaseEntity {
 	@Column(name = "oldest_price")
 	private Double oldestPrice;
 
+	@Column(name = "volatility")
+	private Double volatility;
+
 	@Override
 	public String toString() {
 		return "Asset{" +
@@ -72,6 +75,12 @@ public class Asset extends BaseEntity {
 			", code='" + code + '\'' +
 			", name='" + name + '\'' +
 			", id=" + id +
+			", volatility  =" + volatility +
 			'}';
+	}
+
+	public Double getRecentPrice(Double exchangeRate) {
+		if (this.region.equals(Region.KR)) return this.recentPrice;
+		else return this.recentPrice * exchangeRate;
 	}
 }

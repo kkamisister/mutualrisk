@@ -13,5 +13,4 @@ import java.util.Optional;
 public interface AssetRepository extends JpaRepository<Asset, Integer>, AssetRepositoryCustom {
 
 	Optional<Asset> findByCode(String code);
-
 }
