@@ -1,39 +1,65 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Typography, Input } from '@mui/material';
 import BasicButton from 'components/button/BasicButton';
 import BasicChip from 'components/chip/BasicChip';
-import axios from 'axios';
 import useAssetStore from 'stores/useAssetStore';
 import { colors } from 'constants/colors';
 import { createPortfolio } from 'utils/apis/portfolio';
+import SuccessAlert from 'components/alert/SucessAlert';
+import ErrorAlert from 'components/alert/ErrorAlert';
+import AssetInputModal from 'pages/portfolio/create/AssetInputModal';
+import { useQuery } from '@tanstack/react-query';
+import { fetchPortfolioList } from 'utils/apis/analyze';
 
 const AssetConstraintList = ({ assets }) => {
-	const { totalCash } = useAssetStore(state => state.totalCash);
-	const [lowerBounds, setLowerBounds] = useState(Array(assets.length));
-	const [upperBounds, setUpperBounds] = useState(Array(assets.length));
-	const [exactProportion, setExactProportion] = useState(Array(assets.length));
+	const totalCashFromStore = useAssetStore(state => state.totalCash);
+	const { data: userPortfolio, isLoading } = useQuery({
+		queryKey: ['userPortfolio'],
+		queryFn: fetchPortfolioList,
+	});
+
+	const [totalCash, setTotalCash] = useState(totalCashFromStore);
+	useEffect(() => {
+		if (totalCashFromStore === 0 && !isLoading && userPortfolio) {
+			setTotalCash(userPortfolio.recentValuation);
+		} else if (isLoading) {
+			console.log('로딩 중...');
+		}
+	}, [totalCashFromStore, isLoading, userPortfolio]);
+
+	const [openInputModal, setOpenInputModal] = useState(true);
+	const [lowerBounds, setLowerBounds] = useState(Array(assets.length).fill(0));
+	const [upperBounds, setUpperBounds] = useState(Array(assets.length).fill(1));
+	const [exactProportion, setExactProportion] = useState(
+		Array(assets.length).fill(null)
+	);
 
 	const handleLowerChange = (index, value) => {
 		const updated = [...lowerBounds];
-		updated[index] = value !== '' ? parseFloat(value) : 0; // 기본값 0
+		updated[index] = value !== '' ? parseFloat(value) / 100 : 0; // 입력 값을 100으로 나눔
 		setLowerBounds(updated);
 	};
 
 	const handleUpperChange = (index, value) => {
 		const updated = [...upperBounds];
-		updated[index] = value !== '' ? parseFloat(value) : 100; // 기본값 100
+		updated[index] = value !== '' ? parseFloat(value) / 100 : 1; // 입력 값을 100으로 나눔
 		setUpperBounds(updated);
 	};
 
 	const handleExactChange = (index, value) => {
 		const updated = [...exactProportion];
-		updated[index] = value !== '' ? parseFloat(value) : null; // 기본값 null
+		updated[index] = value !== '' ? parseFloat(value) / 100 : null; // 입력 값을 100으로 나눔
 		setExactProportion(updated);
 	};
 
-	const handleSubmit = async () => {
+	const createInitPortfolio = async () => {
 		try {
-			const assetIds = assets.map(asset => asset.id);
+			const assetIds = assets.map(asset => asset.assetId);
+			// console.log('assetIds:', assetIds);
+			// console.log('totalCash:', totalCash);
+			// console.log('lowerBounds:', lowerBounds);
+			// console.log('upperBounds', upperBounds);
+
 			const response = await createPortfolio({
 				totalCash,
 				assetIds,
@@ -46,6 +72,11 @@ const AssetConstraintList = ({ assets }) => {
 		} catch (error) {
 			console.error('포트폴리오 생성 중 오류 발생:', error);
 		}
+	};
+
+	const handleSubmit = () => {
+		// setOpenInputModal(true);
+		createInitPortfolio();
 	};
 
 	return (
@@ -65,7 +96,7 @@ const AssetConstraintList = ({ assets }) => {
 
 			{assets.map((asset, index) => (
 				<Box
-					key={asset.id}
+					key={asset.assetId}
 					sx={{
 						display: 'flex',
 						justifyContent: 'space-between',
@@ -82,17 +113,16 @@ const AssetConstraintList = ({ assets }) => {
 							borderRadius: '8px',
 							fontSize: '12px',
 							fontWeight: 'bold',
-							whiteSpace: 'nowrap', // 텍스트를 한 줄로 고정
-							overflow: 'hidden', // 넘치는 텍스트 숨김
+							whiteSpace: 'nowrap',
 							textOverflow: 'ellipsis',
 						}}>
 						{asset.name}
 					</Box>
 
 					<Box sx={{ flex: 1, mx: 1 }}>
+						<Typography variant="caption">최솟값</Typography>
 						<Input
 							fullWidth
-							label="최솟값"
 							type="number"
 							defaultValue={0}
 							onChange={e => handleLowerChange(index, e.target.value)}
@@ -100,8 +130,8 @@ const AssetConstraintList = ({ assets }) => {
 					</Box>
 
 					<Box sx={{ flex: 1, mx: 1 }}>
+						<Typography variant="caption">최댓값</Typography>
 						<Input
-							label="최댓값"
 							type="number"
 							defaultValue={100}
 							onChange={e => handleUpperChange(index, e.target.value)}
@@ -109,27 +139,23 @@ const AssetConstraintList = ({ assets }) => {
 					</Box>
 
 					<Box sx={{ flex: 1, mx: 1 }}>
+						<Typography variant="caption">지정비율</Typography>
 						<Input
-							label="지정비율"
 							type="number"
 							defaultValue={null}
-							onChange={e => handleUpperChange(index, e.target.value)}
+							onChange={e => handleExactChange(index, e.target.value)}
 						/>
 					</Box>
 				</Box>
 			))}
 
-			<Box
-				sx={{
-					display: 'flex',
-					justifyContent: 'center',
-				}}>
-				<BasicButton
-					text="포트폴리오 제작하기"
-					onClick={handleSubmit}
-					sx={{ mt: 'auto' }}
+			<BasicButton text="포트폴리오 제작하기" onClick={handleSubmit} />
+			{!totalCash && (
+				<AssetInputModal
+					open={openInputModal}
+					onClose={() => setOpenInputModal(false)}
 				/>
-			</Box>
+			)}
 		</Box>
 	);
 };
