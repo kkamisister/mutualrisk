@@ -3,6 +3,7 @@ import httpx
 import numpy as np
 import pandas as pd
 from pypfopt import EfficientFrontier
+from pyspark.sql import SparkSession
 
 app = FastAPI()
 
