@@ -1,12 +1,8 @@
 import React from 'react';
-import { Avatar, Stack, Chip, Typography } from '@mui/material';
+import { Stack, Chip, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
-import { useLocation } from 'react-router-dom';
-import Accordion from '@mui/material/Accordion';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import AccordionSummary from '@mui/material/AccordionSummary';
 
-const StockNewsListItem = ({ news }) => {
+const StockNewsItemCard = ({ news }) => {
 	return (
 		<Stack
 			direction="row"
@@ -18,6 +14,10 @@ const StockNewsListItem = ({ news }) => {
 				justifyContent: 'space-between',
 				alignItems: 'center',
 				cursor: 'pointer',
+				'&:hover': {
+					backgroundColor: colors.point.stroke,
+				},
+				transition: 'all 0.3s ease', // transition 적용
 			}}
 			onClick={() => {
 				window.open(news.link, '_blank');
@@ -83,4 +83,4 @@ const StockNewsListItem = ({ news }) => {
 	);
 };
 
-export default StockNewsListItem;
+export default StockNewsItemCard;

@@ -29,9 +29,11 @@ export const colors = {
 		red: 'rgba(240, 66, 81, 0.2)',
 	},
 	point: {
-		yellow: '#D7C500',
+		yellow: '#FDD835',
+		yellowHover: '#D7C500',
 		green: '#2E7D32',
 		red: '#F04251',
+		redHover: '#EF9A9A',
 		blue: '#1D66FA',
 		stroke: '#DDE1E6',
 	},
