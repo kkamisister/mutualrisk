@@ -59,7 +59,7 @@ const EfficientFrontier = () => {
 
 	return (
 		<WidgetContainer>
-			<Title text={'Efficient Frontier'} />
+			<Title text={'효율적 포트폴리오 곡선'} />
 			<ResponsiveContainer width="100%" height={400}>
 				<ComposedChart
 					data={frontierPoints} // Efficient Frontier 데이터 사용
