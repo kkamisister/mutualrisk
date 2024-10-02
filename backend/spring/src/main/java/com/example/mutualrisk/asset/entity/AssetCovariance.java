@@ -23,4 +23,7 @@ public class AssetCovariance extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "asset_id_2")
     private Asset asset2;
+
+    @Column(name = "covariance")
+    Double covariance;
 }
