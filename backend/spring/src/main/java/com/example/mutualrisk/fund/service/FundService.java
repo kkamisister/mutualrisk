@@ -9,7 +9,7 @@ import com.example.mutualrisk.fund.dto.FundResponse.FundResultDto;
 
 public interface FundService {
 
-	ResponseWithData<FundSummaryResultDto> getAllFunds();
+	ResponseWithData<FundSummaryResultDto> getAllFunds(Integer userId);
 
 	ResponseWithData<FundResultDto> getFund(Integer userId,String fundId);
 

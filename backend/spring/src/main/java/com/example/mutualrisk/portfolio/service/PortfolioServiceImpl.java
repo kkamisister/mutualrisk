@@ -900,6 +900,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         return null;
 
+        // 유저가 설정한 자산 목록과 제약조건을 fastapi 서버로 보내기 위한 요청을 만들어야한다
 
     }
 
@@ -1000,6 +1001,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<PortfolioAssetInfo> portfolioAssetInfoList = getPortfolioAssetInfos(userId, portfolioId);
 
         return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 종목 정보 정상 반환", portfolioAssetInfoList);
+
     }
 
     private Double calculateValuation(List<PortfolioAsset> pAssets, List<Asset> findAssets, LocalDateTime targetDate) {

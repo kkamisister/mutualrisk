@@ -65,10 +65,6 @@ public class TestController {
         throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
     }
 
-    @GetMapping("/mongo")
-    public ResponseWithData<FundSummaryResultDto> mongoTest(){
-        return fundService.getAllFunds();
-    }
 
     @GetMapping("/asset")
     public ResponseWithData<?> assetTest(){

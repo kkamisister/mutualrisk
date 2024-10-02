@@ -41,9 +41,8 @@ public class FundController {
 	public ResponseEntity<ResponseWithData> getAllfunds(HttpServletRequest request){
 
 		Integer userId = (Integer)request.getAttribute("userId");
-		// log.info("user Id : {}",userId);
 
-		ResponseWithData<FundSummaryResultDto> allfunds = fundService.getAllFunds();
+		ResponseWithData<FundSummaryResultDto> allfunds = fundService.getAllFunds(userId);
 
 		return ResponseEntity.status(allfunds.status())
 			.body(allfunds);

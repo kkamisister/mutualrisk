@@ -5,6 +5,7 @@ import static com.example.mutualrisk.asset.dto.AssetResponse.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.fund.entity.Fund;
 import com.example.mutualrisk.fund.entity.FundAsset;
 import com.example.mutualrisk.sector.entity.Sector;
@@ -102,22 +103,22 @@ public record FundResponse() {
 		String code,
 		String name,
 		String region,
-		Double dailyChangeRate,
 		Integer rank,
 		Boolean interest,
 		Long valueOfHolding,
+		Double valueOfHoldingRatio,
 		Double currentValue
 	){
-		public static FundAssetInfo of(FundAsset item, AssetInfo assetInfo,Integer rank,Boolean interest){
+		public static FundAssetInfo of(FundAsset item, Asset asset,Integer rank,Boolean interest,Double valueOfHoldingRatio){
 			return FundAssetInfo.builder()
 				.assetId(item.getAssetId())
 				.code(item.getCode())
 				.name(item.getName())
 				.region(item.getRegion())
-				.dailyChangeRate(Double.valueOf(assetInfo.dailyPriceChangeRate()))
 				.rank(rank)
 				.interest(interest)
-				.currentValue(assetInfo.price())
+				.currentValue(asset.getRecentPrice())
+				.valueOfHoldingRatio(valueOfHoldingRatio)
 				.valueOfHolding(item.getValueOfHolding())
 				.build();
 		}
