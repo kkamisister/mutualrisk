@@ -180,5 +180,27 @@ public record PortfolioResponse() {
         }
     }
 
+    @Builder
+    public record PortfolioStatusSummary(
+        Double curValuation,
+        Double lastValuation,
+        Double sharpeRatio,
+        RiskRatio krxSharpeRatio,
+        RiskRatio krxETFSharpeRatio,
+        RiskRatio nasdaqSharpeRatio,
+        RiskRatio nasdaqETFSharpeRatio
+    ){
+
+    }
+
+    public record RiskRatio(
+        Integer total,
+        Integer rank
+    ){
+        public static RiskRatio of(Integer total,Integer rank){
+            return new RiskRatio(total,rank);
+        }
+    }
+
 
 }

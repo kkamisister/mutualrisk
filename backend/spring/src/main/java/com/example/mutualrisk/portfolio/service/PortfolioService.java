@@ -30,4 +30,6 @@ public interface PortfolioService {
     ResponseWithData<List<PortfolioAssetInfo>> getAssetInfoList(Integer userId, String portfolioId);
 
     ResponseWithData<PortfolioAnalysis> initPortfolio(PortfolioInitDto initInfo);
+
+    ResponseWithData<PortfolioStatusSummary> userPortfolioSummary(Integer userId,Integer version);
 }
