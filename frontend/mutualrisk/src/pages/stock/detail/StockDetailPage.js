@@ -24,7 +24,7 @@ const StockDetailPage = () => {
 			{['AMEX', 'NASDAQ', 'NYSE'].includes(data.assets[0].market) && (
 				<OverseasDetailPage assetInfo={data} />
 			)}
-			{['KOSPI', 'KOSDAQ', 'KONEX', 'ETF'].includes(
+			{['KOSPI', 'KOSDAQ', 'KONEX', 'ETF', 'KOSDAQ_GLOBAL'].includes(
 				data.assets[0].market
 			) && <DomesticDetailPage assetInfo={data} />}
 		</Stack>
