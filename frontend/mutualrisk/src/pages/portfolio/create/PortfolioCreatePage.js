@@ -6,24 +6,25 @@ import ConditionSetting from 'pages/portfolio/create/condition/ConditionSetting'
 import { colors } from 'constants/colors';
 import SelectedList from 'pages/portfolio/create/selectedstock/SelectedList';
 import AssetInputModal from 'pages/portfolio/create/AssetInputModal';
-import useAssetStore from 'stores/useAssetStore';
 import SuccessSnackbar from 'components/snackbar/SuccessSnackbar';
+import { fetchPortfolioList } from 'utils/apis/analyze';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const PortfolioCreatePage = () => {
 	const [showSelectedItems, setShowSelectedItems] = useState(false);
 	const [showConditionSetting, setShowConditionSetting] = useState(false);
 	const [selectedStocks, setSelectedStocks] = useState([]);
-	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [isModalOpen, setIsModalOpen] = useState(true);
 	const [openAddSnackbar, setOpenAddSnackbar] = useState(false);
 	const [openRemoveSnackbar, setOpenRemoveSnackbar] = useState(false);
-
-	const userAssets = useAssetStore(state => state.totalCash);
-
-	useEffect(() => {
-		if (userAssets === 0) {
-			setIsModalOpen(true);
-		}
-	}, [userAssets]);
+	const [hasPortfolio, setHasPortfolio] = useState(true);
+	const { data: userPortfolio, isLoading } = useQuery({
+		queryKey: ['userPortfolio'],
+		queryFn: fetchPortfolioList,
+		onSuccess: data => {
+			setHasPortfolio(data.hasPortfolio);
+		},
+	});
 
 	const handleStockSelect = stock => {
 		if (selectedStocks.find(selected => selected.assetId === stock.assetId)) {
@@ -51,46 +52,14 @@ const PortfolioCreatePage = () => {
 		setIsModalOpen(false);
 	};
 
-	const handleEditAssets = () => {
-		setIsModalOpen(true); // "수정하기" 버튼 클릭 시 모달 열기
-	};
-
 	return (
 		<Box
 			sx={{
 				maxHeight: '100vh',
 				overflowY: 'auto',
-				pointerEvents: isModalOpen ? 'none' : 'auto', // 모달 열렸을 때 다른 요소 비활성화
 			}}>
 			<BoxTitle title="포트폴리오 제작" />
-			{/* 자산 정보 박스 */}
-			{userAssets !== 0 && (
-				<Box
-					sx={{
-						display: 'flex',
-						justifyContent: 'space-between',
-						alignItems: 'center',
-						position: 'relative',
-						padding: '14px 20px',
-						backgroundColor: colors.background.box,
-						borderRadius: '20px',
-						minWidth: '900px',
-						width: 'calc(100% - 40px)',
-						gap: '10px',
-						marginBottom: '20px',
-					}}>
-					<Typography
-						sx={{
-							fontWeight: 'bold',
-							color: colors.text.main,
-						}}>
-						현재 자산: {userAssets.value.toLocaleString()} 원
-					</Typography>
-					<Button variant="outlined" onClick={handleEditAssets}>
-						수정하기
-					</Button>
-				</Box>
-			)}
+
 			<Box display="flex" width="100%">
 				<Box flex="4 1 0%" sx={{ minWidth: 0 }}>
 					<StockSearch
@@ -116,7 +85,7 @@ const PortfolioCreatePage = () => {
 					)}
 				</Box>
 			</Box>
-			{isModalOpen && (
+			{!hasPortfolio && (
 				<AssetInputModal
 					open={isModalOpen}
 					handleClose={handleModalClose}
