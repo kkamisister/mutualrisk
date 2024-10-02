@@ -122,7 +122,6 @@ const StockSearchModal = ({
 									data={data}
 									isAdded={
 										assetList.filter(asset => {
-											console.log(asset.assedId, data.assetId);
 											return asset.assetId === data.assetId;
 										}).length !== 0
 									}
