@@ -637,6 +637,11 @@ public class PortfolioServiceImpl implements PortfolioService{
         return new ResponseWithData<>(HttpStatus.OK.value(),"포트폴리오 현황 조회에 성공하였습니다",summary);
     }
 
+    @Override
+    public ResponseWithData<String> confirmPortfolio(PortfolioInitDto initInfo) {
+        return null;
+    }
+
     /**
      * 유저의 포트폴리오 제작 요청을 받아서 포트폴리오의 퍼포먼스,비중 및 추천 자산을 반환하는 메서드
      * @param initInfo

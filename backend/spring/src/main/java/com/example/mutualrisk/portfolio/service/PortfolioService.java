@@ -32,4 +32,6 @@ public interface PortfolioService {
     ResponseWithData<PortfolioAnalysis> initPortfolio(PortfolioInitDto initInfo);
 
     ResponseWithData<PortfolioStatusSummary> userPortfolioSummary(Integer userId,Integer version);
+
+    ResponseWithData<String> confirmPortfolio(PortfolioInitDto initInfo);
 }
