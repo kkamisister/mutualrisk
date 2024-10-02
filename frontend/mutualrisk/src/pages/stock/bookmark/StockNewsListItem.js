@@ -6,25 +6,7 @@ import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
 
-const newsSampleData = {
-	title: '가계빚 상승세 눈에 띄게 줄었다…“한국도 금리인하 여건 갖춰져”',
-	link: 'https://n.news.naver.com/mnews/article/009/0005367116',
-	pubDate: '2024.09.19. 오후 7:52',
-	publisher: '조선일보',
-	thumbnail:
-		'https://imgnews.pstatic.net/image/009/2024/09/19/0005367116_001_20240919195217869.jpg?type=w647',
-	relatedAssets: [
-		{
-			assetId: 34,
-			name: '삼성전자',
-			dailyPriceChangeRate: -0.05, // 전날 대비 5% 하락을 나타냄
-			dailyPriceChange: -2800, // 전날 대비 2800원 하락을 나타냄
-		},
-	],
-};
-
 const StockNewsListItem = ({ news }) => {
-	console.log(news);
 	return (
 		<Stack
 			direction="row"
@@ -65,6 +47,7 @@ const StockNewsListItem = ({ news }) => {
 						return (
 							<Chip
 								size="small"
+								key={data.name}
 								label={label}
 								sx={{
 									backgroundColor:
