@@ -20,7 +20,15 @@ const stockInfo = {
 		'https://thumb.tossinvest.com/image/resized/96x0/https%3A%2F%2Fstatic.toss.im%2Fpng-icons%2Fsecurities%2Ficn-sec-fill-NAS00208X-E0.png',
 };
 
-const StockPrice = ({ title, data }) => {
+const StockPrice = ({ price, dailyPriceChange, dailyPriceChangeRate }) => {
+	const pointColor =
+		parseInt(dailyPriceChange) === 0
+			? colors.text.sub2
+			: parseInt(dailyPriceChange) > 0
+			? colors.point.red
+			: colors.point.blue;
+
+	console.log({ price, dailyPriceChange, dailyPriceChangeRate });
 	return (
 		<Stack
 			direction="row"
@@ -43,9 +51,9 @@ const StockPrice = ({ title, data }) => {
 					<Box
 						sx={{
 							fontSize: '24px',
-							color: colors.point.red,
+							color: pointColor,
 							fontWeight: 'bold',
-						}}>{`${stockInfo.price} USD`}</Box>
+						}}>{`${price.toLocaleString('ko-KR')} 원`}</Box>
 					<Stack direction="row" spacing={1}>
 						<Box
 							sx={{
@@ -58,10 +66,12 @@ const StockPrice = ({ title, data }) => {
 						<Box
 							sx={{
 								fontSize: '14px',
-								color: colors.point.red,
+								color: pointColor,
 								fontWeight: '500',
 							}}>
-							{`+ ${stockInfo.dailyPriceChange} USD (${stockInfo.dailyPriceChangeRate})`}
+							{`${parseInt(dailyPriceChange) > 0 ? '+' : ''}${parseInt(
+								dailyPriceChange
+							).toLocaleString('ko-KR')}원 (${dailyPriceChangeRate}%)`}
 						</Box>
 					</Stack>
 				</Stack>
