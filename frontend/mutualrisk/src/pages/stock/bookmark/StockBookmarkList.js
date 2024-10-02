@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Stack, IconButton, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import Select from 'react-select';
 import StockSearchModal from './StockSearchModal';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
@@ -10,42 +9,7 @@ import SuccessSnackbar from 'components/snackbar/SuccessSnackbar';
 import StockSkeletonCard from 'components/card/StockSkeletonCard';
 import { removeBookmark } from 'utils/apis/interest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-const AddStockButton = ({ setOpenSearchModal }) => {
-	return (
-		<IconButton
-			onClick={() => setOpenSearchModal(true)}
-			sx={{
-				backgroundColor: colors.background.box,
-				padding: '10px',
-				borderRadius: '10px',
-				justifyContent: 'center',
-				alignItems: 'center',
-				'&:hover': {
-					backgroundColor: colors.point.stroke, // hover 시 배경색 변경
-				},
-			}}>
-			<Stack
-				direction="row"
-				spacing={0.5}
-				sx={{
-					height: '40px',
-					justifyContent: 'center',
-					alignItems: 'center',
-				}}>
-				<AddCircleOutlineIcon />
-				<Typography
-					sx={{
-						fontSize: '14px',
-						fontWeight: 500,
-						color: colors.text.sub1,
-					}}>
-					추가하기
-				</Typography>
-			</Stack>
-		</IconButton>
-	);
-};
+import AddStockButton from './AddBookmarkButton';
 
 const options = [
 	{ value: 'NAME', label: '이름' },
@@ -88,7 +52,6 @@ const StockBookmarkList = ({ isLoading, assetList }) => {
 		// Optimistic 처리를 위해 onMutate 사용
 		onMutate: assetId => {
 			const queryAssetList = queryClient.getQueryData(['bookmark']); // queryClient 내 저장되어 있는 assetList 값
-			console.log(queryAssetList);
 			queryAssetList.assets = queryAssetList.assets.filter(asset => {
 				return asset !== assetId;
 			});
@@ -99,7 +62,39 @@ const StockBookmarkList = ({ isLoading, assetList }) => {
 	const handleRemoveBookmark = assetId => {
 		removeMutation.mutate(assetId);
 	};
-	const navigate = useNavigate();
+
+	// 정렬을 처리하는 Mutation
+	const orderMutation = useMutation({
+		onMutate: () => {
+			// 로딩이 아직 완료되지 않았다면 정렬 필요 X
+			if (isLoading) {
+				return;
+			}
+			const queryAssetList = queryClient.getQueryData(['bookmark']); // queryClient 내 저장되어 있는 assetList 값
+
+			if (selectedOption.value === 'NAME') {
+				queryAssetList.assets = queryAssetList.assets.sort(
+					(a, b) => a.name > b.name
+				);
+			} else if (selectedOption.value === 'RETURN') {
+				queryAssetList.assets = queryAssetList.assets.sort(
+					(a, b) =>
+						parseFloat(b.dailyPriceChangeRate) -
+						parseFloat(a.dailyPriceChangeRate)
+				);
+			} else if (selectedOption.value === 'PRICE') {
+				queryAssetList.assets = queryAssetList.assets.sort(
+					(a, b) => parseInt(b.price) - parseInt(a.price)
+				);
+			}
+
+			return queryClient.setQueryData(() => queryAssetList);
+		},
+	});
+
+	const handleSelectedOptionChange = () => {
+		orderMutation.mutate();
+	};
 
 	return (
 		<Stack
@@ -122,7 +117,10 @@ const StockBookmarkList = ({ isLoading, assetList }) => {
 					defaultValue={selectedOption}
 					value={selectedOption}
 					options={options}
-					onChange={newOption => setSelectedOption(newOption)}
+					onChange={newOption => {
+						setSelectedOption(newOption);
+						handleSelectedOptionChange();
+					}}
 				/>
 			</Stack>
 			<AddStockButton setOpenSearchModal={setOpenSearchModal} />
