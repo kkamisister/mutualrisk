@@ -21,7 +21,6 @@ const ChartWidget = ({ assetId }) => {
 	return (
 		<ResponsiveContainer>
 			<LineChart
-				width={730}
 				height={250}
 				data={data.records}
 				margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
