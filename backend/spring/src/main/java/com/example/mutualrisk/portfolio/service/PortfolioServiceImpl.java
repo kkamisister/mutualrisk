@@ -23,7 +23,6 @@ import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.common.util.DateUtil;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
 import com.example.mutualrisk.portfolio.dto.PortfolioRequest.*;
-import com.example.mutualrisk.portfolio.dto.PortfolioResponse;
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 import com.example.mutualrisk.portfolio.entity.*;
 import com.example.mutualrisk.portfolio.repository.PortfolioRepository;
@@ -98,7 +97,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         List<PortfolioAssetInfo> portfolioAssetInfoList = getPortfolioAssetInfos(userId, portfolioId);
 
-        PortfolioResponse.PortfolioPerformance portfolioPerformance = getPortfolioPerformance(assetList, weights, totalValuation);
+        PortfolioPerformance portfolioPerformance = getPortfolioPerformance(assetList, weights, totalValuation);
 
         return buildPortfolioResponse(portfolio, portfolioAssetInfoList, portfolioPerformance);
     }
@@ -546,35 +545,25 @@ public class PortfolioServiceImpl implements PortfolioService{
                 curValuation += asset.getRecentPrice() * pAsset.getTotalPurchaseQuantity();
             }
         }
+
         // 2. 이 포트폴리오의 마지막 날짜 기준 valuation
         Double lastValuation = 0.0;
-        if(userPortfolio.getIsActive())lastValuation = null;
-        else{
-            // targetDate의 자산 가격을 가지고온다
+        if (userPortfolio.getIsActive()) {
+            lastValuation = null;
+        } else {
             LocalDateTime targetDate = userPortfolio.getDeletedAt();
+            lastValuation = calculateValuation(pAssets, findAssets, targetDate);
+        }
 
-            // 특정 날짜의 자산 가격을 가져옴
-            List<AssetHistory> assetHistoryList = assetHistoryService.getAssetHistoryList(findAssets, targetDate);
+        // 3. 생성일 기준 valuation
+        LocalDateTime targetDate = userPortfolio.getCreatedAt();
+        Double createValuation = calculateValuation(pAssets, findAssets, targetDate);
 
-            // 포트폴리오 자산과 AssetHistory를 매칭하여 계산
-            for (PortfolioAsset pAsset : pAssets) {
-                // AssetHistory에서 Asset을 찾아서 처리
-                AssetHistory assetHistory = assetHistoryList.stream()
-                    .filter(ah -> ah.getAsset().getId().equals(pAsset.getAssetId()))
-                    .findFirst()
-                    .orElse(null);
-
-                if (assetHistory != null) {
-                    Double price = assetHistory.getPrice();
-                    lastValuation += price * pAsset.getTotalPurchaseQuantity();
-                }
-            }
-
+        // 4. 위험률 대비 수익률 : sharpe_ratio
+        Double sharpeRatio = userPortfolio.getFictionalPerformance().getSharpeRatio();
         }
         // 3. 위험률 대비 수익률 : sharpe_ratio
         Double sharpeRatio = userPortfolio.getFictionalPerformance().sharpeRatio();
-
-        // 시장별로 가져오지 말고, 한꺼번에 가져와서 분류하자
 
         // 전체 시장을 가지고와서, 각 시장에 Map을 이용해서 구분해보자
         List<Asset> allAssets = assetRepository.findAll();
@@ -633,8 +622,10 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 지금까지 모든것을 DTO에 담아 반환한다
         PortfolioStatusSummary summary = PortfolioStatusSummary.builder()
+            .created_at(userPortfolio.getCreatedAt())
             .curValuation(curValuation)
             .lastValuation(lastValuation)
+            .initValuation(createValuation)
             .sharpeRatio(sharpeRatio)
             .krxSharpeRatio(krxRatio)
             .krxETFSharpeRatio(krxETFRatio)
@@ -773,7 +764,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
             System.out.println("assetWeightDto.asset().getId() = " + assetWeightDto.asset().getId());
         }
-        
+
         // assetWeightDtoList를 정렬
         assetWeightDtoList.sort(Comparator.comparingInt(aw -> aw.asset().getId()));
 
@@ -1012,6 +1003,29 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<PortfolioAssetInfo> portfolioAssetInfoList = getPortfolioAssetInfos(userId, portfolioId);
 
         return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 종목 정보 정상 반환", portfolioAssetInfoList);
+    }
+
+    private Double calculateValuation(List<PortfolioAsset> pAssets, List<Asset> findAssets, LocalDateTime targetDate) {
+        Double valuation = 0.0;
+
+        // 특정 날짜의 자산 가격을 가져옴
+        List<AssetHistory> assetHistoryList = assetHistoryService.getAssetHistoryList(findAssets, targetDate);
+
+        // 포트폴리오 자산과 AssetHistory를 매칭하여 계산
+        for (PortfolioAsset pAsset : pAssets) {
+            // AssetHistory에서 Asset을 찾아서 처리
+            AssetHistory assetHistory = assetHistoryList.stream()
+                .filter(ah -> ah.getAsset().getId().equals(pAsset.getAssetId()))
+                .findFirst()
+                .orElse(null);
+
+            if (assetHistory != null) {
+                Double price = assetHistory.getPrice();
+                valuation += price * pAsset.getTotalPurchaseQuantity();
+            }
+        }
+
+        return valuation;
     }
 
     private List<PortfolioAssetInfo> getPortfolioAssetInfos(Integer userId, String portfolioId) {
@@ -1290,10 +1304,10 @@ public class PortfolioServiceImpl implements PortfolioService{
             .build();
         return new ResponseWithData<>(HttpStatus.OK.value(), "유저가 포트폴리오를 아직 만들지 않은 상태입니다", portfolioResultDto);
     }
-    private PortfolioResponse.PortfolioPerformance getPortfolioPerformance(List<Asset> assetList, List<Double> weights, double totalAmount) {
+    private PortfolioPerformance getPortfolioPerformance(List<Asset> assetList, List<Double> weights, double totalAmount) {
         // todo: expected_return, covariance_matrix가 데이터 적재가 덜 되어서 구하는 로직을 추가하지 않음. 추후 추가 필요
 
-        return PortfolioResponse.PortfolioPerformance.builder()
+        return PortfolioPerformance.builder()
             .valuation(totalAmount)
             .build();
     }
