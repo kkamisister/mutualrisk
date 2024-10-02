@@ -63,6 +63,7 @@ public class FundServiceImpl implements FundService {
 	@Override
 	public ResponseWithData<FundSummaryResultDto> getAllFunds() {
 
+
 		// 펀드 정보를 가지고 온다
 		List<Fund> allfunds = fundRepository.getAllFunds();
 
@@ -71,15 +72,28 @@ public class FundServiceImpl implements FundService {
 			.map(FundSummaryInfo::from)
 			.toList();
 
+
+
+
+
+
+
+
 		// 총 보유량 및 구매량 종목을 가지고 온다
 		Fund topHoldAndBuyAmount = fundRepository.getTopHoldAndBuyAmount()
 			.orElseThrow(() -> new MutualRiskException(ErrorCode.NO_HOLD_AND_BUY_AMOUNT));
+
+		// // 이걸 DTO에 잘 담는다
+		// FundTopHoldAndBuyAmountDto amountDto = new FundTopHoldAndBuyAmountDto(
+		// 	topHoldAndBuyAmount.getTopHoldAsset(),
+		// 	topHoldAndBuyAmount.getTopBuyAsset()
+		// );
 
 		// 결과를 resultDTO에 담아서 반환한다
 		FundSummaryResultDto fundResultDto = FundSummaryResultDto.builder()
 			.fundNum(fundSummarys.size())
 			.funds(fundSummarys)
-			.topHoldAndBuyAmount(topHoldAndBuyAmount)
+			// .topHoldAndBuyAmount(amountDto)
 			.build();
 
 		return new ResponseWithData<>(HttpStatus.OK.value(),"펀드 조회에 성공하였습니다",fundResultDto);

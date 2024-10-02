@@ -216,7 +216,6 @@ public class AssetServiceImpl implements AssetService{
 
         return new ResponseWithMessage(HttpStatus.OK.value(),"관심종목에서 삭제되었습니다.");
     }
-
     /**
      * 입력받은 코드에 대한 자산을 반환하는 메서드
      * @param assetId

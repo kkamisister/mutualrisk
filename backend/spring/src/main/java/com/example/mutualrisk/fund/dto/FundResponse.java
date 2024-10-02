@@ -58,11 +58,21 @@ public record FundResponse() {
 	public record FundSummaryResultDto(
 		Integer fundNum,
 		List<FundSummaryInfo> funds,
-		Fund topHoldAndBuyAmount
+		FundTopHoldAndBuyAmountDto topHoldAndBuyAmount
 	){
 
-
 	}
+
+	@Schema(name = "펀드 메인 페이지의 데이터",description = "20개 펀드사들의 상위 보유 및 구매 자산 목록")
+	public record FundTopHoldAndBuyAmountDto(
+		List<FundAssetInfo> topHoldAsset,
+		List<FundAssetInfo> topBuyAsset
+	){
+		public static FundTopHoldAndBuyAmountDto of(List<FundAssetInfo> topHoldAsset,List<FundAssetInfo> topBuyAsset){
+			return new FundTopHoldAndBuyAmountDto(topHoldAsset,topBuyAsset);
+		}
+	}
+
 
 	@Builder
 	@Schema(name = "펀드 요약정보",description = "상위 투자운용사 목록 정보, 상단의 이미지에 부분에 사용")
