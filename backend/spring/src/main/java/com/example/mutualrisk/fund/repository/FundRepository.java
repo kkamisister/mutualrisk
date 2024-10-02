@@ -18,6 +18,8 @@ public interface FundRepository {
 
 	Optional<Fund> getBeforeQuarter(Fund fund);
 
+	Optional<Fund> getBeforeQuarterTopHoldAndBuyAmount(Fund fund);
+
 	Fund save(Fund fund);
 
 }

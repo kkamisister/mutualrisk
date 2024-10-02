@@ -17,6 +17,7 @@ import com.example.mutualrisk.asset.dto.AssetResponse.AssetInfo;
 import com.example.mutualrisk.asset.service.AssetHistoryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.asset.entity.AssetHistory;
@@ -52,17 +53,21 @@ public class FundServiceImpl implements FundService {
 	private final FundRepository fundRepository;
 	private final UserRepository userRepository;
 	private final AssetRepository assetRepository;
-	private final AssetHistoryRepository assetHistoryRepository;
 	private final InterestAssetRepository interestAssetRepository;
-	private final ExchangeRatesRepository exchangeRatesRepository;
 
 	/**
 	 * 전체 펀드 목록을 조회하는 메서드
 	 * @return
 	 */
 	@Override
-	public ResponseWithData<FundSummaryResultDto> getAllFunds() {
+	public ResponseWithData<FundSummaryResultDto> getAllFunds(Integer userId) {
 
+		// 유저를 가지고 온다
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new MutualRiskException(ErrorCode.USER_NOT_FOUND));
+
+		// 유저의 관심자산 목록을 가지고온다
+		List<InterestAsset> userInterestAssets = interestAssetRepository.findUserInterestAssets(user);
 
 		// 펀드 정보를 가지고 온다
 		List<Fund> allfunds = fundRepository.getAllFunds();
@@ -72,33 +77,91 @@ public class FundServiceImpl implements FundService {
 			.map(FundSummaryInfo::from)
 			.toList();
 
-
-
-
-
-
-
-
 		// 총 보유량 및 구매량 종목을 가지고 온다
-		Fund topHoldAndBuyAmount = fundRepository.getTopHoldAndBuyAmount()
+		Fund amount = fundRepository.getTopHoldAndBuyAmount()
 			.orElseThrow(() -> new MutualRiskException(ErrorCode.NO_HOLD_AND_BUY_AMOUNT));
 
-		// // 이걸 DTO에 잘 담는다
-		// FundTopHoldAndBuyAmountDto amountDto = new FundTopHoldAndBuyAmountDto(
-		// 	topHoldAndBuyAmount.getTopHoldAsset(),
-		// 	topHoldAndBuyAmount.getTopBuyAsset()
-		// );
+		// 이전 분기의 펀드를 가지고온다
+		Optional<Fund> beforeQuarter = fundRepository.getBeforeQuarterTopHoldAndBuyAmount(amount);
+
+		log.warn("beforeQuarter : {}",beforeQuarter);
+
+		// 필요한 정보 : assetId,code,name,rank,interest,valueOfHolding,전체중에 차지하는 비중,현재 가격
+		List<FundAsset> topHoldAsset = amount.getTopHoldAsset();
+		List<FundAsset> topBuyAsset = amount.getTopBuyAsset();
+
+		// 보유,구매 탑30 종목의 아이디들
+		List<Integer> topHoldAssetIds = topHoldAsset.stream().map(FundAsset::getAssetId).toList();
+		List<Integer> topBuyAssetIds = topBuyAsset.stream().map(FundAsset::getAssetId).toList();
+
+		// 탑30 보유 및 구매 종목들
+		List<Asset> holdAssets = assetRepository.findAllById(topHoldAssetIds);
+		List<Asset> buyAssets = assetRepository.findAllById(topBuyAssetIds);
+
+		// (자산ID,자산) 을 매핑한 맵
+		Map<Integer, Asset> holdIdMap = holdAssets.stream().collect(Collectors.toMap(
+			Asset::getId,
+			asset -> asset
+		));
+		Map<Integer, Asset> buyIdMap = buyAssets.stream().collect(Collectors.toMap(
+			Asset::getId,
+			asset -> asset
+		));
+
+		List<FundAssetInfo> topHoldAssetInfos = new ArrayList<>();
+		for(FundAsset fundAsset : topHoldAsset) {
+			//1. 펀드자산에 있는 자산 정보를 가지고 온다
+			if(ObjectUtils.isEmpty(fundAsset.getAssetId()))continue; // 기타인 경우 스킵
+			Asset asset = holdIdMap.get(fundAsset.getAssetId());
+
+			//2. rank를 구한다
+			// 현재 fund와 전 분기 fund의 topHoldAsset을 비교하여, 자산의 순위변화를 찾는다
+			Integer rank = beforeQuarter
+				.map(f -> calculateHoldRank(amount, f, asset.getId()))
+				.orElse(null); // null인경우는 새롭게 추가된 자산임
+
+			//3. interest를 구한다
+			// 현재 로그인한 유저의 관심종목에 포함되어있는지 여부를 반환한다
+			Boolean interest = userInterestAssets.stream()
+				.anyMatch(interestAsset -> interestAsset.getAsset().getId().equals(asset.getId()));
+
+			//4. 정보를 담아서 반환한다
+			FundAssetInfo fundAssetInfo = FundAssetInfo.of(fundAsset, asset, rank, interest, null);
+			topHoldAssetInfos.add(fundAssetInfo);
+		}
+
+		List<FundAssetInfo> topBuyAssetInfos = new ArrayList<>();
+		for(FundAsset fundAsset : topBuyAsset) {
+			//1. 펀드자산에 있는 자산 정보를 가지고 온다
+			if(ObjectUtils.isEmpty(fundAsset.getAssetId()))continue; // 기타인 경우 스킵
+			Asset asset = buyIdMap.get(fundAsset.getAssetId());
+
+			log.warn("topBuyAsset : {}",asset);
+			//2. rank를 구한다
+			// 현재 fund와 전 분기 fund의 topHoldAsset을 비교하여, 자산의 순위변화를 찾는다
+			Integer rank = beforeQuarter
+				.map(f -> calculateBuyRank(amount, f, asset.getId()))
+				.orElse(null); // null인경우는 새롭게 추가된 자산임
+
+			//3. interest를 구한다
+			// 현재 로그인한 유저의 관심종목에 포함되어있는지 여부를 반환한다
+			Boolean interest = userInterestAssets.stream()
+				.anyMatch(interestAsset -> interestAsset.getAsset().getId().equals(asset.getId()));
+
+			//4. 정보를 담아서 반환한다
+			FundAssetInfo fundAssetInfo = FundAssetInfo.of(fundAsset, asset, rank, interest, null);
+			topBuyAssetInfos.add(fundAssetInfo);
+		}
 
 		// 결과를 resultDTO에 담아서 반환한다
 		FundSummaryResultDto fundResultDto = FundSummaryResultDto.builder()
 			.fundNum(fundSummarys.size())
 			.funds(fundSummarys)
-			// .topHoldAndBuyAmount(amountDto)
+			.topHoldAndBuyAmount(FundTopHoldAndBuyAmountDto.of(topHoldAssetInfos,topBuyAssetInfos))
 			.build();
 
 		return new ResponseWithData<>(HttpStatus.OK.value(),"펀드 조회에 성공하였습니다",fundResultDto);
 	}
-
 	/**
 	 * 펀드 상세보기를 클릭하면 나타나는 정보를 가져오기위한 메서드
 	 *
@@ -127,12 +190,22 @@ public class FundServiceImpl implements FundService {
 		// 펀드가 가진 자산을 가지고온다
 		List<Asset> assets = assetRepository.findAssetListWithIndustryAndSectorByIds(assetIds);
 
+		// (자산ID,자산) 을 매핑한 맵
+		Map<Integer, Asset> assetIdMap = assets.stream().collect(Collectors.toMap(
+			Asset::getId,
+			asset -> asset
+		));
+
 		// 섹터 편중 계산을 해야한다
 		// 실제 자산을 순회하면서, 현재 펀드자산과 ID가 일치하는 자산에서 섹터 정보를 가지고와야한다
 		Map<String, Long> sectorValueMap = new HashMap<>();
 		Map<String,Integer> sectorIdMap = new HashMap<>();
 
-		List<FundAsset> fundAssets = fund.getAsset();
+		// 펀드에 포함된 자산을 비중의 내림차순으로 정렬한다
+		List<FundAsset> fundAssets = fund.getAsset().stream()
+			.sorted(Comparator.comparing(FundAsset::getValueOfHolding).reversed())
+			.toList();
+
 		for (FundAsset fundAsset : fundAssets) {
 			// 자산과 FundAsset을 매핑하여 해당 자산의 Sector를 찾음
 			Optional<Sector> sector = assets.stream()
@@ -164,46 +237,32 @@ public class FundServiceImpl implements FundService {
 		// 유저의 관심자산 목록을 가지고온다
 		List<InterestAsset> userInterestAssets = interestAssetRepository.findUserInterestAssets(user);
 
-		// 환율을 가져오는 메서드
-		Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+		// 필요한 정보 : assetId,code,name,rank,interest,valueOfHolding,전체중에 차지하는 비중,현재 가격
+		List<FundAssetInfo> fundAssetInfos = new ArrayList<>();
+		for(FundAsset fundAsset : fundAssets) {
 
-		// 첫번째 자산의 최근 종가일 2개를 가지고온다
-		List<LocalDateTime> twoValidDate = assetHistoryService.getValidDate(assets.get(0),
-			LocalDateTime.now(), 2);
+			//1. 펀드자산에 있는 자산 정보를 가지고 온다
+			if(ObjectUtils.isEmpty(fundAsset.getAssetId()))continue; // 기타인 경우 스킵
+			Asset asset = assetIdMap.get(fundAsset.getAssetId());
 
-		// 펀드의 자산정보를 가지고 온다
-		List<FundAssetInfo> fundAssetInfos = assets.parallelStream()
-			.map(asset -> {
-				//1. 해당 펀드자산의 일별 종가를 가지고온다
-				List<AssetHistory> recentAssetHistoryList = assetHistoryRepository.findRecentHistoriesBetweenDates(asset
-				,twoValidDate.get(1),twoValidDate.get(0));
+			//2. rank를 구한다
+			// 현재 fund와 전 분기 fund의 topHoldAsset을 비교하여, 자산의 순위변화를 찾는다
+			Integer rank = beforeQuarter
+				.map(f -> calculateRank(fund, f, asset.getId()))
+				.orElse(null); // null인경우는 새롭게 추가된 자산임
 
-				//2. 해당 자산의 정보를 가지고온다
-				AssetInfo assetInfo = AssetInfo.of(asset, recentAssetHistoryList, recentExchangeRate);
+			//3. interest를 구한다
+			// 현재 로그인한 유저의 관심종목에 포함되어있는지 여부를 반환한다
+			Boolean interest = userInterestAssets.stream()
+				.anyMatch(interestAsset -> interestAsset.getAsset().getId().equals(asset.getId()));
 
-				// 3. rank 구하기
-				// 현재 fund와 전 분기 fund의 topHoldAsset을 비교하여, 자산의 순위변화를 찾는다
-				Integer rank = beforeQuarter
-					.map(f -> calculateRank(fund, f, asset.getId()))
-					.orElse(0);
+			//4. 전체 중에서 차지하는 비율을 찾는다
+			Double ratio = fundAsset.getValueOfHolding() * 100.0 / fund.getValueOfHoldings();
 
-				// 4. interest 구하기
-				// 현재 로그인한 유저의 관심종목에 포함되어있는지 여부를 반환한다
-				Boolean interest = userInterestAssets.stream()
-					.anyMatch(interestAsset -> interestAsset.getAsset().getId().equals(asset.getId()));
-
-				//5. valueOfHolding를 구한다
-				FundAsset fundAsset = fund.getAsset().stream()
-					.skip(1)
-					.filter(item -> item.getAssetId().equals(asset.getId()))
-					.findFirst()
-					.orElse(FundAsset.builder().build()); // 없으면 빈 객체 반환
-
-				return FundAssetInfo.of(fundAsset,assetInfo,rank, interest);
-			})
-			.limit(10) // 최대 10개만
-			.sorted(Comparator.comparing(FundAssetInfo::valueOfHolding).reversed()) // valueOfHolding의 내림차순
-			.collect(Collectors.toList());
+			//5. 정보를 담아서 반환한다
+			FundAssetInfo fundAssetInfo = FundAssetInfo.of(fundAsset, asset, rank, interest, ratio);
+			fundAssetInfos.add(fundAssetInfo);
+		}
 
 		// 결과를 반환한다
 		FundResultDto fundResultDto = FundResultDto.builder()
@@ -330,7 +389,58 @@ public class FundServiceImpl implements FundService {
 	 */
 	private static List<Integer> getAssetIds(Fund fund) {
 		return fund.getAsset().stream()
+			.filter(fundAsset -> !fundAsset.getName().equals("기타"))
 			.map(FundAsset::getAssetId).toList();
+	}
+
+	/**
+	 * 탑30 보유량의 전/후 분기 대비 순위상승량을 계산한다
+	 * @param curFund
+	 * @param beforeFund
+	 * @param assetId
+	 * @return
+	 */
+	private static Integer calculateHoldRank(Fund curFund,Fund beforeFund,Integer assetId) {
+
+		// beforeFund에서 asset의 인덱스를 찾음
+		List<FundAsset> beforeAssets = beforeFund.getTopHoldAsset();
+		int beforeIndex = findAssetIndex(beforeAssets, assetId);
+
+		// curFund에서 asset의 인덱스를 찾음
+		List<FundAsset> curAssets = curFund.getTopHoldAsset();
+		int curIndex = findAssetIndex(curAssets, assetId);
+
+		// 1. beforeFund가 없는경우 -> 순위변화 : 0
+		if(beforeIndex == -1)return 0;
+			// 2. beforeFund가 있는경우 -> 순위변화를 반환
+		else{
+			return beforeIndex - curIndex;
+		}
+	}
+
+	/**
+	 * 탑30 구매량의 전/후 분기 대비 순위상승량을 계산한다
+	 * @param curFund
+	 * @param beforeFund
+	 * @param assetId
+	 * @return
+	 */
+	private static Integer calculateBuyRank(Fund curFund,Fund beforeFund,Integer assetId) {
+
+		// beforeFund에서 asset의 인덱스를 찾음
+		List<FundAsset> beforeAssets = beforeFund.getTopBuyAsset();
+		int beforeIndex = findAssetIndex(beforeAssets, assetId);
+
+		// curFund에서 asset의 인덱스를 찾음
+		List<FundAsset> curAssets = curFund.getTopBuyAsset();
+		int curIndex = findAssetIndex(curAssets, assetId);
+
+		// 1. beforeFund가 없는경우 -> 순위변화 : 0
+		if(beforeIndex == -1)return 0;
+			// 2. beforeFund가 있는경우 -> 순위변화를 반환
+		else{
+			return beforeIndex - curIndex;
+		}
 	}
 
 	/**

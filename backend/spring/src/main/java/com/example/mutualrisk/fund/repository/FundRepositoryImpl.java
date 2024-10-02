@@ -29,25 +29,12 @@ public class FundRepositoryImpl implements FundRepository {
 	@Override
 	public List<Fund> getFundsByPeriod(String fundName,Integer period) {
 
-		// 날짜 형식 정의
-		// DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-
 		// 현재 날짜로부터 period 기간 전의 날짜를 계산
 		LocalDate today = LocalDate.now();
 		LocalDate startDate = today.minusYears(period); // period 기간 전의 날짜 계산
 
-		// LocalDate를 String으로 변환
-
-		// String startDateStr = startDate.format(formatter);
-		// String todayStr = today.format(formatter);
-
-		log.warn("today : {}",today);
-		log.warn("startDate : {}",startDate);
-
 		Query query = new Query();
 
-		log.warn("fundName : {}",fundName);
 		// 입력받은 펀드 찾기
 		query.addCriteria(Criteria.where("company").is(fundName));
 
@@ -121,6 +108,26 @@ public class FundRepositoryImpl implements FundRepository {
 
 		// submissionDate로 내림차순 정렬
 		query.with(Sort.by(Sort.Order.desc("submissionDate")));
+
+		return Optional.ofNullable(mongoTemplate.findOne(query,Fund.class));
+	}
+
+	@Override
+	public Optional<Fund> getBeforeQuarterTopHoldAndBuyAmount(Fund fund) {
+
+		Query query = new Query();
+
+		// type : totalFund인 것을 찾는다
+		query.addCriteria(Criteria.where("type").is(fund.getType()));
+
+		// 제출일이 바로 이전인 것을 찾는다
+		query.addCriteria(Criteria.where("submissionDate").lt(fund.getSubmissionDate()));
+
+		// submissionDate로 내림차순 정렬
+		query.with(Sort.by(Sort.Order.desc("submissionDate")));
+
+		// 현재 asset은 필요없기때문에, 가져오지않는다
+		query.fields().exclude("asset");
 
 		return Optional.ofNullable(mongoTemplate.findOne(query,Fund.class));
 	}

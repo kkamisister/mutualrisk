@@ -739,29 +739,29 @@ public class PortfolioServiceImpl implements PortfolioService{
             // 기존 포트폴리오로 측정한 퍼포먼스와 추천자산 비중을 반환한다
             PortfolioAnalysis original = PortfolioAnalysis.of(performance, recommendAssetInfos);
 
-            // // hadoop에 보낼 JSON 요청 본문을 만든다
-            // Map<String, Object> recommendBody = new HashMap<>();
-            //
-            // // 새로운 자산 id들을 가지고온다
-            // List<Asset> assetsNotInList = assetRepository.findAssetsNotInList(initInfo.assetIds());
-            // List<Integer> newAssetIds = assetsNotInList.stream().map(Asset::getId).toList();
-            //
-            // recommendBody.put("existing_assets", initInfo.assetIds());
-            // recommendBody.put("new_assets", newAssetIds);
-            //
-            // // hadoop fastapi로 요청을 보낸다
-            // try {
-            //     Map<String, Object> res = fastApiService.getRecommendData(recommendBody);
-            //     for (Entry<String, Object> entry : res.entrySet()) {
-            //         System.out.println("entry = " + entry.getKey());
-            //         System.out.println("entry = " + entry.getValue());
-            //     }
-            //
-            // } catch (RuntimeException e) {
-            //     // 예외 처리
-            //     log.error("Hadoop 서버와의 통신 중 오류가 발생했습니다.", e);
-            //     throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
-            // }
+            // hadoop에 보낼 JSON 요청 본문을 만든다
+            Map<String, Object> recommendBody = new HashMap<>();
+
+            // 새로운 자산 id들을 가지고온다
+            List<Asset> assetsNotInList = assetRepository.findAssetsNotInList(initInfo.assetIds());
+            List<Integer> newAssetIds = assetsNotInList.stream().map(Asset::getId).toList();
+
+            recommendBody.put("existing_assets", initInfo.assetIds());
+            recommendBody.put("new_assets", newAssetIds);
+
+            // hadoop fastapi로 요청을 보낸다
+            try {
+                Map<String, Object> res = fastApiService.getRecommendData(recommendBody);
+                for (Entry<String, Object> entry : res.entrySet()) {
+                    System.out.println("entry = " + entry.getKey());
+                    System.out.println("entry = " + entry.getValue());
+                }
+
+            } catch (RuntimeException e) {
+                // 예외 처리
+                log.error("Hadoop 서버와의 통신 중 오류가 발생했습니다.", e);
+                throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
+            }
 
             // 여기에는 추천종목을 고려한 DTO를 반환
             CalculatedPortfolio calculatedPortfolio = CalculatedPortfolio.builder()
