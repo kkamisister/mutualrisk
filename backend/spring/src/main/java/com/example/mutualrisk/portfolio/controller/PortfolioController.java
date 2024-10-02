@@ -96,6 +96,10 @@ public class PortfolioController {
         return ResponseEntity.status(responseWithMessage.status()).body(responseWithMessage);
     }
 
+    /**
+     * 포트폴리오 백테스팅 결과를 조회하는 api
+     * 백테스팅 시점은, 현재로부터 특정 기간 동안의 과거 데이터를 기반으로 한다
+     */
     @Operation(summary = "백테스팅 결과 조회", description = "현재 포트폴리오 자산 보유량 기준으로, 과거 평가액을 조회하는 api")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "백테스팅 결과 조회 성공")
@@ -134,6 +138,10 @@ public class PortfolioController {
             .body(userPortfolioSector);
     }
 
+    /**
+     * 현재 포트폴리오의 효율적 프론티어 곡선을 이루는 점들의 좌표를 반환하는 함수
+     * (x좌표 : 포트폴리오의 분산(volatility), y좌표 : 포트폴리오의 기대 수익률(expected_return))
+     */
     @Operation(summary = "효율적 프론티어 조회", description = "효율적 프론티어를 이루는 각 점들의 성과 지표를 조회하는 api")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "효율적 포트폴리오 곡선 데이터 정상 반환"),
@@ -148,6 +156,10 @@ public class PortfolioController {
             .body(frontierDtoResponseWithData);
     }
 
+    /**
+     * 포트폴리오의 자산 평가액을 조회하는 api
+     * 조회하는 시점은, 포트폴리오가 마지막으로 유지된 시점으로부터, 특정 기간 동안의 과거 데이터를 기반으로 한다
+     */
     @Operation(summary = "포트폴리오 평가액 추이 조회", description = "각 기간별 포트폴리오의 자산 평가액을 조회하는 api")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "자산 평가액 조회 성공"),
@@ -172,6 +184,10 @@ public class PortfolioController {
             .body(portfolioValuationDtoResponseWithData);
     }
 
+    /**
+     * 포트폴리오 월별 수익률을 조회하는 api
+     * 조회하는 시점은, 포트폴리오가 마지막으로 유지된 시점으로부터, 특정 기간 동안의 과거 데이터를 기반으로 한다
+     */
     @Operation(summary = "포트폴리오 monthly return 조회", description = "포트폴리오의 월별 수익률을 반환")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "자산 평가액 조회 성공"),
@@ -198,6 +214,10 @@ public class PortfolioController {
             .body(portfolioValuationDtoResponseWithData);
     }
 
+    /**
+     * 포트폴리오의 보유 자산 목록을 보여주는 api
+     * 기본 자산 정보에 더해서, 자산별 보유 비중과 자산 평가액을 추가로 반환
+     */
     @GetMapping("/assets")
     public ResponseEntity<ResponseWithData<List<PortfolioAssetInfo>>> getPortfolioAssetList(
         @RequestParam(value = "portfolioId") String portfolioId,
