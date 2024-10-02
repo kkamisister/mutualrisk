@@ -538,35 +538,22 @@ public class PortfolioServiceImpl implements PortfolioService{
                 curValuation += asset.getRecentPrice() * pAsset.getTotalPurchaseQuantity();
             }
         }
+
         // 2. 이 포트폴리오의 마지막 날짜 기준 valuation
         Double lastValuation = 0.0;
-        if(userPortfolio.getIsActive())lastValuation = null;
-        else{
-            // targetDate의 자산 가격을 가지고온다
+        if (userPortfolio.getIsActive()) {
+            lastValuation = null;
+        } else {
             LocalDateTime targetDate = userPortfolio.getDeletedAt();
-
-            // 특정 날짜의 자산 가격을 가져옴
-            List<AssetHistory> assetHistoryList = assetHistoryService.getAssetHistoryList(findAssets, targetDate);
-
-            // 포트폴리오 자산과 AssetHistory를 매칭하여 계산
-            for (PortfolioAsset pAsset : pAssets) {
-                // AssetHistory에서 Asset을 찾아서 처리
-                AssetHistory assetHistory = assetHistoryList.stream()
-                    .filter(ah -> ah.getAsset().getId().equals(pAsset.getAssetId()))
-                    .findFirst()
-                    .orElse(null);
-
-                if (assetHistory != null) {
-                    Double price = assetHistory.getPrice();
-                    lastValuation += price * pAsset.getTotalPurchaseQuantity();
-                }
-            }
-
+            lastValuation = calculateValuation(pAssets, findAssets, targetDate);
         }
-        // 3. 위험률 대비 수익률 : sharpe_ratio
-        Double sharpeRatio = userPortfolio.getFictionalPerformance().getSharpeRatio();
 
-        // 시장별로 가져오지 말고, 한꺼번에 가져와서 분류하자
+        // 3. 생성일 기준 valuation
+        LocalDateTime targetDate = userPortfolio.getCreatedAt();
+        Double createValuation = calculateValuation(pAssets, findAssets, targetDate);
+
+        // 4. 위험률 대비 수익률 : sharpe_ratio
+        Double sharpeRatio = userPortfolio.getFictionalPerformance().getSharpeRatio();
 
         // 전체 시장을 가지고와서, 각 시장에 Map을 이용해서 구분해보자
         List<Asset> allAssets = assetRepository.findAll();
@@ -625,8 +612,10 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 지금까지 모든것을 DTO에 담아 반환한다
         PortfolioStatusSummary summary = PortfolioStatusSummary.builder()
+            .created_at(userPortfolio.getCreatedAt())
             .curValuation(curValuation)
             .lastValuation(lastValuation)
+            .initValuation(createValuation)
             .sharpeRatio(sharpeRatio)
             .krxSharpeRatio(krxRatio)
             .krxETFSharpeRatio(krxETFRatio)
@@ -763,10 +752,10 @@ public class PortfolioServiceImpl implements PortfolioService{
             // hadoop fastapi로 요청을 보낸다
             try {
                 Map<String, Object> res = fastApiService.getRecommendData(recommendBody);
-                // for (Entry<String, Object> entry : res.entrySet()) {
-                //     System.out.println("entry = " + entry.getKey());
-                //     System.out.println("entry = " + entry.getValue());
-                // }
+                for (Entry<String, Object> entry : res.entrySet()) {
+                    System.out.println("entry = " + entry.getKey());
+                    System.out.println("entry = " + entry.getValue());
+                }
 
             } catch (RuntimeException e) {
                 // 예외 처리
@@ -808,6 +797,29 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 종목 정보 정상 반환", portfolioAssetInfoList);
 
+    }
+
+    private Double calculateValuation(List<PortfolioAsset> pAssets, List<Asset> findAssets, LocalDateTime targetDate) {
+        Double valuation = 0.0;
+
+        // 특정 날짜의 자산 가격을 가져옴
+        List<AssetHistory> assetHistoryList = assetHistoryService.getAssetHistoryList(findAssets, targetDate);
+
+        // 포트폴리오 자산과 AssetHistory를 매칭하여 계산
+        for (PortfolioAsset pAsset : pAssets) {
+            // AssetHistory에서 Asset을 찾아서 처리
+            AssetHistory assetHistory = assetHistoryList.stream()
+                .filter(ah -> ah.getAsset().getId().equals(pAsset.getAssetId()))
+                .findFirst()
+                .orElse(null);
+
+            if (assetHistory != null) {
+                Double price = assetHistory.getPrice();
+                valuation += price * pAsset.getTotalPurchaseQuantity();
+            }
+        }
+
+        return valuation;
     }
 
     private List<PortfolioAssetInfo> getPortfolioAssetInfos(Integer userId, String portfolioId) {
