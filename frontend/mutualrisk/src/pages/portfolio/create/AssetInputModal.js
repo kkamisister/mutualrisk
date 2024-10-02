@@ -1,12 +1,12 @@
 import { Modal, Box, Button, TextField, Stack } from '@mui/material';
 import { useState } from 'react';
-import useAssetStore from 'stores/useAsssetStore';
+import useAssetStore from 'stores/useAssetStore';
 
 const AssetInputModal = ({ open, handleClose }) => {
 	const [assetValue, setAssetValue] = useState(''); // 자산 입력 상태 관리
 	const [error, setError] = useState(false); // 오류 상태 관리
 
-	const addAsset = useAssetStore(state => state.addAsset); // Zustand의 addAsset 함수 가져오기
+	const addAsset = useAssetStore(state => state.addTotalCash); // Zustand의 addAsset 함수 가져오기
 
 	// 자산 입력 핸들러 (쉼표 추가)
 	const handleChange = e => {
@@ -36,7 +36,6 @@ const AssetInputModal = ({ open, handleClose }) => {
 
 		// Zustand에 자산 값 저장
 		addAsset({
-			id: Date.now(), // 고유 ID
 			value: value, // 숫자로 변환 후 저장
 		});
 
