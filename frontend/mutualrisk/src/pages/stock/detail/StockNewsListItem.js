@@ -36,6 +36,7 @@ const StockNewsListItem = ({ news }) => {
 				justifyContent: 'space-between',
 				alignItems: 'center',
 				cursor: 'pointer',
+				width: 'calc(100% - 26px)',
 			}}
 			onClick={() => {
 				window.open(news.link, '_blank');
