@@ -5,6 +5,7 @@ import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.portfolio.entity.FrontierPoint;
+import com.example.mutualrisk.portfolio.entity.Portfolio;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
@@ -17,9 +18,18 @@ public record PortfolioResponse() {
     @Schema(name = "포트폴리오의 요약 정보 데이터", description = "유저의 포트폴리오 전체 조회 시 반환되는 데이터")
     public record SimplePortfolioDto(
         String id,
-        Integer version
+        String name,
+        Integer version,
+        LocalDateTime createdAt
     ) {
-
+        public static SimplePortfolioDto from(Portfolio portfolio) {
+            return SimplePortfolioDto.builder()
+                .id(portfolio.getId())
+                .name(portfolio.getName())
+                .version(portfolio.getVersion())
+                .createdAt(portfolio.getCreatedAt())
+                .build();
+        }
     }
 
     @Builder
@@ -48,6 +58,16 @@ public record PortfolioResponse() {
         Double volatility,
         Double sharpeRatio,
         Double valuation
+    ) {
+
+    }
+
+    @Builder
+    @Schema
+    public record PortfolioTotalSearchDto(
+        Boolean hasPortfolio,
+        Double recentValuation,
+        List<SimplePortfolioDto> portfolioList
     ) {
 
     }
