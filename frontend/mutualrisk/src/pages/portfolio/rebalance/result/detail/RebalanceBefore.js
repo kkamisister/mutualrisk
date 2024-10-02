@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import DetailContainer from 'pages/portfolio/rebalance/result/detail/DetailContainer';
 import {
 	BarChart,
@@ -10,76 +10,115 @@ import {
 	Legend,
 	ResponsiveContainer,
 } from 'recharts';
+import { colors } from 'constants/colors';
+import styled from 'styled-components';
+import StockItemCard from 'components/card/StockItemCard';
 
 const data = [
 	{
-		name: 'Page A',
-		uv: 4000,
-		pv: 2400,
-		amt: 2400,
+		name: '삼성전자',
+		value: 30,
+		color: colors.main.primary200,
 	},
 	{
-		name: 'Page B',
-		uv: 3000,
-		pv: 1398,
-		amt: 2210,
+		name: '테슬라',
+		value: 30,
+		color: '#ff4d4d', // Tesla의 빨간색
 	},
 	{
-		name: 'Page C',
-		uv: 2000,
-		pv: 9800,
-		amt: 2290,
+		name: '엔비디아',
+		value: 30,
+		color: '#00b33c', // Nvidia의 녹색
 	},
 	{
-		name: 'Page D',
-		uv: 2780,
-		pv: 3908,
-		amt: 2000,
-	},
-	{
-		name: 'Page E',
-		uv: 1890,
-		pv: 4800,
-		amt: 2181,
-	},
-	{
-		name: 'Page F',
-		uv: 2390,
-		pv: 3800,
-		amt: 2500,
-	},
-	{
-		name: 'Page G',
-		uv: 3490,
-		pv: 4300,
-		amt: 2100,
+		name: 'TIGER 미국달러단기채권액티브',
+		value: 30,
+		color: '#ff9933', // TIGER의 주황색
 	},
 ];
 
+const StockList = styled.ul`
+	list-style: none;
+	padding: 0;
+	margin-left: 20px;
+`;
+
+const StockItem = styled.li`
+	display: flex;
+	align-items: center;
+	padding: 10px;
+	margin-bottom: 10px;
+	transition: transform 0.2s;
+	background-color: #f9f9f9;
+	border-radius: 5px;
+
+	&:hover {
+		transform: scale(1.05);
+	}
+
+	${props =>
+		props.highlighted &&
+		`
+        transform: scale(1.1);
+        background-color: #e6f7ff;
+    `}
+`;
+
+const ColorBlock = styled.div`
+	width: 20px;
+	height: 20px;
+	background-color: ${props => props.color};
+	margin-right: 10px;
+`;
+
 const RebalanceBefore = () => {
+	const [highlightedStock, setHighlightedStock] = useState(null);
+
 	return (
 		<DetailContainer title={'기존 포트폴리오'}>
-			<ResponsiveContainer width="100%" height="100%">
-				<BarChart
-					width={500}
-					height={300}
-					data={data}
-					layout="vertical" // 세로 막대 그래프 설정
-					margin={{
-						top: 5,
-						right: 30,
-						left: 20,
-						bottom: 5,
-					}}
-					barSize={20}>
-					<XAxis type="number" /> {/* X축은 수량이니까 숫자로 설정 */}
-					<YAxis type="category" dataKey="name" /> {/* Y축은 카테고리 */}
-					<Tooltip />
-					<Legend />
-					<CartesianGrid strokeDasharray="3 3" />
-					<Bar dataKey="pv" fill="#8884d8" background={{ fill: '#eee' }} />
-				</BarChart>
-			</ResponsiveContainer>
+			<div style={{ display: 'flex', justifyContent: 'space-between' }}>
+				<ResponsiveContainer width="60%" height={300}>
+					<BarChart
+						data={data}
+						layout="vertical"
+						margin={{
+							top: 5,
+							right: 30,
+							left: 20,
+							bottom: 5,
+						}}
+						barSize={20}
+						onMouseMove={state => {
+							if (state.isTooltipActive) {
+								const { payload } = state.activePayload[0];
+								setHighlightedStock(payload.name);
+							} else {
+								setHighlightedStock(null);
+							}
+						}}>
+						<XAxis type="number" />
+						<YAxis type="category" dataKey="name" />
+						<Tooltip />
+						<Legend />
+						<CartesianGrid strokeDasharray="3 3" />
+						<Bar
+							dataKey="value"
+							fill={colors.main.primary200}
+							background={{ fill: '#eee' }}
+						/>
+					</BarChart>
+				</ResponsiveContainer>
+				<StockList>
+					{data.map(stock => (
+						<StockItem
+							key={stock.name}
+							highlighted={highlightedStock === stock.name}>
+							<ColorBlock color={stock.color} />
+							{stock.name} {stock.value}%
+						</StockItem>
+					))}
+				</StockList>
+			</div>
 		</DetailContainer>
 	);
 };
