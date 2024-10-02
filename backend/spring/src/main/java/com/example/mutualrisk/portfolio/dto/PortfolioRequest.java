@@ -2,10 +2,12 @@ package com.example.mutualrisk.portfolio.dto;
 
 import java.util.List;
 
+import com.example.mutualrisk.asset.entity.Asset;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 
 public record PortfolioRequest() {
 
@@ -45,6 +47,18 @@ public record PortfolioRequest() {
 		// ))
 		// List<Double> exactProportion
 	){
+	}
+
+	@Builder
+	@Schema(name = "포트폴리오 제작 fastapi를 호출할 때 필요한 요청 정보를 넣는다")
+	public record PortfolioRequestDto(
+		List<Double> expectedReturns,
+		List<List<Double>> pricesDataFrame,
+		List<Double> lowerBounds,
+		List<Double> upperBounds,
+		List<Asset> findAssets
+		) {
+
 	}
 
 }

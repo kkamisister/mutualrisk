@@ -58,13 +58,29 @@ public class PortfolioController {
         @ApiResponse(responseCode = "200", description = "포트폴리오 미리보기 성공")
     })
 	@PostMapping("/init")
-	public ResponseEntity<ResponseWithData<PortfolioAnalysis>> initUserPortfolio(@RequestBody PortfolioInitDto initInfo) {
+	public ResponseEntity<ResponseWithData<CalculatedPortfolio>> initUserPortfolio(@RequestBody PortfolioInitDto initInfo) {
 
-		ResponseWithData<PortfolioAnalysis> portfolioInfo = portfolioService.initPortfolio(initInfo);
+		ResponseWithData<CalculatedPortfolio> portfolioInfo = portfolioService.initPortfolio(initInfo);
 
 		return ResponseEntity.status(portfolioInfo.status())
 			.body(portfolioInfo);
 	}
+
+    @Operation(summary = "유저 포트폴리오 제작 미리보기", description = "포트폴리오 제작 버튼을 누르면 예상 비중을 반환한다")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "포트폴리오 미리보기 성공")
+    })
+    @PostMapping("/final")
+    public ResponseEntity<ResponseWithData<String>> confirmUserPortfolio(@RequestBody PortfolioInitDto initInfo, HttpServletRequest request) {
+
+        Integer userId = (Integer) request.getAttribute("userId");
+
+        ResponseWithData<String> responseWithMessage = portfolioService.confirmPortfolio(userId, initInfo);
+
+//        return ResponseEntity.status(responseWithMessage.status())
+//            .body(responseWithMessage);
+        return null;
+    }
 
     @Operation(summary = "유저 전체 포트폴리오 조회", description = "유저가 만든 전체 포트폴리오 내역을 조회한다")
     @ApiResponses(value = {

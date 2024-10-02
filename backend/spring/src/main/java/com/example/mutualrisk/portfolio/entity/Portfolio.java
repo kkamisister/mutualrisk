@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
+import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 import jakarta.persistence.Id;
 import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -12,6 +14,7 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 
 @Document(collection = "portfolio")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
@@ -30,7 +33,7 @@ public class Portfolio {
 	private List<Double> lowerBound;
 	private List<Double> upperBound;
 	private List<Double> weights;
-	private FictionalPerformance fictionalPerformance;
+	private PortfolioPerformance fictionalPerformance;
 	private List<FrontierPoint> frontierPoints;
 
 	/**

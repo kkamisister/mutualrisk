@@ -84,8 +84,6 @@ public class FundServiceImpl implements FundService {
 		// 이전 분기의 펀드를 가지고온다
 		Optional<Fund> beforeQuarter = fundRepository.getBeforeQuarterTopHoldAndBuyAmount(amount);
 
-		log.warn("beforeQuarter : {}",beforeQuarter);
-
 		// 필요한 정보 : assetId,code,name,rank,interest,valueOfHolding,전체중에 차지하는 비중,현재 가격
 		List<FundAsset> topHoldAsset = amount.getTopHoldAsset();
 		List<FundAsset> topBuyAsset = amount.getTopBuyAsset();
@@ -108,50 +106,48 @@ public class FundServiceImpl implements FundService {
 			asset -> asset
 		));
 
-		List<FundAssetInfo> topHoldAssetInfos = new ArrayList<>();
-		for(FundAsset fundAsset : topHoldAsset) {
-			//1. 펀드자산에 있는 자산 정보를 가지고 온다
-			if(ObjectUtils.isEmpty(fundAsset.getAssetId()))continue; // 기타인 경우 스킵
-			Asset asset = holdIdMap.get(fundAsset.getAssetId());
+		List<FundAssetInfo> topHoldAssetInfos = topHoldAsset.stream()
+			// 1. 펀드자산에 있는 자산 정보를 가지고 온다
+			.filter(fundAsset -> !ObjectUtils.isEmpty(fundAsset.getAssetId())) // 기타인 경우 스킵
+			.map(fundAsset -> {
+				Asset asset = holdIdMap.get(fundAsset.getAssetId());
 
-			//2. rank를 구한다
-			// 현재 fund와 전 분기 fund의 topHoldAsset을 비교하여, 자산의 순위변화를 찾는다
-			Integer rank = beforeQuarter
-				.map(f -> calculateHoldRank(amount, f, asset.getId()))
-				.orElse(null); // null인경우는 새롭게 추가된 자산임
+				// 2. rank를 구한다
+				Integer rank = beforeQuarter
+					.map(f -> calculateHoldRank(amount, f, asset.getId()))
+					.orElse(null); // null인 경우는 새롭게 추가된 자산임
 
-			//3. interest를 구한다
-			// 현재 로그인한 유저의 관심종목에 포함되어있는지 여부를 반환한다
-			Boolean interest = userInterestAssets.stream()
-				.anyMatch(interestAsset -> interestAsset.getAsset().getId().equals(asset.getId()));
+				// 3. interest를 구한다
+				Boolean interest = userInterestAssets.stream()
+					.anyMatch(interestAsset -> interestAsset.getAsset().getId().equals(asset.getId()));
 
-			//4. 정보를 담아서 반환한다
-			FundAssetInfo fundAssetInfo = FundAssetInfo.of(fundAsset, asset, rank, interest, null);
-			topHoldAssetInfos.add(fundAssetInfo);
-		}
+				// 4. 정보를 담아서 반환한다
+				return FundAssetInfo.of(fundAsset, asset, rank, interest, null);
+			})
+			.limit(10)
+			.collect(Collectors.toList());
 
-		List<FundAssetInfo> topBuyAssetInfos = new ArrayList<>();
-		for(FundAsset fundAsset : topBuyAsset) {
-			//1. 펀드자산에 있는 자산 정보를 가지고 온다
-			if(ObjectUtils.isEmpty(fundAsset.getAssetId()))continue; // 기타인 경우 스킵
-			Asset asset = buyIdMap.get(fundAsset.getAssetId());
+		List<FundAssetInfo> topBuyAssetInfos = topBuyAsset.stream()
+			// 1. 펀드자산에 있는 자산 정보를 가지고 온다
+			.filter(fundAsset -> !ObjectUtils.isEmpty(fundAsset.getAssetId())) // 기타인 경우 스킵
+			.map(fundAsset -> {
+				Asset asset = buyIdMap.get(fundAsset.getAssetId());
 
-			log.warn("topBuyAsset : {}",asset);
-			//2. rank를 구한다
-			// 현재 fund와 전 분기 fund의 topHoldAsset을 비교하여, 자산의 순위변화를 찾는다
-			Integer rank = beforeQuarter
-				.map(f -> calculateBuyRank(amount, f, asset.getId()))
-				.orElse(null); // null인경우는 새롭게 추가된 자산임
+				// 2. rank를 구한다
+				Integer rank = beforeQuarter
+					.map(f -> calculateBuyRank(amount, f, asset.getId()))
+					.orElse(null); // null인 경우는 새롭게 추가된 자산임
 
-			//3. interest를 구한다
-			// 현재 로그인한 유저의 관심종목에 포함되어있는지 여부를 반환한다
-			Boolean interest = userInterestAssets.stream()
-				.anyMatch(interestAsset -> interestAsset.getAsset().getId().equals(asset.getId()));
+				// 3. interest를 구한다
+				Boolean interest = userInterestAssets.stream()
+					.anyMatch(interestAsset -> interestAsset.getAsset().getId().equals(asset.getId()));
 
-			//4. 정보를 담아서 반환한다
-			FundAssetInfo fundAssetInfo = FundAssetInfo.of(fundAsset, asset, rank, interest, null);
-			topBuyAssetInfos.add(fundAssetInfo);
-		}
+				// 4. 정보를 담아서 반환한다
+				return FundAssetInfo.of(fundAsset, asset, rank, interest, null);
+			})
+			.limit(10)
+			.collect(Collectors.toList());
+
 
 		// 결과를 resultDTO에 담아서 반환한다
 		FundSummaryResultDto fundResultDto = FundSummaryResultDto.builder()
