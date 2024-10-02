@@ -7,12 +7,15 @@ import { colors } from 'constants/colors';
 import SelectedList from 'pages/portfolio/create/selectedstock/SelectedList';
 import AssetInputModal from 'pages/portfolio/create/AssetInputModal';
 import useAssetStore from 'stores/useAssetStore';
+import SuccessSnackbar from 'components/snackbar/SuccessSnackbar';
 
 const PortfolioCreatePage = () => {
 	const [showSelectedItems, setShowSelectedItems] = useState(false);
 	const [showConditionSetting, setShowConditionSetting] = useState(false);
 	const [selectedStocks, setSelectedStocks] = useState([]);
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [openAddSnackbar, setOpenAddSnackbar] = useState(false);
+	const [openRemoveSnackbar, setOpenRemoveSnackbar] = useState(false);
 
 	const userAssets = useAssetStore(state => state.totalCash);
 
@@ -29,8 +32,10 @@ const PortfolioCreatePage = () => {
 					selected => selected.assetId !== stock.assetId
 				)
 			);
+			setOpenAddSnackbar(true);
 		} else {
 			setSelectedStocks([...selectedStocks, stock]);
+			setOpenRemoveSnackbar(true);
 		}
 	};
 
@@ -117,6 +122,15 @@ const PortfolioCreatePage = () => {
 					handleClose={handleModalClose}
 				/>
 			)}
+
+			<SuccessSnackbar
+				message="담은 종목에 추가하였습니다"
+				openSnackbar={openAddSnackbar}
+			/>
+			<SuccessSnackbar
+				message="담은 종목에서 제거하였습니다"
+				openSnackbar={openRemoveSnackbar}
+			/>
 		</Box>
 	);
 };
