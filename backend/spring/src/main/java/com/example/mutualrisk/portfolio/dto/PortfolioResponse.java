@@ -182,8 +182,10 @@ public record PortfolioResponse() {
 
     @Builder
     public record PortfolioStatusSummary(
+        LocalDateTime created_at,
         Double curValuation,
         Double lastValuation,
+        Double initValuation,
         Double sharpeRatio,
         RiskRatio krxSharpeRatio,
         RiskRatio krxETFSharpeRatio,
