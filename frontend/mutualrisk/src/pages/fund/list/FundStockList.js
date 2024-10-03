@@ -16,7 +16,7 @@ const FundStockList = ({ title, data }) => {
 				border: `solid 1px ${colors.point.stroke}`,
 			}}>
 			<Title text={title} caption="(최근 업데이트: 2024/12/31)"></Title>
-			<FundStockBarChart />
+			<FundStockBarChart data={data} />
 			<FundStockListItem />
 			<FundStockListItem />
 			<FundStockListItem />
