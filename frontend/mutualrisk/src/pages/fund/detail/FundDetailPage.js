@@ -9,8 +9,15 @@ import FundInfo from './FundInfo';
 import AssetEvaluationChart from './AssetEvaluationChart';
 import SectorBias from './SectorBias';
 import AssetHoldingList from './AssetHoldingList';
+import { useQuery } from '@tanstack/react-query';
+import { fetchFundByFundId } from 'utils/apis/fund';
 
-const FundDetailPage = () => {
+const FundDetailPage = ({ id }) => {
+	const { isPending, data } = useQuery({
+		queryKey: ['fundDetail'], // keyword를 queryKey에 포함하여 키워드가 변경되면 새로운 요청 실행
+		queryFn: () => fetchFundByFundId(id),
+	});
+
 	return (
 		<Stack
 			sx={{
