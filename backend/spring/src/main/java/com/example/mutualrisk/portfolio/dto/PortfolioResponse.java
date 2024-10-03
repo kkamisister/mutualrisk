@@ -109,6 +109,15 @@ public record PortfolioResponse() {
     }
 
     @Builder
+    @Schema(name = "포트폴리오 백테스팅 결과 조회 데이터")
+    public record PortfolioBackTestDto(
+        PortfolioValuationDto benchMark,
+        PortfolioValuationDto portfolioValuation
+    ) {
+
+    }
+
+    @Builder
     @Schema(name = "포트폴리오 이익률 추이 데이터", description = "유저 포트폴리오의 수익률 추이 데이터")
     public record PortfolioValuationDto(
         TimeInterval timeInterval,
