@@ -647,6 +647,8 @@ public class PortfolioServiceImpl implements PortfolioService{
         // PortfolioInitDto -> PortfolioRequestDto로 변환
         PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(initInfo);
 
+        log.warn("portfolioRequestDto : {}",portfolioRequestDto);
+
         // 2. PortfolioRequestDto를 받아서, Map<String, Object> 형식으로 고친다
         Map<String, Object> requestBody = getRequestBodyFromPortfolioRequestDto(portfolioRequestDto);
 
@@ -663,6 +665,9 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 4. 반환할 데이터 만들기
         PortfolioAnalysis original = getPortfolioAnalysis(initInfo, responseBody, portfolioRequestDto);
+
+        log.warn("반환할 데이터 : {}",original);
+
         CalculatedPortfolio calculatedPortfolio = CalculatedPortfolio.builder()
             .original(original)
             //나중에 추천종목 생기면 여기에 추가해서 리턴하기
@@ -707,6 +712,8 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 퍼포먼스를 가지고 온다
         Map<String, Double> fictionalPerformanceMap = (Map<String, Double>) responseBody.get("fictionalPerformance");
 
+        log.warn("fictionalPerformanceMap : {}",fictionalPerformanceMap);
+
         Double expectedReturn = fictionalPerformanceMap.get("expectedReturn");
         Double volatility = fictionalPerformanceMap.get("volatility");
 
@@ -715,6 +722,8 @@ public class PortfolioServiceImpl implements PortfolioService{
             .expectedReturn(expectedReturn)
             .volatility(volatility)
             .build();
+
+        log.warn("fictionalPerformance : {}",fictionalPerformance);
 
         // 각 자산의 가중치를 가지고온다
         Map<String, Double> fictionalWeights = (Map<String, Double>) responseBody.get("weights");
@@ -744,6 +753,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
             purchaseNumList.add(purchaseNum);
         }
+        log.warn("purchaseNumList : {}",purchaseNumList);
 
         List<Double> priceList = assetList
             .stream()
@@ -756,11 +766,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             .mapToObj(i -> AssetWeightDto.of(assetList.get(i), realWeights.get(i)))
             .toList());
 
-        log.warn("assetWeightDtoList: {}", assetWeightDtoList);
-        for (AssetWeightDto assetWeightDto : assetWeightDtoList) {
-
-            System.out.println("assetWeightDto.asset().getId() = " + assetWeightDto.asset().getId());
-        }
+        log.warn("여기인가 ??");
 
         // assetWeightDtoList를 정렬
         assetWeightDtoList.sort(Comparator.comparingInt(aw -> aw.asset().getId()));
@@ -793,7 +799,10 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<Double> weights = assetWeightDtoList.stream()
             .map(AssetWeightDto::weight)
             .toList();
+
+        log.warn("공분산 가져오기 전");
         List<AssetCovariance> assetCovarianceList = assetCovarianceRepository.findAllCovarianceIn(assetList);
+        log.warn("공분산 가져오기 후");
 
         Double volatility = calculatePortfolioVariance(weights, assetCovarianceList, assetList);
 

@@ -67,6 +67,7 @@ public class Asset extends BaseEntity {
 	@Override
 	public String toString() {
 		return "Asset{" +
+			"price='" + recentPrice + '\'' +
 			"imageName='" + imageName + '\'' +
 			", imagePath='" + imagePath + '\'' +
 			", expectedReturn=" + expectedReturn +

@@ -234,31 +234,30 @@ public class FundServiceImpl implements FundService {
 		List<InterestAsset> userInterestAssets = interestAssetRepository.findUserInterestAssets(user);
 
 		// 필요한 정보 : assetId,code,name,rank,interest,valueOfHolding,전체중에 차지하는 비중,현재 가격
-		List<FundAssetInfo> fundAssetInfos = new ArrayList<>();
-		for(FundAsset fundAsset : fundAssets) {
+		List<FundAssetInfo> fundAssetInfos = fundAssets.stream()
+			// 1. 펀드자산에 있는 자산 정보를 가지고 온다
+			.filter(fundAsset -> !ObjectUtils.isEmpty(fundAsset.getAssetId())) // 기타인 경우 스킵
+			.map(fundAsset -> {
+				Asset asset = assetIdMap.get(fundAsset.getAssetId());
 
-			//1. 펀드자산에 있는 자산 정보를 가지고 온다
-			if(ObjectUtils.isEmpty(fundAsset.getAssetId()))continue; // 기타인 경우 스킵
-			Asset asset = assetIdMap.get(fundAsset.getAssetId());
+				// 2. rank를 구한다
+				Integer rank = beforeQuarter
+					.map(f -> calculateRank(fund, f, asset.getId()))
+					.orElse(null); // null인경우는 새롭게 추가된 자산임
 
-			//2. rank를 구한다
-			// 현재 fund와 전 분기 fund의 topHoldAsset을 비교하여, 자산의 순위변화를 찾는다
-			Integer rank = beforeQuarter
-				.map(f -> calculateRank(fund, f, asset.getId()))
-				.orElse(null); // null인경우는 새롭게 추가된 자산임
+				// 3. interest를 구한다
+				Boolean interest = userInterestAssets.stream()
+					.anyMatch(interestAsset -> interestAsset.getAsset().getId().equals(asset.getId()));
 
-			//3. interest를 구한다
-			// 현재 로그인한 유저의 관심종목에 포함되어있는지 여부를 반환한다
-			Boolean interest = userInterestAssets.stream()
-				.anyMatch(interestAsset -> interestAsset.getAsset().getId().equals(asset.getId()));
+				// 4. 전체 중에서 차지하는 비율을 찾는다
+				Double ratio = fundAsset.getValueOfHolding() * 100.0 / fund.getValueOfHoldings();
 
-			//4. 전체 중에서 차지하는 비율을 찾는다
-			Double ratio = fundAsset.getValueOfHolding() * 100.0 / fund.getValueOfHoldings();
+				// 5. 정보를 담아서 반환한다
+				return FundAssetInfo.of(fundAsset, asset, rank, interest, ratio);
+			})
+			.limit(10)
+			.collect(Collectors.toList());
 
-			//5. 정보를 담아서 반환한다
-			FundAssetInfo fundAssetInfo = FundAssetInfo.of(fundAsset, asset, rank, interest, ratio);
-			fundAssetInfos.add(fundAssetInfo);
-		}
 
 		// 결과를 반환한다
 		FundResultDto fundResultDto = FundResultDto.builder()

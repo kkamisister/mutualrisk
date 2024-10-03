@@ -22,4 +22,6 @@ public interface FundRepository {
 
 	Fund save(Fund fund);
 
+	void delete(Fund fund);
+
 }
