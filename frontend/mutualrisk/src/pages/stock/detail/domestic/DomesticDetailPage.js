@@ -7,6 +7,7 @@ import StockMenuButton from '../StockMenuButton';
 import StockPrice from './StockPrice';
 import StockTitle from './StockTitle';
 import StockInfoTab from './stock/StockInfoTab';
+import WidgetContainer from 'components/container/WidgetConatiner';
 const DomesticDetailPage = ({ assetInfo }) => {
 	const [tabMenu, setTabMenu] = useState('chart');
 	const {
@@ -66,7 +67,7 @@ const DomesticDetailPage = ({ assetInfo }) => {
 				/>
 			</Stack>
 			{tabMenu === 'chart' && (
-				<Box
+				<WidgetContainer
 					sx={{
 						height: '700px',
 						width: '100%',
@@ -76,14 +77,14 @@ const DomesticDetailPage = ({ assetInfo }) => {
 						border: `1px solid ${colors.point.stroke}`,
 					}}>
 					<ChartWidget assetId={assetId} />
-				</Box>
+				</WidgetContainer>
 			)}
 			{tabMenu === 'info' && (
 				<Box
 					sx={{
 						width: '100%',
 					}}>
-					<StockInfoTab market={market} code={code} />
+					<StockInfoTab market={market} code={code} assetId={assetId} />
 				</Box>
 			)}
 			{tabMenu === 'news' && <StockNewsTab newsList={newsList} />}

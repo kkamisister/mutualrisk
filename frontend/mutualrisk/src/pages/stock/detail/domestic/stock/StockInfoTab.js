@@ -1,17 +1,18 @@
 import React from 'react';
-import { Grid, Stack } from '@mui/material';
+import { Grid, Stack, CircularProgress } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { fetchStockDetailByAssetId } from 'utils/apis/asset';
 import StockProfileWidget from './StockProfileWidget';
 import InvestorTradingWidget from './InvestorTradingWidget';
 import ValueAssessmentWidget from './ValueAssessmentWidget';
+import WidgetContainer from 'components/container/WidgetConatiner';
+
 const mockData = {
 	recordNum: 5,
 	assetId: 1235,
 	name: '삼성증권',
 	code: '016360',
-	summary:
-		'1982년 국제증권으로 설립된 동사는 1992년 삼성그룹에 편입되면서 사명을 삼성증권으로 변경함. 차별화된 부유층 고객기반, 업계 최고의 자산관리 역량과 인프라를 바탕으로 고객 니즈에 적합한 맞춤형 상품 및 서비스를 선제적으로 제공하는 등 업계 선도사의 위상을 유지하고 있음. 당분기말 기준 본점 외 28개 국내지점, 2개 해외사무소(동경, 북경)가 있으며, 삼성선물 및 해외법인 등의 종속기업이 있음.',
+	summary: '',
 	marketValue: '3조 9,694억',
 	per: '6.07배',
 	pbr: '0.57배',
@@ -59,17 +60,15 @@ const mockData = {
 		},
 	],
 };
-const StockInfoTab = ({ assetId }) => {
+const StockInfoTab = ({ market, code, assetId }) => {
 	const { isLoading, data } = useQuery({
-		queryKey: ['stockSearchResult'],
+		queryKey: ['domesticStockDetail'],
 		queryFn: () => fetchStockDetailByAssetId(assetId),
-		placeholderData: mockData,
 	});
 
-	return (
+	return !isLoading ? (
 		<Stack direction="column" spacing={1}>
-			=
-			<StockProfileWidget data={data} />
+			<StockProfileWidget data={data} market={market} />
 			<Grid container sx={{ justifyContent: 'space-between' }}>
 				<Grid item xs={7.95}>
 					<InvestorTradingWidget records={data.records} />
@@ -79,6 +78,17 @@ const StockInfoTab = ({ assetId }) => {
 				</Grid>
 			</Grid>
 		</Stack>
+	) : (
+		<WidgetContainer
+			direction="column"
+			spacing={1}
+			sx={{
+				justifyContent: 'center',
+				alignItems: 'center',
+				height: '600px',
+			}}>
+			<CircularProgress />
+		</WidgetContainer>
 	);
 };
 
