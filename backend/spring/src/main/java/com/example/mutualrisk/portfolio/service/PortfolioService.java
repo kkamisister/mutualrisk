@@ -33,4 +33,6 @@ public interface PortfolioService {
     ResponseWithData<PortfolioStatusSummary> userPortfolioSummary(Integer userId,Integer version);
 
     ResponseWithData<String> confirmPortfolio(Integer userId, PortfolioInitDto initInfo);
+
+    ResponseWithData<PortfolioBackTestDto> getBackTestOfCreatedPortfolio(Integer userId, List<RecommendAssetInfo> recommendAssetInfoList);
 }

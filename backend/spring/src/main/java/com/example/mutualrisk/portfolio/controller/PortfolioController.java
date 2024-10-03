@@ -169,6 +169,20 @@ public class PortfolioController {
         return ResponseEntity.status(portfolioBacktestingResultDto.status()).body(portfolioBacktestingResultDto);
     }
 
+    @Operation(summary = "포트폴리오 제작 백테스팅 결과 조회", description = "포트폴리오 제작 시 기존 포트폴리오와 비교하여 백테스팅 결과를 포여주는 api")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "백테스팅 결과 조회 성공")
+    })
+    @PostMapping("/backtest")
+    public ResponseEntity<ResponseWithData<PortfolioBackTestDto>> getBackTestOfCreatedPortfolio(@RequestBody List<RecommendAssetInfo> recommendAssetInfoList, HttpServletRequest request) {
+
+        Integer userId = (Integer)request.getAttribute("userId");
+
+        ResponseWithData<PortfolioBackTestDto> portfolioBackTestDtoResponseWithData = portfolioService.getBackTestOfCreatedPortfolio(userId, recommendAssetInfoList);
+
+        return null;
+    }
+
     @Operation(summary = "섹터정보 조회", description = "유저 포트폴리오의 섹터 편중을 조회하는 api")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "섹터 조회 성공"),

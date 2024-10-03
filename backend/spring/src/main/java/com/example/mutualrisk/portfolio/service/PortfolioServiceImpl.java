@@ -1128,6 +1128,11 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     }
 
+    @Override
+    public ResponseWithData<PortfolioBackTestDto> getBackTestOfCreatedPortfolio(Integer userId, List<RecommendAssetInfo> recommendAssetInfoList) {
+        return null;
+    }
+
     // fastapi에서 준 결과를 가지고, 새로운 포트폴리오를 만든다
     // 기존 유저의 포트폴리오가 있는 경우를 가정하고 만듬
     private Portfolio getNewPortfolioFrom(Map<String, Object> responseBody, PortfolioInitDto initInfo, Integer userId, int version, List<Asset> findAssets, Portfolio recentPortfolio) {
