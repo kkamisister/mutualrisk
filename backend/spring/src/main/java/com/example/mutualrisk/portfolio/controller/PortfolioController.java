@@ -66,7 +66,11 @@ public class PortfolioController {
 			.body(portfolioInfo);
 	}
 
-    @Operation(summary = "유저 포트폴리오 제작 미리보기", description = "포트폴리오 제작 버튼을 누르면 예상 비중을 반환한다")
+    /**
+     * 유저가 포트폴리오 확정 버튼을 눌렀을 때 동작하는 api
+     * 기존 포트폴리오 만료 처리 로직과, 새로운 포트폴리오 mongoDB에 저장하는 로직을 포함
+     */
+    @Operation(summary = "유저 포트폴리오 제작 확정", description = "포트폴리오 확정 버튼을 누르면, 유저의 포트폴리오가 해당 포트폴리오로 업데이트된다")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "포트폴리오 미리보기 성공")
     })
@@ -77,9 +81,8 @@ public class PortfolioController {
 
         ResponseWithData<String> responseWithMessage = portfolioService.confirmPortfolio(userId, initInfo);
 
-//        return ResponseEntity.status(responseWithMessage.status())
-//            .body(responseWithMessage);
-        return null;
+        return ResponseEntity.status(responseWithMessage.status())
+            .body(responseWithMessage);
     }
 
     /**

@@ -61,4 +61,9 @@ public class PortfolioRepositoryImpl implements PortfolioRepository{
         return Optional.ofNullable(mongoTemplate.findOne(query,Portfolio.class));
     }
 
+    @Override
+    public void savePortfolio(Portfolio portfolio) {
+        mongoTemplate.save(portfolio);
+    }
+
 }
