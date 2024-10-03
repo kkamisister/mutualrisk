@@ -43,7 +43,7 @@ public class PortfolioController {
         @ApiResponse(responseCode = "200", description = "포트폴리오 현황조회 성공")
     })
     @GetMapping("/summary")
-    public ResponseEntity<ResponseWithData<PortfolioStatusSummary>> UserPortfolioSummary(@RequestParam("ver") Integer version,HttpServletRequest request){
+    public ResponseEntity<ResponseWithData<PortfolioStatusSummary>> UserPortfolioSummary(@RequestParam("ver") Integer version, HttpServletRequest request){
 
         Integer userId = (Integer) request.getAttribute("userId");
 
@@ -58,9 +58,11 @@ public class PortfolioController {
         @ApiResponse(responseCode = "200", description = "포트폴리오 미리보기 성공")
     })
 	@PostMapping("/init")
-	public ResponseEntity<ResponseWithData<CalculatedPortfolio>> initUserPortfolio(@RequestBody PortfolioInitDto initInfo) {
+	public ResponseEntity<ResponseWithData<CalculatedPortfolio>> initUserPortfolio(@RequestBody PortfolioInitDto initInfo, HttpServletRequest request) {
 
-		ResponseWithData<CalculatedPortfolio> portfolioInfo = portfolioService.initPortfolio(initInfo);
+        Integer userId = (Integer) request.getAttribute("userId");
+
+		ResponseWithData<CalculatedPortfolio> portfolioInfo = portfolioService.initPortfolio(userId, initInfo);
 
 		return ResponseEntity.status(portfolioInfo.status())
 			.body(portfolioInfo);

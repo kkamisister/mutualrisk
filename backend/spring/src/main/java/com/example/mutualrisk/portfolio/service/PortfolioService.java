@@ -28,7 +28,7 @@ public interface PortfolioService {
 
     ResponseWithData<List<PortfolioAssetInfo>> getAssetInfoList(Integer userId, String portfolioId);
 
-    ResponseWithData<CalculatedPortfolio> initPortfolio(PortfolioInitDto initInfo);
+    ResponseWithData<CalculatedPortfolio> initPortfolio(Integer userId, PortfolioInitDto initInfo);
 
     ResponseWithData<PortfolioStatusSummary> userPortfolioSummary(Integer userId,Integer version);
 
