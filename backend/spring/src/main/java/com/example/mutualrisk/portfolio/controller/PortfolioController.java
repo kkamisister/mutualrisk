@@ -174,13 +174,23 @@ public class PortfolioController {
         @ApiResponse(responseCode = "200", description = "백테스팅 결과 조회 성공")
     })
     @PostMapping("/backtest")
-    public ResponseEntity<ResponseWithData<PortfolioBackTestDto>> getBackTestOfCreatedPortfolio(@RequestBody List<RecommendAssetInfo> recommendAssetInfoList, HttpServletRequest request) {
+    public ResponseEntity<ResponseWithData<PortfolioBackTestDto>> getBackTestOfCreatedPortfolio(@RequestBody List<RecommendAssetInfo> recommendAssetInfoList, @RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
 
         Integer userId = (Integer)request.getAttribute("userId");
+        // parameter(Enum) 초기화
+        TimeInterval timeInterval;
+        PerformanceMeasure measure;
+        try {
+            timeInterval = TimeInterval.valueOf(timeIntervalString.toUpperCase());
+            measure = PerformanceMeasure.valueOf(measureString.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
+        }
 
-        ResponseWithData<PortfolioBackTestDto> portfolioBackTestDtoResponseWithData = portfolioService.getBackTestOfCreatedPortfolio(userId, recommendAssetInfoList);
+        ResponseWithData<PortfolioBackTestDto> portfolioBackTestDtoResponseWithData = portfolioService.getBackTestOfCreatedPortfolio(userId, recommendAssetInfoList, timeInterval, measure);
 
-        return null;
+        return ResponseEntity.status(portfolioBackTestDtoResponseWithData.status())
+            .body(portfolioBackTestDtoResponseWithData);
     }
 
     @Operation(summary = "섹터정보 조회", description = "유저 포트폴리오의 섹터 편중을 조회하는 api")

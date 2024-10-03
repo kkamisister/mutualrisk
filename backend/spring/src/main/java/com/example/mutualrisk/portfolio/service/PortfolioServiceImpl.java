@@ -248,13 +248,17 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         List<Asset> assetList = assetRepository.findAllById(assetIdList);
 
+        List<Integer> purchaseQuantityList = portfolioAssetList.stream()
+            .map(PortfolioAsset::getTotalPurchaseQuantity)
+            .toList();
+
         // 3. 포트폴리오 백테스팅 결과 저장
         LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
 
         List<Performance> performances = new ArrayList<>();
         for (int dDate = 30; dDate >= 1; dDate--) {
             LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
-            Double valuation = getValuation(portfolioAssetList, assetList, targetDate);
+            Double valuation = getValuation(purchaseQuantityList, assetList, targetDate);
             performances.add(Performance.builder()
                     .time(targetDate)
                     .valuation(valuation)
@@ -1128,10 +1132,104 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     }
 
+    /**
+     * 유저가 포트폴리오 제작하기 버튼을 눌렀을 때, 제작한 포트폴리오의 백테스팅 데이터를 반환하는 메서드
+     * 유저의 과거 포트폴리오가 존재할 경우, 가장 최근 포트폴리오의 백테스팅 데이터도 구해 함께 반환
+     */
     @Override
-    public ResponseWithData<PortfolioBackTestDto> getBackTestOfCreatedPortfolio(Integer userId, List<RecommendAssetInfo> recommendAssetInfoList) {
-        return null;
+    public ResponseWithData<PortfolioBackTestDto> getBackTestOfCreatedPortfolio(Integer userId, List<RecommendAssetInfo> recommendAssetInfoList, TimeInterval timeInterval, PerformanceMeasure measure) {
+
+        // 1. 유저의 가장 최근 포트폴리오의 성과 지표를 반환(benchMark)
+        PortfolioValuationDto benchMark = null;
+        // 1-1. 유저의 전체 포트폴리오 가져오기
+        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
+
+        // 유저의 과거 포트폴리오 내역이 존재할 경우, benchMark를 업데이트한다
+        if (!myPortfolioList.isEmpty()) {
+            Portfolio latestPortfolio = myPortfolioList.get(0);
+            // 1-2. AssetList 구하기
+            List<PortfolioAsset> portfolioAssetList = latestPortfolio.getAsset();
+
+            List<Integer> assetIdList = portfolioAssetList.stream()
+                .map(PortfolioAsset::getAssetId)
+                .toList();
+
+            List<Asset> assetList = assetRepository.findAllById(assetIdList);
+
+            // 1-3. 유저가 각 자산에 대해 산 수량 리스트(purchaseQuantityList)를 구하기
+            List<Integer> purchaseQuantityList = portfolioAssetList.stream()
+                .map(PortfolioAsset::getTotalPurchaseQuantity)
+                .toList();
+
+            // 1-4. 포트폴리오 백테스팅 결과 저장
+            LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
+            // 포트폴리오의 성과 지표를 저장하는 list
+            List<Performance> performances = new ArrayList<>();
+            // 틱은 30개로 설정
+            for (int dDate = 30; dDate >= 1; dDate--) {
+                LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
+                Double valuation = getValuation(purchaseQuantityList, assetList, targetDate);
+                performances.add(Performance.builder()
+                    .time(targetDate)
+                    .valuation(valuation)
+                    .build());
+            }
+
+            benchMark = PortfolioValuationDto.builder()
+                .portfolioId(latestPortfolio.getId())
+                .timeInterval(timeInterval)
+                .measure(measure)
+                .performances(performances)
+                .build();
+        }
+
+        // 2. 현재 추천해 준 포트폴리오의 자산을 바탕으로, 백테스팅 데이터 구하기
+        // 2-1. assetId 순으로 정렬
+        recommendAssetInfoList.sort(Comparator.comparingInt(RecommendAssetInfo::assetId));
+
+        // 2-2. AssetList 구하기
+        List<Integer> assetIdList = recommendAssetInfoList.stream()
+            .map(RecommendAssetInfo::assetId)
+            .toList();
+
+        List<Asset> assetList = assetRepository.findAllById(assetIdList);
+
+        // 2-3. 유저가 각 자산에 대해 산 수량 정보(purchaseQuantityList)를 구하기
+        List<Integer> purchaseQuantityList = recommendAssetInfoList.stream()
+            .map(RecommendAssetInfo::purchaseNum)
+            .toList();
+
+        // 2-4. 포트폴리오 백테스팅 결과 저장
+        LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
+
+        List<Performance> performances = new ArrayList<>();
+        for (int dDate = 30; dDate >= 1; dDate--) {
+            LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
+            Double valuation = getValuation(purchaseQuantityList, assetList, targetDate);
+            performances.add(Performance.builder()
+                .time(targetDate)
+                .valuation(valuation)
+                .build());
+        }
+
+        PortfolioValuationDto portfolioValuation = PortfolioValuationDto.builder()
+            .portfolioId("new portfolio")
+            .timeInterval(timeInterval)
+            .measure(measure)
+            .performances(performances)
+            .build();
+
+        // 3. benchMark와 portfolioValuation을 객체에 담아 반환
+        PortfolioBackTestDto portfolioBackTestDto = PortfolioBackTestDto.builder()
+            .benchMark(benchMark)
+            .portfolioValuation(portfolioValuation)
+            .build();
+
+
+        return new ResponseWithData<>(HttpStatus.OK.value(), "백테스팅 결과 조회 성공", portfolioBackTestDto);
     }
+
+
 
     // fastapi에서 준 결과를 가지고, 새로운 포트폴리오를 만든다
     // 기존 유저의 포트폴리오가 있는 경우를 가정하고 만듬
@@ -1582,12 +1680,12 @@ public class PortfolioServiceImpl implements PortfolioService{
     // 백테스팅 그래프를 위한 메서드
     /**
      *
-     * @param portfolioAssetList : 포트폴리오 자산 관련 정보를 담는 list. 자산 구매량 정보를 담고 있다
+     * @param purchaseQuantityList : 자산 구매량 정보를 담고 있는 list
      * @param assetList : 자산 Entity를 담고 있는 list
      * @param targetDate : valuation 를 구하기 원하는 날짜
      * @return : targetDate 기준 포트폴리오 valuation
      */
-    private Double getValuation(List<PortfolioAsset> portfolioAssetList, List<Asset> assetList, LocalDateTime targetDate) {
+    private Double getValuation(List<Integer> purchaseQuantityList, List<Asset> assetList, LocalDateTime targetDate) {
         // 특정 날짜의 자산 가격을 가져옴
         List<Double> assetPrices = assetHistoryService.getAssetHistoryList(assetList, targetDate)
             .stream()
@@ -1596,7 +1694,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // PortfolioAsset의 totalPurchaseQuantity와 assetPrices를 곱한 값을 합산
         return IntStream.range(0, assetPrices.size())
-            .mapToDouble(i -> portfolioAssetList.get(i).getTotalPurchaseQuantity() * assetPrices.get(i))
+            .mapToDouble(i -> purchaseQuantityList.get(i) * assetPrices.get(i))
             .sum();
     }
     /**
