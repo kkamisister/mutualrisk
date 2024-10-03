@@ -167,8 +167,10 @@ public record PortfolioResponse() {
         String imageName,
         Double price,
         String region,
+        String market,
         Double weight,
-        Integer purchaseNum
+        Integer oldPurchaseNum,
+        Integer newPurchaseNum
     ) {
 
     }
@@ -198,6 +200,7 @@ public record PortfolioResponse() {
         String imageName,
         Double price,
         String region,
+        String market,
         Double weight,
         Integer purchaseNum
     ){
@@ -213,6 +216,7 @@ public record PortfolioResponse() {
                 .imageName(imageName)
                 .price(asset.getRecentPrice())
                 .region(asset.getRegion().toString())
+                .market(asset.getMarket().name())
                 .weight(weight)
                 .purchaseNum(purchaseNum)
                 .build();

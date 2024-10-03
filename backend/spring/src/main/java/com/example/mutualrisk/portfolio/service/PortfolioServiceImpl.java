@@ -22,7 +22,6 @@ import com.example.mutualrisk.common.fastapi.FastApiService;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.common.util.DateUtil;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
-import com.example.mutualrisk.portfolio.dto.PortfolioRequest;
 import com.example.mutualrisk.portfolio.dto.PortfolioRequest.*;
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 import com.example.mutualrisk.portfolio.entity.*;
@@ -639,12 +638,14 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     /**
      * 유저의 포트폴리오 제작 요청을 받아서 포트폴리오의 퍼포먼스,비중 및 추천 자산을 반환하는 메서드
+     *
+     * @param userId
      * @param initInfo
      * @return
      */
     @Override
     @Transactional
-    public ResponseWithData<CalculatedPortfolio> initPortfolio(PortfolioInitDto initInfo) {
+    public ResponseWithData<CalculatedPortfolio> initPortfolio(Integer userId, PortfolioInitDto initInfo) {
         List<Asset> findAssets = assetRepository.findAllById(initInfo.assetIds())
             .stream()
             .sorted(Comparator.comparing(asset -> initInfo.assetIds().indexOf(asset.getId())))
@@ -669,9 +670,38 @@ public class PortfolioServiceImpl implements PortfolioService{
         }
 
         // 4. 반환할 데이터 만들기
+
+        // 4-1. 새롭게 추천해주는 포트폴리오에 대한 정보
         PortfolioAnalysis original = getPortfolioAnalysis(initInfo, responseBody, portfolioRequestDto);
+
+        // 4-2. 기존 포트폴리오가 있다면, oldPortfolioAssetInfoList 구하기
+        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
+        List<RecommendAssetInfo> oldPortfolioAssetInfoList = null;
+        if (!myPortfolioList.isEmpty()) {
+            Portfolio latestPortfolio = myPortfolioList.get(0);
+            oldPortfolioAssetInfoList = getRecommendAssetInfoFrom(latestPortfolio);
+        }
+
+        // 4-3. newPortfolioAssetInfoList 구하기
+        List<RecommendAssetInfo> newPortfolioAssetInfoList = original.assets();
+
+        // 4-4. 자산별 보유 비중 변화량 구하기
+        List<ChangeAssetInfo> changeAssetInfoList;
+        // 4-4-1. 기존 포트폴리오가 있는 경우
+        if (oldPortfolioAssetInfoList != null) {
+            changeAssetInfoList = getChangeassetInfoList(oldPortfolioAssetInfoList, newPortfolioAssetInfoList);
+        }
+        else {
+            changeAssetInfoList = getChangeassetInfoList(newPortfolioAssetInfoList);
+        }
+
+
+
         CalculatedPortfolio calculatedPortfolio = CalculatedPortfolio.builder()
             .original(original)
+            .oldPortfolioAssetInfoList(oldPortfolioAssetInfoList)
+            .newPortfolioAssetInfoList(newPortfolioAssetInfoList)
+            .changeAssetInfoList(changeAssetInfoList)
             //나중에 추천종목 생기면 여기에 추가해서 리턴하기
             .build();
 
@@ -694,6 +724,157 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 6. 프론트에 던진다
         return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 제작 미리보기 입니다", calculatedPortfolio);
+    }
+
+    /**
+     * 과거 포트폴리오가 없는 경우, 현재 포트폴리오를 바탕으로 종목별 보유 수량 변화량을 계산한다
+     */
+    private List<ChangeAssetInfo> getChangeassetInfoList(List<RecommendAssetInfo> newPortfolioAssetInfoList) {
+        // 반환할 종목별 보유량 변화 리스트
+        List<ChangeAssetInfo> changeAssetInfoList = new ArrayList<>();
+
+        for (RecommendAssetInfo recommendAssetInfo : newPortfolioAssetInfoList) {
+            ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.builder()
+                .assetId(recommendAssetInfo.assetId())
+                .name(recommendAssetInfo.name())
+                .code(recommendAssetInfo.code())
+                .imagePath(recommendAssetInfo.imagePath())
+                .imageName(recommendAssetInfo.imageName())
+                .price(recommendAssetInfo.price())
+                .region(recommendAssetInfo.region())
+                .market(recommendAssetInfo.market())
+                .weight(recommendAssetInfo.weight())
+                .oldPurchaseNum(0)
+                .newPurchaseNum(recommendAssetInfo.purchaseNum())
+                .build();
+            changeAssetInfoList.add(changeAssetInfo);
+        }
+
+        return changeAssetInfoList;
+    }
+
+    /**
+     * 과거 투자 자산 목록과 현재 투자 자산 목록을 비교해서, 새로 사거나 팔아야 하는 양을 반환한다
+     */
+    private List<ChangeAssetInfo> getChangeassetInfoList(List<RecommendAssetInfo> oldPortfolioAssetInfoList, List<RecommendAssetInfo> newPortfolioAssetInfoList) {
+
+        // 반환할 종목별 보유량 변화 리스트
+        List<ChangeAssetInfo> changeAssetInfoList = new ArrayList<>();
+
+        // asset_id를 key로, 자산별 정보를 value로 하는 map(이전 포트폴리오 기준)
+        HashMap<Integer, RecommendAssetInfo> oldAssetInfoMap = new HashMap<>();
+        for (RecommendAssetInfo oldAssetInfo : oldPortfolioAssetInfoList) {
+            oldAssetInfoMap.put(oldAssetInfo.assetId(), oldAssetInfo);
+        }
+
+        // asset_id를 key로, 자산별 정보를 value로 하는 map(새로운 포트폴리오 기준)
+        HashMap<Integer, RecommendAssetInfo> newAssetInfoMap = new HashMap<>();
+        for (RecommendAssetInfo newAssetInfo : newPortfolioAssetInfoList) {
+            newAssetInfoMap.put(newAssetInfo.assetId(), newAssetInfo);
+        }
+
+        // 방문 여부 체크용 hashSet
+        HashSet<Integer> visited = new HashSet<>();
+
+        // oldPortfolioAssetInfoList에 있는 자산부터, 변화량을 확인
+        for (RecommendAssetInfo oldAssetInfo: oldPortfolioAssetInfoList) {
+            visited.add(oldAssetInfo.assetId());
+
+            // 새롭게 제작한 포트폴리오에 해당 자산이 없는 경우, newPurchaseNum = 0이다
+            // 있는 경우에만, 새로운 포트폴리오에서 가져온다
+            int newPurchaseNum = 0;
+            if (newAssetInfoMap.containsKey(oldAssetInfo.assetId())) {
+                newPurchaseNum = newAssetInfoMap.get(oldAssetInfo.assetId()).purchaseNum();
+            }
+
+            ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.builder()
+                .assetId(oldAssetInfo.assetId())
+                .name(oldAssetInfo.name())
+                .code(oldAssetInfo.code())
+                .imagePath(oldAssetInfo.imagePath())
+                .imageName(oldAssetInfo.imageName())
+                .price(oldAssetInfo.price())
+                .region(oldAssetInfo.region())
+                .market(oldAssetInfo.market())
+                .weight(oldAssetInfo.weight())
+                .oldPurchaseNum(oldAssetInfo.purchaseNum())
+                .newPurchaseNum(newPurchaseNum)
+                .build();
+
+            changeAssetInfoList.add(changeAssetInfo);
+        }
+
+        // newPortfolioAssetInfoList에 있는 자산도 마저 확인
+        for (RecommendAssetInfo newAssetInfo: newPortfolioAssetInfoList) {
+
+            // 이미 체크한 적이 없는 자산일 경우에만, 새롭게 추가
+            if (!visited.contains(newAssetInfo.assetId())) {
+
+                // 기존 포트폴리오에 자산이 없는 경우, oldPurchaseNum = 0이다
+                // 있는 경우에만, 기존 보유량을 가져온다
+                int oldPurchaseNum = 0;
+                if (oldAssetInfoMap.containsKey(newAssetInfo.assetId())) {
+                    oldPurchaseNum = oldAssetInfoMap.get(newAssetInfo.assetId()).purchaseNum();
+                }
+
+                ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.builder()
+                    .assetId(newAssetInfo.assetId())
+                    .name(newAssetInfo.name())
+                    .code(newAssetInfo.code())
+                    .imagePath(newAssetInfo.imagePath())
+                    .imageName(newAssetInfo.imageName())
+                    .price(newAssetInfo.price())
+                    .region(newAssetInfo.region())
+                    .market(newAssetInfo.market())
+                    .weight(newAssetInfo.weight())
+                    .oldPurchaseNum(oldPurchaseNum)
+                    .newPurchaseNum(newAssetInfo.purchaseNum())
+                    .build();
+
+                changeAssetInfoList.add(changeAssetInfo);
+
+
+            }
+        }
+
+        return changeAssetInfoList;
+    }
+
+
+    /**
+     * 포트폴리오 document 에 있는 자산 투자 정보를 가공하여, 자산 + 투자 비중 정보를 반환
+     */
+    private List<RecommendAssetInfo> getRecommendAssetInfoFrom(Portfolio portfolio) {
+        List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
+        List<Integer> assetIdList = portfolioAssetList.stream()
+            .map(PortfolioAsset::getAssetId)
+            .toList();
+        List<Asset> assetList = assetRepository.findAllById(assetIdList);
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+        // 1. 투자 비중 정보 구하기
+        List<Double> purchasePrices = IntStream.range(0, portfolioAssetList.size())
+            .mapToDouble(i -> portfolioAssetList.get(i).getTotalPurchaseQuantity() * assetList.get(i).getRecentPrice(recentExchangeRate))
+            .boxed()
+            .toList();
+
+        // 합계 계산
+        double sum = purchasePrices.stream().mapToDouble(Double::doubleValue).sum();
+
+        // 정규화: 각 요소를 합계로 나누기
+        List<Double> weights = purchasePrices.stream()
+            .map(price -> price / sum)
+            .toList();
+
+        // 2. purchaseNum 리스트 구하기
+        List<Integer> purchaseNumList = portfolioAssetList.stream()
+            .map(PortfolioAsset::getTotalPurchaseQuantity)
+            .toList();
+
+        // 3. RecommendAssetInfo 리스트 반환
+        return IntStream.range(0, assetList.size())
+            .mapToObj(i -> RecommendAssetInfo.of(assetList.get(i), weights.get(i), purchaseNumList.get(i)))
+            .toList();
     }
 
     private Map<String, Object> getRecommendBody(PortfolioInitDto initInfo) {
@@ -762,12 +943,6 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<AssetWeightDto> assetWeightDtoList = new ArrayList<>(IntStream.range(0, assetList.size())
             .mapToObj(i -> AssetWeightDto.of(assetList.get(i), realWeights.get(i)))
             .toList());
-
-        log.warn("assetWeightDtoList: {}", assetWeightDtoList);
-        for (AssetWeightDto assetWeightDto : assetWeightDtoList) {
-
-            System.out.println("assetWeightDto.asset().getId() = " + assetWeightDto.asset().getId());
-        }
 
         // assetWeightDtoList를 정렬
         assetWeightDtoList.sort(Comparator.comparingInt(aw -> aw.asset().getId()));
