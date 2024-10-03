@@ -7,6 +7,7 @@ import StockMenuButton from '../StockMenuButton';
 import StockPrice from './StockPrice';
 import StockTitle from './StockTitle';
 import StockInfoTab from './stock/StockInfoTab';
+import EtfInfoTab from './etf/EtfInfoTab';
 import WidgetContainer from 'components/container/WidgetConatiner';
 const DomesticDetailPage = ({ assetInfo }) => {
 	const [tabMenu, setTabMenu] = useState('chart');
@@ -84,7 +85,12 @@ const DomesticDetailPage = ({ assetInfo }) => {
 					sx={{
 						width: '100%',
 					}}>
-					<StockInfoTab market={market} code={code} assetId={assetId} />
+					{market === 'ETF' && (
+						<EtfInfoTab market={market} code={code} assetId={assetId} />
+					)}
+					{market !== 'ETF' && (
+						<StockInfoTab market={market} code={code} assetId={assetId} />
+					)}
 				</Box>
 			)}
 			{tabMenu === 'news' && <StockNewsTab newsList={newsList} />}
