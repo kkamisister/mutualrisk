@@ -81,7 +81,7 @@ public class AssetHistoryServiceImpl implements AssetHistoryService {
      */
     @Override
     @Transactional
-    public ResponseWithData<AssetRecentHistory> getAssetRecentHistory(Integer assetId, Integer period) {
+    public ResponseWithData<AssetRecentHistory> getAssetRecentHistory(Integer assetId, Integer period,Integer offset) {
 
         // 자산을 찾는다
         Asset findAsset = assetRepository.findById(assetId)
@@ -90,7 +90,7 @@ public class AssetHistoryServiceImpl implements AssetHistoryService {
 
         // period 동안의 자산 정보를 조회한다
         List<AssetHistory> recentPriceHistory = assetHistoryRepository.findRecentHistoryOfAsset(
-            findAsset, period);
+            findAsset, period,offset);
 
 
         // DTO에 담아 반환한다

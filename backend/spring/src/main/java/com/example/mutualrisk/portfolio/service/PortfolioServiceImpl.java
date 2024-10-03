@@ -944,6 +944,12 @@ public class PortfolioServiceImpl implements PortfolioService{
             .mapToObj(i -> AssetWeightDto.of(assetList.get(i), realWeights.get(i)))
             .toList());
 
+        log.warn("assetWeightDtoList: {}", assetWeightDtoList);
+        for (AssetWeightDto assetWeightDto : assetWeightDtoList) {
+
+            System.out.println("assetWeightDto.asset().getId() = " + assetWeightDto.asset().getId());
+        }
+
         // assetWeightDtoList를 정렬
         assetWeightDtoList.sort(Comparator.comparingInt(aw -> aw.asset().getId()));
 

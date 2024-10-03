@@ -19,16 +19,6 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 
 @Repository
 public class InterestAssetRepositoryCustomImpl extends Querydsl4RepositorySupport implements InterestAssetRepositoryCustom {
-	@Override
-	public List<InterestAsset> findUserInterestAssets(User user, OrderCondition orderCondition, Order order) {
-
-		return select(interestAsset)
-			.from(interestAsset)
-			.join(interestAsset.asset,asset).fetchJoin()
-			.orderBy(orderStandard(orderCondition,order))
-			.where(interestAsset.user.eq(user))
-			.fetch();
-	}
 
 	@Override
 	public List<InterestAsset> findUserInterestAssets(User user) {
@@ -37,21 +27,6 @@ public class InterestAssetRepositoryCustomImpl extends Querydsl4RepositorySuppor
 			.join(interestAsset.asset,asset).fetchJoin()
 			.where(interestAsset.user.eq(user))
 			.fetch();
-	}
-
-	// 정렬 기준을 설정하는 OrderSpecifier
-	private OrderSpecifier<?> orderStandard(OrderCondition orderCondition, Order order) {
-		switch (orderCondition) {
-			case NAME:
-				return order.equals(Order.ASC) ? asset.name.asc() : asset.name.desc();
-			case PRICE:
-				return order.equals(Order.ASC) ? asset.recentPrice.asc() : asset.recentPrice.desc();
-			case RETURN:
-				return order.equals(Order.ASC) ? asset.expectedReturn.asc() : asset.expectedReturn.desc();
-			default:
-				return asset.name.asc();
-
-		}
 	}
 
 	@Override

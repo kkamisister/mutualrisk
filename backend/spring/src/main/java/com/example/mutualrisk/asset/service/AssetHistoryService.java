@@ -18,5 +18,5 @@ public interface AssetHistoryService {
     // targetDate와 가장 가까운 영업일 날짜 n개를 반환하는 함수
     List<LocalDateTime> getValidDate(Asset asset, LocalDateTime targetDate, int num);
 
-    ResponseWithData<AssetRecentHistory> getAssetRecentHistory(Integer assetId,Integer period);
+    ResponseWithData<AssetRecentHistory> getAssetRecentHistory(Integer assetId,Integer period,Integer offset);
 }

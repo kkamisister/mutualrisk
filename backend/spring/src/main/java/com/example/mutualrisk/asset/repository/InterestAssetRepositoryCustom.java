@@ -11,7 +11,6 @@ import com.example.mutualrisk.user.entity.User;
 
 public interface InterestAssetRepositoryCustom {
 
-	List<InterestAsset> findUserInterestAssets(User user, OrderCondition orderCondition,Order order);
 	List<InterestAsset> findUserInterestAssets(User user);
 	Optional<InterestAsset> findUserInterestAsset(User user, Asset asset);
 

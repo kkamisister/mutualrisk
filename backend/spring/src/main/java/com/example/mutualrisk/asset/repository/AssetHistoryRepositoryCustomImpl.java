@@ -50,11 +50,12 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
     }
 
     @Override
-    public List<AssetHistory> findRecentHistoryOfAsset(Asset asset,Integer period) {
+    public List<AssetHistory> findRecentHistoryOfAsset(Asset asset,Integer period,Integer offset) {
         return selectFrom(assetHistory)
             .join(assetHistory.asset, QAsset.asset).fetchJoin()
             .where(assetHistory.asset.eq(asset))
             .orderBy(assetHistory.date.desc())
+            .offset(offset)
             .limit(period)
             .fetch();
     }

@@ -3,10 +3,14 @@ package com.example.mutualrisk.asset.repository;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -15,6 +19,8 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.asset.entity.InterestAsset;
+import com.example.mutualrisk.common.enums.Order;
+import com.example.mutualrisk.common.enums.OrderCondition;
 import com.example.mutualrisk.common.enums.Region;
 import com.example.mutualrisk.common.config.QuerydslConfig;
 import com.example.mutualrisk.common.exception.ErrorCode;

@@ -137,4 +137,9 @@ public class FundRepositoryImpl implements FundRepository {
 		return mongoTemplate.save(fund);
 	}
 
+	@Override
+	public void delete(Fund fund) {
+		mongoTemplate.remove(fund);
+	}
+
 }

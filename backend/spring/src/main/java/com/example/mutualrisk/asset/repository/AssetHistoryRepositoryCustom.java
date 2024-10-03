@@ -13,7 +13,7 @@ public interface AssetHistoryRepositoryCustom {
     Optional<AssetHistory> findRecentHistoryOfAsset(Asset asset, LocalDateTime dateTime);
     List<AssetHistory> findHistoryOfAssets(List<Asset> assets, LocalDateTime dateTime);
 
-    List<AssetHistory> findRecentHistoryOfAsset(Asset asset,Integer period);
+    List<AssetHistory> findRecentHistoryOfAsset(Asset asset,Integer period,Integer offset);
 
     List<AssetHistory> findRecentHistoriesBetweenDates(Asset asset, LocalDateTime pastDate, LocalDateTime targetDate);
 
