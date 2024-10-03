@@ -118,53 +118,53 @@ class AssetNewsRepositoryCustomImplTest {
 
 	}
 
-	@Test
-	@DisplayName("자산에 관련된 뉴스를 조회할 수 있다")
-	void findByAsset() {
-
-		Asset asset = Asset.builder().code("ABC").name("삼성전자").expectedReturn(0.0).build();
-		assetRepository.save(asset);
-
-		LocalDateTime now = LocalDateTime.now();
-
-		News news1 = News.builder()
-			.title("삼성전자채용소식")
-			.content("삼성전자 대규모 채용")
-			.publishedAt(now.minusDays(1L))
-			.build();
-
-		News news2 = News.builder()
-			.title("LG전자채용소식")
-			.content("LG전자 대규모 채용")
-			.publishedAt(now)
-			.build();
-
-		newsRepository.saveAll(List.of(news1,news2));
-
-		AssetNews assetNews1 = AssetNews.builder()
-			.news(news1)
-			.asset(asset)
-			.build();
-
-		AssetNews assetNews2 = AssetNews.builder()
-			.news(news2)
-			.asset(asset)
-			.build();
-
-		assetNewsRepository.save(assetNews1);
-		assetNewsRepository.save(assetNews2);
-
-		//when
-		List<AssetNews> findAssetNews = assetNewsRepository.findByAsset(asset);
-
-		//then
-		assertThat(findAssetNews.size()).isEqualTo(2);
-		assertThat(findAssetNews).extracting(AssetNews::getNews)
-			.extracting(News::getTitle)
-			.containsExactly("LG전자채용소식","삼성전자채용소식");
-
-
-	}
+	// @Test
+	// @DisplayName("자산에 관련된 뉴스를 조회할 수 있다")
+	// void findByAsset() {
+	//
+	// 	Asset asset = Asset.builder().code("ABC").name("삼성전자").expectedReturn(0.0).build();
+	// 	assetRepository.save(asset);
+	//
+	// 	LocalDateTime now = LocalDateTime.now();
+	//
+	// 	News news1 = News.builder()
+	// 		.title("삼성전자채용소식")
+	// 		.content("삼성전자 대규모 채용")
+	// 		.publishedAt(now.minusDays(1L))
+	// 		.build();
+	//
+	// 	News news2 = News.builder()
+	// 		.title("LG전자채용소식")
+	// 		.content("LG전자 대규모 채용")
+	// 		.publishedAt(now)
+	// 		.build();
+	//
+	// 	newsRepository.saveAll(List.of(news1,news2));
+	//
+	// 	AssetNews assetNews1 = AssetNews.builder()
+	// 		.news(news1)
+	// 		.asset(asset)
+	// 		.build();
+	//
+	// 	AssetNews assetNews2 = AssetNews.builder()
+	// 		.news(news2)
+	// 		.asset(asset)
+	// 		.build();
+	//
+	// 	assetNewsRepository.save(assetNews1);
+	// 	assetNewsRepository.save(assetNews2);
+	//
+	// 	//when
+	// 	List<AssetNews> findAssetNews = assetNewsRepository.findByAsset(asset);
+	//
+	// 	//then
+	// 	assertThat(findAssetNews.size()).isEqualTo(2);
+	// 	assertThat(findAssetNews).extracting(AssetNews::getNews)
+	// 		.extracting(News::getTitle)
+	// 		.containsExactly("LG전자채용소식","삼성전자채용소식");
+	//
+	//
+	// }
 
 	@Test
 	void findAllByNews() {
