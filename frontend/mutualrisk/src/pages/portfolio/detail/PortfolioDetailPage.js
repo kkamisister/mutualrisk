@@ -1,6 +1,7 @@
 import React from 'react';
 import TitleDivider from 'components/title/TitleDivider';
 import Title from 'components/title/Title';
+import Select from 'react-select';
 import { Stack } from '@mui/material';
 import { colors } from 'constants/colors';
 import StockAddBox from 'pages/portfolio/detail/StockAddBox';
@@ -16,8 +17,8 @@ const PortfolioDetailPage = () => {
 	return (
 		<Stack spacing={2} sx={{ backgroundColor: colors.background.primary }}>
 			<TitleDivider text="내 포트폴리오" />
+			<Select />
 			<StockAddBox />
-
 			{/* 포트폴리오 현황 요약 */}
 			<WidgetContainer sx={{ backgroundColor: colors.main.primary100 }}>
 				<Title
