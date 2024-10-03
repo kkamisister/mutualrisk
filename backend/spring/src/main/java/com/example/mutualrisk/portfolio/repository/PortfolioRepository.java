@@ -12,4 +12,6 @@ public interface PortfolioRepository {
     Portfolio getPortfolioById(String id);
 
     Optional<Portfolio> getPortfolioByIdAndVersion(Integer userId,Integer version);
+
+    void savePortfolio(Portfolio portfolio);
 }

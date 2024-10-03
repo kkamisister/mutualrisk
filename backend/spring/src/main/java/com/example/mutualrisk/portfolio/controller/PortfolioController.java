@@ -43,7 +43,7 @@ public class PortfolioController {
         @ApiResponse(responseCode = "200", description = "포트폴리오 현황조회 성공")
     })
     @GetMapping("/summary")
-    public ResponseEntity<ResponseWithData<PortfolioStatusSummary>> UserPortfolioSummary(@RequestParam("ver") Integer version,HttpServletRequest request){
+    public ResponseEntity<ResponseWithData<PortfolioStatusSummary>> UserPortfolioSummary(@RequestParam("ver") Integer version, HttpServletRequest request){
 
         Integer userId = (Integer) request.getAttribute("userId");
 
@@ -58,15 +58,21 @@ public class PortfolioController {
         @ApiResponse(responseCode = "200", description = "포트폴리오 미리보기 성공")
     })
 	@PostMapping("/init")
-	public ResponseEntity<ResponseWithData<CalculatedPortfolio>> initUserPortfolio(@RequestBody PortfolioInitDto initInfo) {
+	public ResponseEntity<ResponseWithData<CalculatedPortfolio>> initUserPortfolio(@RequestBody PortfolioInitDto initInfo, HttpServletRequest request) {
 
-		ResponseWithData<CalculatedPortfolio> portfolioInfo = portfolioService.initPortfolio(initInfo);
+        Integer userId = (Integer) request.getAttribute("userId");
+
+		ResponseWithData<CalculatedPortfolio> portfolioInfo = portfolioService.initPortfolio(userId, initInfo);
 
 		return ResponseEntity.status(portfolioInfo.status())
 			.body(portfolioInfo);
 	}
 
-    @Operation(summary = "유저 포트폴리오 제작 미리보기", description = "포트폴리오 제작 버튼을 누르면 예상 비중을 반환한다")
+    /**
+     * 유저가 포트폴리오 확정 버튼을 눌렀을 때 동작하는 api
+     * 기존 포트폴리오 만료 처리 로직과, 새로운 포트폴리오 mongoDB에 저장하는 로직을 포함
+     */
+    @Operation(summary = "유저 포트폴리오 제작 확정", description = "포트폴리오 확정 버튼을 누르면, 유저의 포트폴리오가 해당 포트폴리오로 업데이트된다")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "포트폴리오 미리보기 성공")
     })
@@ -77,20 +83,25 @@ public class PortfolioController {
 
         ResponseWithData<String> responseWithMessage = portfolioService.confirmPortfolio(userId, initInfo);
 
-//        return ResponseEntity.status(responseWithMessage.status())
-//            .body(responseWithMessage);
-        return null;
+        return ResponseEntity.status(responseWithMessage.status())
+            .body(responseWithMessage);
     }
 
+    /**
+     * 유저가 만든 전체 포트폴리오 리스트 조회
+     * - 포트폴리오는, 버전 기준 내림차순으로 정렬되어서 보여진다
+     * - 포트폴리오 리스트에 들어가는 정보 : id, name, version, createdAt
+     * - 추가로, recentValuation(가장 최근 포트폴리오의, 현재 기준 자산 평가액)을 반환
+     */
     @Operation(summary = "유저 전체 포트폴리오 조회", description = "유저가 만든 전체 포트폴리오 내역을 조회한다")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "유저 전체 포트폴리오 조회 성공")
     })
     @GetMapping("/my")
-    public ResponseEntity<ResponseWithData<List<SimplePortfolioDto>>> getAllUserPortfolio(HttpServletRequest request) {
+    public ResponseEntity<ResponseWithData<PortfolioTotalSearchDto>> getAllUserPortfolio(HttpServletRequest request) {
         Integer userId = (Integer)request.getAttribute("userId");
 
-        ResponseWithData<List<SimplePortfolioDto>> allUserPortfolio = portfolioService.getAllUserPortfolio(userId);
+        ResponseWithData<PortfolioTotalSearchDto> allUserPortfolio = portfolioService.getAllUserPortfolio(userId);
 
         return ResponseEntity.status(allUserPortfolio.status()).body(allUserPortfolio);
     }

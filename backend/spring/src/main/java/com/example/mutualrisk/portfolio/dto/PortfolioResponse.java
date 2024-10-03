@@ -5,6 +5,7 @@ import com.example.mutualrisk.asset.entity.Asset;
 import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.portfolio.entity.FrontierPoint;
+import com.example.mutualrisk.portfolio.entity.Portfolio;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
@@ -17,9 +18,18 @@ public record PortfolioResponse() {
     @Schema(name = "포트폴리오의 요약 정보 데이터", description = "유저의 포트폴리오 전체 조회 시 반환되는 데이터")
     public record SimplePortfolioDto(
         String id,
-        Integer version
+        String name,
+        Integer version,
+        LocalDateTime createdAt
     ) {
-
+        public static SimplePortfolioDto from(Portfolio portfolio) {
+            return SimplePortfolioDto.builder()
+                .id(portfolio.getId())
+                .name(portfolio.getName())
+                .version(portfolio.getVersion())
+                .createdAt(portfolio.getCreatedAt())
+                .build();
+        }
     }
 
     @Builder
@@ -48,6 +58,16 @@ public record PortfolioResponse() {
         Double volatility,
         Double sharpeRatio,
         Double valuation
+    ) {
+
+    }
+
+    @Builder
+    @Schema
+    public record PortfolioTotalSearchDto(
+        Boolean hasPortfolio,
+        Double recentValuation,
+        List<SimplePortfolioDto> portfolioList
     ) {
 
     }
@@ -126,10 +146,32 @@ public record PortfolioResponse() {
     }
 
     @Builder
+    @Schema(name = "포트폴리오 제작시 보여 주는 데이터")
     public record CalculatedPortfolio(
-        PortfolioAnalysis original,
-        PortfolioAnalysis recommendation
+        PortfolioAnalysis original,    // 새롭게 추천해 주는 포트폴리오에 대한 정보
+        PortfolioAnalysis recommendation,    // 추천 종목을 추가하였을 때, 포트폴리오에 대한 정보
+        List<RecommendAssetInfo> oldPortfolioAssetInfoList,    // 기존 포트폴리오 종목에 대한 정보
+        List<RecommendAssetInfo> newPortfolioAssetInfoList,    // 새롭게 추천해 주는 포트폴리오에 대한 정보
+        List<ChangeAssetInfo> changeAssetInfoList    // 종목별 보유량 변화 정보
     ){
+
+    }
+
+    @Builder
+    @Schema(name = "종목 보유량 변화 정보")
+    public record ChangeAssetInfo (
+        Integer assetId,
+        String name,
+        String code,
+        String imagePath,
+        String imageName,
+        Double price,
+        String region,
+        String market,
+        Double weight,
+        Integer oldPurchaseNum,
+        Integer newPurchaseNum
+    ) {
 
     }
 
@@ -158,6 +200,7 @@ public record PortfolioResponse() {
         String imageName,
         Double price,
         String region,
+        String market,
         Double weight,
         Integer purchaseNum
     ){
@@ -173,6 +216,7 @@ public record PortfolioResponse() {
                 .imageName(imageName)
                 .price(asset.getRecentPrice())
                 .region(asset.getRegion().toString())
+                .market(asset.getMarket().name())
                 .weight(weight)
                 .purchaseNum(purchaseNum)
                 .build();

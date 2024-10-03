@@ -30,6 +30,8 @@ import com.example.mutualrisk.sector.entity.Sector;
 import com.example.mutualrisk.user.entity.User;
 import com.example.mutualrisk.user.repository.UserRepository;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -636,18 +638,22 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     /**
      * 유저의 포트폴리오 제작 요청을 받아서 포트폴리오의 퍼포먼스,비중 및 추천 자산을 반환하는 메서드
+     *
+     * @param userId
      * @param initInfo
      * @return
      */
     @Override
     @Transactional
-    public ResponseWithData<CalculatedPortfolio> initPortfolio(PortfolioInitDto initInfo) {
+    public ResponseWithData<CalculatedPortfolio> initPortfolio(Integer userId, PortfolioInitDto initInfo) {
+        List<Asset> findAssets = assetRepository.findAllById(initInfo.assetIds())
+            .stream()
+            .sorted(Comparator.comparing(asset -> initInfo.assetIds().indexOf(asset.getId())))
+            .collect(Collectors.toList());
 
         // 1. 유저가 입력한 dto를 받아서, api에 던질 dto 형식으로 고친다
         // PortfolioInitDto -> PortfolioRequestDto로 변환
-        PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(initInfo);
-
-        log.warn("portfolioRequestDto : {}",portfolioRequestDto);
+        PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(findAssets, initInfo);
 
         // 2. PortfolioRequestDto를 받아서, Map<String, Object> 형식으로 고친다
         Map<String, Object> requestBody = getRequestBodyFromPortfolioRequestDto(portfolioRequestDto);
@@ -664,12 +670,38 @@ public class PortfolioServiceImpl implements PortfolioService{
         }
 
         // 4. 반환할 데이터 만들기
+
+        // 4-1. 새롭게 추천해주는 포트폴리오에 대한 정보
         PortfolioAnalysis original = getPortfolioAnalysis(initInfo, responseBody, portfolioRequestDto);
 
-        log.warn("반환할 데이터 : {}",original);
+        // 4-2. 기존 포트폴리오가 있다면, oldPortfolioAssetInfoList 구하기
+        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
+        List<RecommendAssetInfo> oldPortfolioAssetInfoList = null;
+        if (!myPortfolioList.isEmpty()) {
+            Portfolio latestPortfolio = myPortfolioList.get(0);
+            oldPortfolioAssetInfoList = getRecommendAssetInfoFrom(latestPortfolio);
+        }
+
+        // 4-3. newPortfolioAssetInfoList 구하기
+        List<RecommendAssetInfo> newPortfolioAssetInfoList = original.assets();
+
+        // 4-4. 자산별 보유 비중 변화량 구하기
+        List<ChangeAssetInfo> changeAssetInfoList;
+        // 4-4-1. 기존 포트폴리오가 있는 경우
+        if (oldPortfolioAssetInfoList != null) {
+            changeAssetInfoList = getChangeassetInfoList(oldPortfolioAssetInfoList, newPortfolioAssetInfoList);
+        }
+        else {
+            changeAssetInfoList = getChangeassetInfoList(newPortfolioAssetInfoList);
+        }
+
+
 
         CalculatedPortfolio calculatedPortfolio = CalculatedPortfolio.builder()
             .original(original)
+            .oldPortfolioAssetInfoList(oldPortfolioAssetInfoList)
+            .newPortfolioAssetInfoList(newPortfolioAssetInfoList)
+            .changeAssetInfoList(changeAssetInfoList)
             //나중에 추천종목 생기면 여기에 추가해서 리턴하기
             .build();
 
@@ -694,6 +726,157 @@ public class PortfolioServiceImpl implements PortfolioService{
         return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 제작 미리보기 입니다", calculatedPortfolio);
     }
 
+    /**
+     * 과거 포트폴리오가 없는 경우, 현재 포트폴리오를 바탕으로 종목별 보유 수량 변화량을 계산한다
+     */
+    private List<ChangeAssetInfo> getChangeassetInfoList(List<RecommendAssetInfo> newPortfolioAssetInfoList) {
+        // 반환할 종목별 보유량 변화 리스트
+        List<ChangeAssetInfo> changeAssetInfoList = new ArrayList<>();
+
+        for (RecommendAssetInfo recommendAssetInfo : newPortfolioAssetInfoList) {
+            ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.builder()
+                .assetId(recommendAssetInfo.assetId())
+                .name(recommendAssetInfo.name())
+                .code(recommendAssetInfo.code())
+                .imagePath(recommendAssetInfo.imagePath())
+                .imageName(recommendAssetInfo.imageName())
+                .price(recommendAssetInfo.price())
+                .region(recommendAssetInfo.region())
+                .market(recommendAssetInfo.market())
+                .weight(recommendAssetInfo.weight())
+                .oldPurchaseNum(0)
+                .newPurchaseNum(recommendAssetInfo.purchaseNum())
+                .build();
+            changeAssetInfoList.add(changeAssetInfo);
+        }
+
+        return changeAssetInfoList;
+    }
+
+    /**
+     * 과거 투자 자산 목록과 현재 투자 자산 목록을 비교해서, 새로 사거나 팔아야 하는 양을 반환한다
+     */
+    private List<ChangeAssetInfo> getChangeassetInfoList(List<RecommendAssetInfo> oldPortfolioAssetInfoList, List<RecommendAssetInfo> newPortfolioAssetInfoList) {
+
+        // 반환할 종목별 보유량 변화 리스트
+        List<ChangeAssetInfo> changeAssetInfoList = new ArrayList<>();
+
+        // asset_id를 key로, 자산별 정보를 value로 하는 map(이전 포트폴리오 기준)
+        HashMap<Integer, RecommendAssetInfo> oldAssetInfoMap = new HashMap<>();
+        for (RecommendAssetInfo oldAssetInfo : oldPortfolioAssetInfoList) {
+            oldAssetInfoMap.put(oldAssetInfo.assetId(), oldAssetInfo);
+        }
+
+        // asset_id를 key로, 자산별 정보를 value로 하는 map(새로운 포트폴리오 기준)
+        HashMap<Integer, RecommendAssetInfo> newAssetInfoMap = new HashMap<>();
+        for (RecommendAssetInfo newAssetInfo : newPortfolioAssetInfoList) {
+            newAssetInfoMap.put(newAssetInfo.assetId(), newAssetInfo);
+        }
+
+        // 방문 여부 체크용 hashSet
+        HashSet<Integer> visited = new HashSet<>();
+
+        // oldPortfolioAssetInfoList에 있는 자산부터, 변화량을 확인
+        for (RecommendAssetInfo oldAssetInfo: oldPortfolioAssetInfoList) {
+            visited.add(oldAssetInfo.assetId());
+
+            // 새롭게 제작한 포트폴리오에 해당 자산이 없는 경우, newPurchaseNum = 0이다
+            // 있는 경우에만, 새로운 포트폴리오에서 가져온다
+            int newPurchaseNum = 0;
+            if (newAssetInfoMap.containsKey(oldAssetInfo.assetId())) {
+                newPurchaseNum = newAssetInfoMap.get(oldAssetInfo.assetId()).purchaseNum();
+            }
+
+            ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.builder()
+                .assetId(oldAssetInfo.assetId())
+                .name(oldAssetInfo.name())
+                .code(oldAssetInfo.code())
+                .imagePath(oldAssetInfo.imagePath())
+                .imageName(oldAssetInfo.imageName())
+                .price(oldAssetInfo.price())
+                .region(oldAssetInfo.region())
+                .market(oldAssetInfo.market())
+                .weight(oldAssetInfo.weight())
+                .oldPurchaseNum(oldAssetInfo.purchaseNum())
+                .newPurchaseNum(newPurchaseNum)
+                .build();
+
+            changeAssetInfoList.add(changeAssetInfo);
+        }
+
+        // newPortfolioAssetInfoList에 있는 자산도 마저 확인
+        for (RecommendAssetInfo newAssetInfo: newPortfolioAssetInfoList) {
+
+            // 이미 체크한 적이 없는 자산일 경우에만, 새롭게 추가
+            if (!visited.contains(newAssetInfo.assetId())) {
+
+                // 기존 포트폴리오에 자산이 없는 경우, oldPurchaseNum = 0이다
+                // 있는 경우에만, 기존 보유량을 가져온다
+                int oldPurchaseNum = 0;
+                if (oldAssetInfoMap.containsKey(newAssetInfo.assetId())) {
+                    oldPurchaseNum = oldAssetInfoMap.get(newAssetInfo.assetId()).purchaseNum();
+                }
+
+                ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.builder()
+                    .assetId(newAssetInfo.assetId())
+                    .name(newAssetInfo.name())
+                    .code(newAssetInfo.code())
+                    .imagePath(newAssetInfo.imagePath())
+                    .imageName(newAssetInfo.imageName())
+                    .price(newAssetInfo.price())
+                    .region(newAssetInfo.region())
+                    .market(newAssetInfo.market())
+                    .weight(newAssetInfo.weight())
+                    .oldPurchaseNum(oldPurchaseNum)
+                    .newPurchaseNum(newAssetInfo.purchaseNum())
+                    .build();
+
+                changeAssetInfoList.add(changeAssetInfo);
+
+
+            }
+        }
+
+        return changeAssetInfoList;
+    }
+
+
+    /**
+     * 포트폴리오 document 에 있는 자산 투자 정보를 가공하여, 자산 + 투자 비중 정보를 반환
+     */
+    private List<RecommendAssetInfo> getRecommendAssetInfoFrom(Portfolio portfolio) {
+        List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
+        List<Integer> assetIdList = portfolioAssetList.stream()
+            .map(PortfolioAsset::getAssetId)
+            .toList();
+        List<Asset> assetList = assetRepository.findAllById(assetIdList);
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+        // 1. 투자 비중 정보 구하기
+        List<Double> purchasePrices = IntStream.range(0, portfolioAssetList.size())
+            .mapToDouble(i -> portfolioAssetList.get(i).getTotalPurchaseQuantity() * assetList.get(i).getRecentPrice(recentExchangeRate))
+            .boxed()
+            .toList();
+
+        // 합계 계산
+        double sum = purchasePrices.stream().mapToDouble(Double::doubleValue).sum();
+
+        // 정규화: 각 요소를 합계로 나누기
+        List<Double> weights = purchasePrices.stream()
+            .map(price -> price / sum)
+            .toList();
+
+        // 2. purchaseNum 리스트 구하기
+        List<Integer> purchaseNumList = portfolioAssetList.stream()
+            .map(PortfolioAsset::getTotalPurchaseQuantity)
+            .toList();
+
+        // 3. RecommendAssetInfo 리스트 반환
+        return IntStream.range(0, assetList.size())
+            .mapToObj(i -> RecommendAssetInfo.of(assetList.get(i), weights.get(i), purchaseNumList.get(i)))
+            .toList();
+    }
+
     private Map<String, Object> getRecommendBody(PortfolioInitDto initInfo) {
         // hadoop에 보낼 JSON 요청 본문을 만든다
         Map<String, Object> recommendBody = new HashMap<>();
@@ -712,8 +895,6 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 퍼포먼스를 가지고 온다
         Map<String, Double> fictionalPerformanceMap = (Map<String, Double>) responseBody.get("fictionalPerformance");
 
-        log.warn("fictionalPerformanceMap : {}",fictionalPerformanceMap);
-
         Double expectedReturn = fictionalPerformanceMap.get("expectedReturn");
         Double volatility = fictionalPerformanceMap.get("volatility");
 
@@ -722,8 +903,6 @@ public class PortfolioServiceImpl implements PortfolioService{
             .expectedReturn(expectedReturn)
             .volatility(volatility)
             .build();
-
-        log.warn("fictionalPerformance : {}",fictionalPerformance);
 
         // 각 자산의 가중치를 가지고온다
         Map<String, Double> fictionalWeights = (Map<String, Double>) responseBody.get("weights");
@@ -753,7 +932,6 @@ public class PortfolioServiceImpl implements PortfolioService{
 
             purchaseNumList.add(purchaseNum);
         }
-        log.warn("purchaseNumList : {}",purchaseNumList);
 
         List<Double> priceList = assetList
             .stream()
@@ -766,7 +944,11 @@ public class PortfolioServiceImpl implements PortfolioService{
             .mapToObj(i -> AssetWeightDto.of(assetList.get(i), realWeights.get(i)))
             .toList());
 
-        log.warn("여기인가 ??");
+        log.warn("assetWeightDtoList: {}", assetWeightDtoList);
+        for (AssetWeightDto assetWeightDto : assetWeightDtoList) {
+
+            System.out.println("assetWeightDto.asset().getId() = " + assetWeightDto.asset().getId());
+        }
 
         // assetWeightDtoList를 정렬
         assetWeightDtoList.sort(Comparator.comparingInt(aw -> aw.asset().getId()));
@@ -799,10 +981,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<Double> weights = assetWeightDtoList.stream()
             .map(AssetWeightDto::weight)
             .toList();
-
-        log.warn("공분산 가져오기 전");
         List<AssetCovariance> assetCovarianceList = assetCovarianceRepository.findAllCovarianceIn(assetList);
-        log.warn("공분산 가져오기 후");
 
         Double volatility = calculatePortfolioVariance(weights, assetCovarianceList, assetList);
 
@@ -870,27 +1049,25 @@ public class PortfolioServiceImpl implements PortfolioService{
     @Override
     @Transactional
     public ResponseWithData<String> confirmPortfolio(Integer userId, PortfolioInitDto initInfo) {
-        // 기존 포트폴리오 만료 처리 로직
-
-        // 1. 유저의 포트폴리오 리스트 받아오기
-        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
-
-        // 2. 유저의 가장 최신 포트폴리오 구하기
-        Portfolio recentPortfolio = myPortfolioList.get(0);
-
-        // 3. 최신 포트폴리오 만료 처리
-        recentPortfolio.setDeletedAt(LocalDateTime.now());
-
-        // 4. 새로운 포트폴리오 만들기
+        // 1. 포트폴리오 생성 정보 받아오기
         // todo: 얘내 리팩토링해야 함. 포트폴리오 생성 api 에도 똑같은 로직이 있음
-        // 4-1. 유저가 입력한 dto를 받아서, api에 던질 dto 형식으로 고친다
+        // 1-1. 유저가 입력한 dto를 받아서, api에 던질 dto 형식으로 고친다
         // PortfolioInitDto -> PortfolioRequestDto로 변환
-        PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(initInfo);
+        // 유저가 입력한 자산의 expected_return을 가지고 와야한다
+        // 입력받은 순서 그대로 리스트안에 넣기 위해 정렬해야함
+        List<Asset> findAssets = assetRepository.findAllById(initInfo.assetIds())
+            .stream()
+            .sorted(Comparator.comparing(asset -> initInfo.assetIds().indexOf(asset.getId())))
+            .collect(Collectors.toList());
 
-        // 4-2. PortfolioRequestDto를 받아서, Map<String, Object> 형식으로 고친다
+
+        PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(findAssets, initInfo);
+
+        // 1-2. PortfolioRequestDto를 받아서, Map<String, Object> 형식으로 고친다
+        // fastAPI에 던질 형식으로 고침
         Map<String, Object> requestBody = getRequestBodyFromPortfolioRequestDto(portfolioRequestDto);
 
-        // 4-3. requestBody를 fastapi 호출해서, 결과를 받아온다
+        // 1-3. requestBody를 fastapi 호출해서, 결과를 받아온다
         Map<String, Object> responseBody;
         try {
             // FastApiService를 사용하여 요청을 보낸다
@@ -901,16 +1078,188 @@ public class PortfolioServiceImpl implements PortfolioService{
             throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
         }
 
-        // 4-4. 반환할 데이터 만들기
-        PortfolioAnalysis original = getPortfolioAnalysis(initInfo, responseBody, portfolioRequestDto);
+        // 2. 유저의 가장 최신 포트폴리오 받아오기
+        // 2-1. 유저의 포트폴리오 리스트 받아오기
+        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
 
-        log.warn("original: {}", original.toString());
+        // 2-2-1. 유저의 과거 포트폴리오가 없을 경우
+        Portfolio portfolio;
+        if (myPortfolioList.isEmpty()) {
+            portfolio = getInitialPortfolioFrom(responseBody, initInfo, userId, 1, findAssets);
+        }
+        // 2-2-2. 유저의 과거 포트폴리오가 있는 경우
+        else {
+            // 2-2-2-1. 유저의 가장 최신 포트폴리오 구하기
+            Portfolio recentPortfolio = myPortfolioList.get(0);
+
+            // 2-2-2-2. 최신 포트폴리오 만료 처리
+            recentPortfolio.setDeletedAt(LocalDateTime.now());
+            recentPortfolio.setIsActive(Boolean.FALSE);
+
+            portfolioRepository.savePortfolio(recentPortfolio);
+
+            portfolio = getNewPortfolioFrom(responseBody, initInfo, userId, recentPortfolio.getVersion()+1, findAssets, recentPortfolio);
+        }
 
 
-        return null;
+        Map<String, Object> recommendBody = getRecommendBody(initInfo);
 
-        // 유저가 설정한 자산 목록과 제약조건을 fastapi 서버로 보내기 위한 요청을 만들어야한다
+        // 3. hadoop fastapi로 요청을 보낸다
+//        Map<String, Object> res;
+//        try {
+//            res = fastApiService.getRecommendData(recommendBody);
+//            // for (Entry<String, Object> entry : res.entrySet()) {
+//            //     System.out.println("entry = " + entry.getKey());
+//            //     System.out.println("entry = " + entry.getValue());
+//            // }
+//
+//        } catch (RuntimeException e) {
+//            // 예외 처리
+//            log.error("Hadoop 서버와의 통신 중 오류가 발생했습니다.", e);
+//            throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
+//        }
 
+        // 4. 저장한다
+        portfolioRepository.savePortfolio(portfolio);
+
+
+        // 5. 프론트에 결과를 반환한다
+        return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 확정 성공!!", "포트폴리오 확정 성공!!");
+
+    }
+
+    // fastapi에서 준 결과를 가지고, 새로운 포트폴리오를 만든다
+    // 기존 유저의 포트폴리오가 있는 경우를 가정하고 만듬
+    private Portfolio getNewPortfolioFrom(Map<String, Object> responseBody, PortfolioInitDto initInfo, Integer userId, int version, List<Asset> findAssets, Portfolio recentPortfolio) {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        List<PortfolioAsset> recentPortfolioAssetList = recentPortfolio.getAsset();
+        Map<Integer, PortfolioAsset> recentPortfolioAssetMap = new HashMap<>();
+        for (PortfolioAsset asset : recentPortfolioAssetList) {
+            recentPortfolioAssetMap.put(asset.getAssetId(), asset);
+        }
+
+        // fictionalPerformance 부분을 매핑하여 PortfolioPerformance 객체로 변환
+        LinkedHashMap<String, Object> fictionalPerformanceMap = (LinkedHashMap<String, Object>) responseBody.get("fictionalPerformance");
+        PortfolioPerformance fictionalPerformance = objectMapper.convertValue(fictionalPerformanceMap, PortfolioPerformance.class);
+
+        Map<String, Double> fictionalWeights = (Map<String, Double>) responseBody.get("weights");
+
+        // frontierPoints 부분을 매핑하여 List<FrontierPoint>로 변환
+        List<Map<String, Object>> frontierPointsMap = (List<Map<String, Object>>) responseBody.get("frontierPoints");
+        List<FrontierPoint> frontierPoints = objectMapper.convertValue(frontierPointsMap, new TypeReference<List<FrontierPoint>>() {});
+
+        Integer totalCash = initInfo.totalCash();
+        List<PortfolioAsset> portfolioAssetList = new ArrayList<>();
+        List<Double> weights = new ArrayList<>();
+
+        for (Entry<String, Double> entry : fictionalWeights.entrySet()) {
+            // 자산 비중을 가지고 온다
+            Asset asset = findAssets.get(Integer.parseInt(entry.getKey()));
+            Double weight = entry.getValue();
+            Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+            // 구매량을 결정해야한다
+            // 구매량은, (전체 현금 보유량 * 자산 비중 / 해당 자산의 가격) 을 반올림 한 값으로 한다
+            int purchaseNum = (int) Math.round(totalCash * weight / asset.getRecentPrice(recentExchangeRate));
+
+            int recentPurchaseNum;
+            double recentPurchasePrice;
+            if (recentPortfolioAssetMap.containsKey(asset.getId())) {
+                PortfolioAsset portfolioAsset = recentPortfolioAssetMap.get(asset.getId());
+                recentPurchaseNum = portfolioAsset.getTotalPurchaseQuantity();
+                recentPurchasePrice = portfolioAsset.getTotalPurchasePrice();
+            }
+            else {
+                recentPurchaseNum = 0;
+                recentPurchasePrice = 0;
+            }
+
+            double purchasePrice = recentPurchasePrice + (purchaseNum - recentPurchaseNum) * asset.getRecentPrice(recentExchangeRate);
+
+            portfolioAssetList.add(PortfolioAsset.builder()
+                .assetId(asset.getId())
+                .code(asset.getCode())
+                .totalPurchaseQuantity(purchaseNum)
+                .totalPurchasePrice(purchasePrice)
+                .build());
+
+            weights.add(weight);
+        }
+
+
+        return Portfolio.builder()
+            .type("portfolio")
+            .name(initInfo.name())
+            .userId(userId)
+            .version(version)
+            .isActive(Boolean.TRUE)
+            .createdAt(LocalDateTime.now())
+            .asset(portfolioAssetList)
+            .lowerBound(initInfo.lowerBounds())
+            .upperBound(initInfo.upperBounds())
+            .weights(weights)
+            .fictionalPerformance(fictionalPerformance)
+            .frontierPoints(frontierPoints)
+            .build();
+    }
+
+    // fastapi에서 준 결과를 가지고, 새로운 포트폴리오를 만든다
+    // 기존 유저의 포트폴리오가 없는 경우를 가정하고 만듬
+    private Portfolio getInitialPortfolioFrom(Map<String, Object> responseBody, PortfolioInitDto initInfo, Integer userId, int version, List<Asset> findAssets) {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // fictionalPerformance 부분을 매핑하여 PortfolioPerformance 객체로 변환
+        LinkedHashMap<String, Object> fictionalPerformanceMap = (LinkedHashMap<String, Object>) responseBody.get("fictionalPerformance");
+        PortfolioPerformance fictionalPerformance = objectMapper.convertValue(fictionalPerformanceMap, PortfolioPerformance.class);
+
+        Map<String, Double> fictionalWeights = (Map<String, Double>) responseBody.get("weights");
+
+        // frontierPoints 부분을 매핑하여 List<FrontierPoint>로 변환
+        List<Map<String, Object>> frontierPointsMap = (List<Map<String, Object>>) responseBody.get("frontierPoints");
+        List<FrontierPoint> frontierPoints = objectMapper.convertValue(frontierPointsMap, new TypeReference<List<FrontierPoint>>() {});
+
+        Integer totalCash = initInfo.totalCash();
+        List<PortfolioAsset> portfolioAssetList = new ArrayList<>();
+        List<Double> weights = new ArrayList<>();
+
+        for (Entry<String, Double> entry : fictionalWeights.entrySet()) {
+
+            // 자산 비중을 가지고 온다
+            Asset asset = findAssets.get(Integer.parseInt(entry.getKey()));
+            Double weight = entry.getValue();
+            Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+            // 구매량을 결정해야한다
+            // 구매량은, (전체 현금 보유량 * 자산 비중 / 해당 자산의 가격) 을 반올림 한 값으로 한다
+            int purchaseNum = (int) Math.round(totalCash * weight / asset.getRecentPrice(recentExchangeRate));
+
+            portfolioAssetList.add(PortfolioAsset.builder()
+                .assetId(asset.getId())
+                .code(asset.getCode())
+                .totalPurchaseQuantity(purchaseNum)
+                .totalPurchasePrice(purchaseNum * asset.getRecentPrice(recentExchangeRate))
+                .build());
+
+            weights.add(weight);
+        }
+
+
+        return Portfolio.builder()
+            .type("portfolio")
+            .name(initInfo.name())
+            .userId(userId)
+            .version(version)
+            .isActive(Boolean.TRUE)
+            .createdAt(LocalDateTime.now())
+            .asset(portfolioAssetList)
+            .lowerBound(initInfo.lowerBounds())
+            .upperBound(initInfo.upperBounds())
+            .weights(weights)
+            .fictionalPerformance(fictionalPerformance)
+            .frontierPoints(frontierPoints)
+            .build();
     }
 
     /**
@@ -929,14 +1278,7 @@ public class PortfolioServiceImpl implements PortfolioService{
     /**
      * 유저가 입력한 포트폴리오 구성 데이터를 바탕으로, fastAPI에 던질 request를 만든다
      */
-    private PortfolioRequestDto getPortfolioRequestDto(PortfolioInitDto initInfo) {
-        // 유저가 입력한 자산의 expected_return을 가지고 와야한다
-        // 입력받은 순서 그대로 리스트안에 넣기 위해 정렬해야함
-        List<Asset> findAssets = assetRepository.findAllById(initInfo.assetIds())
-            .stream()
-            .sorted(Comparator.comparing(asset -> initInfo.assetIds().indexOf(asset.getId())))
-            .collect(Collectors.toList());
-
+    private PortfolioRequestDto getPortfolioRequestDto(List<Asset> findAssets, PortfolioInitDto initInfo) {
         // 각 자산의 예상 수익
         List<Double> expectedReturns = findAssets.stream()
             .map(Asset::getExpectedReturn)
@@ -991,17 +1333,54 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     @Override
     @Transactional(readOnly = true)
-    public ResponseWithData<List<SimplePortfolioDto>> getAllUserPortfolio(Integer userId) {
+    public ResponseWithData<PortfolioTotalSearchDto> getAllUserPortfolio(Integer userId) {
         List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
-        List<SimplePortfolioDto> data = myPortfolioList.stream()
-            .map(portfolio -> SimplePortfolioDto.builder()
-                .id(portfolio.getId())
-                .version(portfolio.getVersion())
-                .build())
+        List<SimplePortfolioDto> simplePortfolioDtoList = myPortfolioList.stream()
+            .map(SimplePortfolioDto::from)
             .toList();
 
+        // 1. 유저의 포트폴리오가 존재하지 않을 경우
+        if (simplePortfolioDtoList.isEmpty()) {
+            PortfolioTotalSearchDto portfolioTotalSearchDto = PortfolioTotalSearchDto.builder()
+                .hasPortfolio(Boolean.FALSE)
+                .portfolioList(simplePortfolioDtoList)
+                .build();
 
-        return new ResponseWithData<>(HttpStatus.OK.value(), "유저 전체 포트폴리오 조회 성공", data);
+            return new ResponseWithData<>(HttpStatus.OK.value(), "유저 전체 포트폴리오 조회 성공", portfolioTotalSearchDto);
+        }
+        // 2. 유저의 포트폴리오가 존재할 경우
+        else {
+            // 유저의 가장 최신 포트폴리오의, 평가 금액 구하기
+            Portfolio recentPortfolio = myPortfolioList.get(0);
+
+            Double recentValuation = getRecentValuationOfPortfolio(recentPortfolio);
+
+            PortfolioTotalSearchDto portfolioTotalSearchDto = PortfolioTotalSearchDto.builder()
+                .hasPortfolio(Boolean.TRUE)
+                .recentValuation(recentValuation)
+                .portfolioList(simplePortfolioDtoList)
+                .build();
+
+            return new ResponseWithData<>(HttpStatus.OK.value(), "유저 전체 포트폴리오 조회 성공", portfolioTotalSearchDto);
+        }
+    }
+
+    /**
+     * 포트폴리오의, 현재 가격 기준 자산 평가액을 반환하는 함수
+     */
+    private Double getRecentValuationOfPortfolio(Portfolio recentPortfolio) {
+
+        List<PortfolioAsset> portfolioAssetList = recentPortfolio.getAsset();
+        List<Integer> assetIdList = portfolioAssetList.stream()
+            .map(PortfolioAsset::getAssetId)
+            .toList();
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+        List<Asset> assetList = assetRepository.findAllById(assetIdList);
+
+        // 각 asset에 대해, totalPurchaseQuantity * recentPrice를 해서 더해 준다(이게 평가액임)
+        return IntStream.range(0, portfolioAssetList.size())
+            .mapToDouble(i -> portfolioAssetList.get(i).getTotalPurchaseQuantity() * assetList.get(i).getRecentPrice(recentExchangeRate))
+            .sum();
     }
 
     @Override

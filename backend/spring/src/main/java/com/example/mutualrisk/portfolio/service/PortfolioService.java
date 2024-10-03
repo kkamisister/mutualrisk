@@ -24,11 +24,11 @@ public interface PortfolioService {
 
     ResponseWithData<List<PortfolioReturnDto>> getHistoricalReturns(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId, String portfolioId);
 
-    ResponseWithData<List<SimplePortfolioDto>> getAllUserPortfolio(Integer userId);
+    ResponseWithData<PortfolioTotalSearchDto> getAllUserPortfolio(Integer userId);
 
     ResponseWithData<List<PortfolioAssetInfo>> getAssetInfoList(Integer userId, String portfolioId);
 
-    ResponseWithData<CalculatedPortfolio> initPortfolio(PortfolioInitDto initInfo);
+    ResponseWithData<CalculatedPortfolio> initPortfolio(Integer userId, PortfolioInitDto initInfo);
 
     ResponseWithData<PortfolioStatusSummary> userPortfolioSummary(Integer userId,Integer version);
 

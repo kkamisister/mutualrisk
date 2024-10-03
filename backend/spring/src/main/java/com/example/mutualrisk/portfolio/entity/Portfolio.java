@@ -22,6 +22,7 @@ public class Portfolio {
 	@Id @Field(value = "_id",targetType = FieldType.OBJECT_ID)
 	private String id;
 	private String type;
+	private String name;
 	@Field("userId")
 	private Integer userId;
 	private Integer version;
