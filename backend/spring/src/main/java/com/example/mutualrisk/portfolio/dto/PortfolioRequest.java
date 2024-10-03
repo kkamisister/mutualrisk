@@ -16,6 +16,11 @@ public record PortfolioRequest() {
 		+ "정보를 담는다")
 	public record PortfolioInitDto(
 
+		@Schema(name = "유저가 설정한 포트폴리오 이름입니다",
+			example = "포트폴리오 1번"
+		)
+		String name,
+
 		@Schema(name = "유저가 설정한 투자 금액을 입력합니다",
 			example="1,500,000"
 		)

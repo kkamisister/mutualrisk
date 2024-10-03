@@ -22,6 +22,7 @@ import com.example.mutualrisk.common.fastapi.FastApiService;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.common.util.DateUtil;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
+import com.example.mutualrisk.portfolio.dto.PortfolioRequest;
 import com.example.mutualrisk.portfolio.dto.PortfolioRequest.*;
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 import com.example.mutualrisk.portfolio.entity.*;
@@ -30,6 +31,8 @@ import com.example.mutualrisk.sector.entity.Sector;
 import com.example.mutualrisk.user.entity.User;
 import com.example.mutualrisk.user.repository.UserRepository;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -642,10 +645,14 @@ public class PortfolioServiceImpl implements PortfolioService{
     @Override
     @Transactional
     public ResponseWithData<CalculatedPortfolio> initPortfolio(PortfolioInitDto initInfo) {
+        List<Asset> findAssets = assetRepository.findAllById(initInfo.assetIds())
+            .stream()
+            .sorted(Comparator.comparing(asset -> initInfo.assetIds().indexOf(asset.getId())))
+            .collect(Collectors.toList());
 
         // 1. 유저가 입력한 dto를 받아서, api에 던질 dto 형식으로 고친다
         // PortfolioInitDto -> PortfolioRequestDto로 변환
-        PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(initInfo);
+        PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(findAssets, initInfo);
 
         // 2. PortfolioRequestDto를 받아서, Map<String, Object> 형식으로 고친다
         Map<String, Object> requestBody = getRequestBodyFromPortfolioRequestDto(portfolioRequestDto);
@@ -861,27 +868,25 @@ public class PortfolioServiceImpl implements PortfolioService{
     @Override
     @Transactional
     public ResponseWithData<String> confirmPortfolio(Integer userId, PortfolioInitDto initInfo) {
-        // 기존 포트폴리오 만료 처리 로직
-
-        // 1. 유저의 포트폴리오 리스트 받아오기
-        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
-
-        // 2. 유저의 가장 최신 포트폴리오 구하기
-        Portfolio recentPortfolio = myPortfolioList.get(0);
-
-        // 3. 최신 포트폴리오 만료 처리
-        recentPortfolio.setDeletedAt(LocalDateTime.now());
-
-        // 4. 새로운 포트폴리오 만들기
+        // 1. 포트폴리오 생성 정보 받아오기
         // todo: 얘내 리팩토링해야 함. 포트폴리오 생성 api 에도 똑같은 로직이 있음
-        // 4-1. 유저가 입력한 dto를 받아서, api에 던질 dto 형식으로 고친다
+        // 1-1. 유저가 입력한 dto를 받아서, api에 던질 dto 형식으로 고친다
         // PortfolioInitDto -> PortfolioRequestDto로 변환
-        PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(initInfo);
+        // 유저가 입력한 자산의 expected_return을 가지고 와야한다
+        // 입력받은 순서 그대로 리스트안에 넣기 위해 정렬해야함
+        List<Asset> findAssets = assetRepository.findAllById(initInfo.assetIds())
+            .stream()
+            .sorted(Comparator.comparing(asset -> initInfo.assetIds().indexOf(asset.getId())))
+            .collect(Collectors.toList());
 
-        // 4-2. PortfolioRequestDto를 받아서, Map<String, Object> 형식으로 고친다
+
+        PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(findAssets, initInfo);
+
+        // 1-2. PortfolioRequestDto를 받아서, Map<String, Object> 형식으로 고친다
+        // fastAPI에 던질 형식으로 고침
         Map<String, Object> requestBody = getRequestBodyFromPortfolioRequestDto(portfolioRequestDto);
 
-        // 4-3. requestBody를 fastapi 호출해서, 결과를 받아온다
+        // 1-3. requestBody를 fastapi 호출해서, 결과를 받아온다
         Map<String, Object> responseBody;
         try {
             // FastApiService를 사용하여 요청을 보낸다
@@ -892,16 +897,188 @@ public class PortfolioServiceImpl implements PortfolioService{
             throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
         }
 
-        // 4-4. 반환할 데이터 만들기
-        PortfolioAnalysis original = getPortfolioAnalysis(initInfo, responseBody, portfolioRequestDto);
+        // 2. 유저의 가장 최신 포트폴리오 받아오기
+        // 2-1. 유저의 포트폴리오 리스트 받아오기
+        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
 
-        log.warn("original: {}", original.toString());
+        // 2-2-1. 유저의 과거 포트폴리오가 없을 경우
+        Portfolio portfolio;
+        if (myPortfolioList.isEmpty()) {
+            portfolio = getInitialPortfolioFrom(responseBody, initInfo, userId, 1, findAssets);
+        }
+        // 2-2-2. 유저의 과거 포트폴리오가 있는 경우
+        else {
+            // 2-2-2-1. 유저의 가장 최신 포트폴리오 구하기
+            Portfolio recentPortfolio = myPortfolioList.get(0);
+
+            // 2-2-2-2. 최신 포트폴리오 만료 처리
+            recentPortfolio.setDeletedAt(LocalDateTime.now());
+            recentPortfolio.setIsActive(Boolean.FALSE);
+
+            portfolioRepository.savePortfolio(recentPortfolio);
+
+            portfolio = getNewPortfolioFrom(responseBody, initInfo, userId, recentPortfolio.getVersion()+1, findAssets, recentPortfolio);
+        }
 
 
-        return null;
+        Map<String, Object> recommendBody = getRecommendBody(initInfo);
 
-        // 유저가 설정한 자산 목록과 제약조건을 fastapi 서버로 보내기 위한 요청을 만들어야한다
+        // 3. hadoop fastapi로 요청을 보낸다
+//        Map<String, Object> res;
+//        try {
+//            res = fastApiService.getRecommendData(recommendBody);
+//            // for (Entry<String, Object> entry : res.entrySet()) {
+//            //     System.out.println("entry = " + entry.getKey());
+//            //     System.out.println("entry = " + entry.getValue());
+//            // }
+//
+//        } catch (RuntimeException e) {
+//            // 예외 처리
+//            log.error("Hadoop 서버와의 통신 중 오류가 발생했습니다.", e);
+//            throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
+//        }
 
+        // 4. 저장한다
+        portfolioRepository.savePortfolio(portfolio);
+
+
+        // 5. 프론트에 결과를 반환한다
+        return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 확정 성공!!", "포트폴리오 확정 성공!!");
+
+    }
+
+    // fastapi에서 준 결과를 가지고, 새로운 포트폴리오를 만든다
+    // 기존 유저의 포트폴리오가 있는 경우를 가정하고 만듬
+    private Portfolio getNewPortfolioFrom(Map<String, Object> responseBody, PortfolioInitDto initInfo, Integer userId, int version, List<Asset> findAssets, Portfolio recentPortfolio) {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        List<PortfolioAsset> recentPortfolioAssetList = recentPortfolio.getAsset();
+        Map<Integer, PortfolioAsset> recentPortfolioAssetMap = new HashMap<>();
+        for (PortfolioAsset asset : recentPortfolioAssetList) {
+            recentPortfolioAssetMap.put(asset.getAssetId(), asset);
+        }
+
+        // fictionalPerformance 부분을 매핑하여 PortfolioPerformance 객체로 변환
+        LinkedHashMap<String, Object> fictionalPerformanceMap = (LinkedHashMap<String, Object>) responseBody.get("fictionalPerformance");
+        PortfolioPerformance fictionalPerformance = objectMapper.convertValue(fictionalPerformanceMap, PortfolioPerformance.class);
+
+        Map<String, Double> fictionalWeights = (Map<String, Double>) responseBody.get("weights");
+
+        // frontierPoints 부분을 매핑하여 List<FrontierPoint>로 변환
+        List<Map<String, Object>> frontierPointsMap = (List<Map<String, Object>>) responseBody.get("frontierPoints");
+        List<FrontierPoint> frontierPoints = objectMapper.convertValue(frontierPointsMap, new TypeReference<List<FrontierPoint>>() {});
+
+        Integer totalCash = initInfo.totalCash();
+        List<PortfolioAsset> portfolioAssetList = new ArrayList<>();
+        List<Double> weights = new ArrayList<>();
+
+        for (Entry<String, Double> entry : fictionalWeights.entrySet()) {
+            // 자산 비중을 가지고 온다
+            Asset asset = findAssets.get(Integer.parseInt(entry.getKey()));
+            Double weight = entry.getValue();
+            Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+            // 구매량을 결정해야한다
+            // 구매량은, (전체 현금 보유량 * 자산 비중 / 해당 자산의 가격) 을 반올림 한 값으로 한다
+            int purchaseNum = (int) Math.round(totalCash * weight / asset.getRecentPrice(recentExchangeRate));
+
+            int recentPurchaseNum;
+            double recentPurchasePrice;
+            if (recentPortfolioAssetMap.containsKey(asset.getId())) {
+                PortfolioAsset portfolioAsset = recentPortfolioAssetMap.get(asset.getId());
+                recentPurchaseNum = portfolioAsset.getTotalPurchaseQuantity();
+                recentPurchasePrice = portfolioAsset.getTotalPurchasePrice();
+            }
+            else {
+                recentPurchaseNum = 0;
+                recentPurchasePrice = 0;
+            }
+
+            double purchasePrice = recentPurchasePrice + (purchaseNum - recentPurchaseNum) * asset.getRecentPrice(recentExchangeRate);
+
+            portfolioAssetList.add(PortfolioAsset.builder()
+                .assetId(asset.getId())
+                .code(asset.getCode())
+                .totalPurchaseQuantity(purchaseNum)
+                .totalPurchasePrice(purchasePrice)
+                .build());
+
+            weights.add(weight);
+        }
+
+
+        return Portfolio.builder()
+            .type("portfolio")
+            .name(initInfo.name())
+            .userId(userId)
+            .version(version)
+            .isActive(Boolean.TRUE)
+            .createdAt(LocalDateTime.now())
+            .asset(portfolioAssetList)
+            .lowerBound(initInfo.lowerBounds())
+            .upperBound(initInfo.upperBounds())
+            .weights(weights)
+            .fictionalPerformance(fictionalPerformance)
+            .frontierPoints(frontierPoints)
+            .build();
+    }
+
+    // fastapi에서 준 결과를 가지고, 새로운 포트폴리오를 만든다
+    // 기존 유저의 포트폴리오가 없는 경우를 가정하고 만듬
+    private Portfolio getInitialPortfolioFrom(Map<String, Object> responseBody, PortfolioInitDto initInfo, Integer userId, int version, List<Asset> findAssets) {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // fictionalPerformance 부분을 매핑하여 PortfolioPerformance 객체로 변환
+        LinkedHashMap<String, Object> fictionalPerformanceMap = (LinkedHashMap<String, Object>) responseBody.get("fictionalPerformance");
+        PortfolioPerformance fictionalPerformance = objectMapper.convertValue(fictionalPerformanceMap, PortfolioPerformance.class);
+
+        Map<String, Double> fictionalWeights = (Map<String, Double>) responseBody.get("weights");
+
+        // frontierPoints 부분을 매핑하여 List<FrontierPoint>로 변환
+        List<Map<String, Object>> frontierPointsMap = (List<Map<String, Object>>) responseBody.get("frontierPoints");
+        List<FrontierPoint> frontierPoints = objectMapper.convertValue(frontierPointsMap, new TypeReference<List<FrontierPoint>>() {});
+
+        Integer totalCash = initInfo.totalCash();
+        List<PortfolioAsset> portfolioAssetList = new ArrayList<>();
+        List<Double> weights = new ArrayList<>();
+
+        for (Entry<String, Double> entry : fictionalWeights.entrySet()) {
+
+            // 자산 비중을 가지고 온다
+            Asset asset = findAssets.get(Integer.parseInt(entry.getKey()));
+            Double weight = entry.getValue();
+            Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+            // 구매량을 결정해야한다
+            // 구매량은, (전체 현금 보유량 * 자산 비중 / 해당 자산의 가격) 을 반올림 한 값으로 한다
+            int purchaseNum = (int) Math.round(totalCash * weight / asset.getRecentPrice(recentExchangeRate));
+
+            portfolioAssetList.add(PortfolioAsset.builder()
+                .assetId(asset.getId())
+                .code(asset.getCode())
+                .totalPurchaseQuantity(purchaseNum)
+                .totalPurchasePrice(purchaseNum * asset.getRecentPrice(recentExchangeRate))
+                .build());
+
+            weights.add(weight);
+        }
+
+
+        return Portfolio.builder()
+            .type("portfolio")
+            .name(initInfo.name())
+            .userId(userId)
+            .version(version)
+            .isActive(Boolean.TRUE)
+            .createdAt(LocalDateTime.now())
+            .asset(portfolioAssetList)
+            .lowerBound(initInfo.lowerBounds())
+            .upperBound(initInfo.upperBounds())
+            .weights(weights)
+            .fictionalPerformance(fictionalPerformance)
+            .frontierPoints(frontierPoints)
+            .build();
     }
 
     /**
@@ -920,14 +1097,7 @@ public class PortfolioServiceImpl implements PortfolioService{
     /**
      * 유저가 입력한 포트폴리오 구성 데이터를 바탕으로, fastAPI에 던질 request를 만든다
      */
-    private PortfolioRequestDto getPortfolioRequestDto(PortfolioInitDto initInfo) {
-        // 유저가 입력한 자산의 expected_return을 가지고 와야한다
-        // 입력받은 순서 그대로 리스트안에 넣기 위해 정렬해야함
-        List<Asset> findAssets = assetRepository.findAllById(initInfo.assetIds())
-            .stream()
-            .sorted(Comparator.comparing(asset -> initInfo.assetIds().indexOf(asset.getId())))
-            .collect(Collectors.toList());
-
+    private PortfolioRequestDto getPortfolioRequestDto(List<Asset> findAssets, PortfolioInitDto initInfo) {
         // 각 자산의 예상 수익
         List<Double> expectedReturns = findAssets.stream()
             .map(Asset::getExpectedReturn)
