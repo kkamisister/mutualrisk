@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,9 +57,10 @@ public class AssetController {
     })
     @GetMapping("/history/{assetId}")
     public ResponseEntity<ResponseWithData<AssetRecentHistory>> getAssetHistory(@PathVariable("assetId") @Parameter(description = "자산ID", required = true) Integer assetId,
-        @RequestParam("period") @Positive(message = "기간은 1보다 작아질 수 없습니다.") Integer period){
+        @RequestParam("period") @Positive(message = "기간은 1보다 작아질 수 없습니다.") Integer period,
+        @RequestParam(value = "offset",required = false, defaultValue = "0") Integer offset){
 
-        ResponseWithData<AssetRecentHistory> findAssetHistorys = assetHistoryService.getAssetRecentHistory(assetId,period);
+        ResponseWithData<AssetRecentHistory> findAssetHistorys = assetHistoryService.getAssetRecentHistory(assetId,period,offset);
         
         return ResponseEntity.status(findAssetHistorys.status())
             .body(findAssetHistorys);

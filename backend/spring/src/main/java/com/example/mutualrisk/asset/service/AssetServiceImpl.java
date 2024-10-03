@@ -95,9 +95,11 @@ public class AssetServiceImpl implements AssetService{
             .orElseThrow(()-> new MutualRiskException(ErrorCode.USER_NOT_FOUND));
 
         // 유저의 관심자산 목록을 조건에 맞춰 가지고 온다
-        List<Asset> userInterestAssetList = interestAssetRepository.findUserInterestAssets(user,orderCondition,order).stream()
+        List<Asset> userInterestAssetList = interestAssetRepository.findUserInterestAssets(user).stream()
             .map(InterestAsset::getAsset)
             .toList();
+
+        log.warn("userInterestAssetList : {}",userInterestAssetList);
 
         // 관심자산이 없으면 바로 응답을 반환한다
         if(userInterestAssetList.isEmpty()){
@@ -142,6 +144,7 @@ public class AssetServiceImpl implements AssetService{
                 // Asset에 대응하는 최근 2개의 AssetHistory를 가져온다
                 return getAssetInfo(assetHistoryMap, recentExchangeRate, asset);
             })
+            .sorted(ordering(orderCondition, order))
             .toList();
 
         // log.warn("자산정보 생성 : {}",userInterestAssetInfoList);
@@ -466,6 +469,37 @@ public class AssetServiceImpl implements AssetService{
 
         // 결과 출력
         return cleanText;
+    }
+
+    /**
+     * 동적으로 정렬 기준을 반환하는 메서드
+     * @param orderCondition
+     * @param order
+     * @return
+     */
+    private Comparator<AssetInfo> ordering(OrderCondition orderCondition, Order order) {
+        Comparator<AssetInfo> comparator;
+
+        switch (orderCondition) {
+            case NAME:
+                comparator = Comparator.comparing(AssetInfo::name);
+                break;
+            case PRICE:
+                comparator = Comparator.comparing(AssetInfo::price);
+                break;
+            case RETURN:
+                comparator = Comparator.comparing(AssetInfo::expectedReturn);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown order condition: " + orderCondition);
+        }
+
+        // DESC(내림차순)일 경우, 역순으로 정렬
+        if (order == Order.DESC) {
+            comparator = comparator.reversed();
+        }
+
+        return comparator;
     }
 
 }
