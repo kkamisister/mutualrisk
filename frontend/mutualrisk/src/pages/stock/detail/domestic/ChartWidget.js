@@ -3,9 +3,9 @@ import { createChart, CrosshairMode } from 'lightweight-charts';
 import { fetchAssetHistoryByAssetId } from 'utils/apis/asset';
 
 const ChartWidget = ({ assetId }) => {
-	const chartContainerRef = useRef();
-	const chartRef = useRef();
-	const lineSeriesRef = useRef();
+	const chartContainerRef = useRef(null);
+	const chartRef = useRef(null);
+	const lineSeriesRef = useRef(null);
 	const [chartData, setChartData] = useState([]);
 	const loadingRef = useRef(false);
 	const [period, setPeriod] = useState(100); // 초기 period 설정
@@ -46,132 +46,96 @@ const ChartWidget = ({ assetId }) => {
 
 	useEffect(() => {
 		// 차트 생성
-		chartRef.current = createChart(chartContainerRef.current, {
-			width: chartContainerRef.current.clientWidth,
-			height: chartContainerRef.current.clientHeight,
-			layout: {
-				backgroundColor: '#FFFFFF',
-				textColor: '#333',
-			},
-			grid: {
-				vertLines: {
-					color: '#eee',
+		if (chartContainerRef.current) {
+			chartRef.current = createChart(chartContainerRef.current, {
+				width: chartContainerRef.current.clientWidth,
+				height: chartContainerRef.current.clientHeight,
+				layout: {
+					backgroundColor: '#FFFFFF',
+					textColor: '#333',
 				},
-				horzLines: {
-					color: '#eee',
+				grid: {
+					vertLines: {
+						color: '#eee',
+					},
+					horzLines: {
+						color: '#eee',
+					},
 				},
-			},
-			crosshair: {
-				mode: CrosshairMode.Normal,
-			},
-			rightPriceScale: {
-				borderColor: '#ccc',
-			},
-			timeScale: {
-				borderColor: '#ccc',
-			},
-		});
+				crosshair: {
+					mode: CrosshairMode.Normal,
+				},
+				rightPriceScale: {
+					borderColor: '#ccc',
+				},
+				timeScale: {
+					borderColor: '#ccc',
+				},
+				localization: {
+					dateFormat: 'yyyy-MM-dd', // 날짜 형식을 YYYY-MM-DD로 설정
+				},
+			});
 
-		lineSeriesRef.current = chartRef.current.addLineSeries();
+			lineSeriesRef.current = chartRef.current.addLineSeries();
 
-		// 초기 데이터 로딩
-		loadData(period);
+			// 초기 데이터 로딩
+			loadData(period);
 
-		// 컨테이너 크기 변경에 따른 차트 크기 조정
-		resizeObserver.current = new ResizeObserver(entries => {
-			for (let entry of entries) {
-				const { width, height } = entry.contentRect;
-				chartRef.current.applyOptions({ width, height });
-				setTimeout(() => {
-					chartRef.current.timeScale().fitContent();
-				}, 0);
-			}
-		});
-		resizeObserver.current.observe(chartContainerRef.current);
-
-		const onVisibleTimeRangeChanged = () => {
-			const visibleRange = chartRef.current
-				.timeScale()
-				.getVisibleLogicalRange();
-			if (!visibleRange || loadingRef.current || !hasMoreData) return;
-
-			const barsInfo =
-				lineSeriesRef.current.barsInLogicalRange(visibleRange);
-
-			if (barsInfo !== null && barsInfo.barsBefore !== null) {
-				// 왼쪽 끝에 가까워졌을 때만 추가 데이터 로딩
-				if (barsInfo.barsBefore < 10) {
-					const newPeriod = period + 100;
-					setPeriod(newPeriod);
-					loadData(newPeriod);
+			// 컨테이너 크기 변경에 따른 차트 크기 조정
+			resizeObserver.current = new ResizeObserver(entries => {
+				for (let entry of entries) {
+					const { width, height } = entry.contentRect;
+					if (chartRef.current) {
+						chartRef.current.applyOptions({ width, height });
+						setTimeout(() => {
+							chartRef.current.timeScale().fitContent();
+						}, 0);
+					}
 				}
-			}
-		};
+			});
+			resizeObserver.current.observe(chartContainerRef.current);
 
-		chartRef.current
-			.timeScale()
-			.subscribeVisibleLogicalRangeChange(onVisibleTimeRangeChanged);
+			const onVisibleTimeRangeChanged = () => {
+				if (!chartRef.current || !lineSeriesRef.current) return;
 
-		return () => {
-			if (resizeObserver.current && chartContainerRef.current) {
-				resizeObserver.current.unobserve(chartContainerRef.current);
-			}
+				const visibleRange = chartRef.current
+					.timeScale()
+					.getVisibleLogicalRange();
+				if (!visibleRange || loadingRef.current || !hasMoreData) return;
+
+				const barsInfo =
+					lineSeriesRef.current.barsInLogicalRange(visibleRange);
+
+				if (barsInfo !== null && barsInfo.barsBefore !== null) {
+					// 왼쪽 끝에 가까워졌을 때만 추가 데이터 로딩
+					if (barsInfo.barsBefore < 10) {
+						const newPeriod = period + 100;
+						setPeriod(newPeriod);
+						loadData(newPeriod);
+					}
+				}
+			};
+
 			chartRef.current
 				.timeScale()
-				.unsubscribeVisibleLogicalRangeChange(onVisibleTimeRangeChanged);
-			chartRef.current.remove();
-		};
+				.subscribeVisibleLogicalRangeChange(onVisibleTimeRangeChanged);
+
+			return () => {
+				if (resizeObserver.current && chartContainerRef.current) {
+					resizeObserver.current.unobserve(chartContainerRef.current);
+				}
+				if (chartRef.current) {
+					chartRef.current
+						.timeScale()
+						.unsubscribeVisibleLogicalRangeChange(
+							onVisibleTimeRangeChanged
+						);
+					chartRef.current.remove();
+					chartRef.current = null; // 참조 해제
+				}
+			};
+		}
 	}, [assetId, period]);
-
-	// 커스텀 툴팁 생성
-	useEffect(() => {
-		const toolTip = document.createElement('div');
-		toolTip.className = 'chart-tooltip';
-		toolTip.style.display = 'none';
-		toolTip.style.position = 'absolute';
-		toolTip.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
-		toolTip.style.padding = '5px';
-		toolTip.style.border = '1px solid #ccc';
-		toolTip.style.borderRadius = '5px';
-		toolTip.style.pointerEvents = 'none';
-		toolTip.style.fontSize = '12px';
-		chartContainerRef.current.appendChild(toolTip);
-
-		const handleCrosshairMove = param => {
-			if (
-				!param.point ||
-				!param.time ||
-				param.point.x < 0 ||
-				param.point.x > chartRef.current.width() ||
-				param.point.y < 0 ||
-				param.point.y > chartRef.current.height()
-			) {
-				toolTip.style.display = 'none';
-				return;
-			}
-
-			const price = param.seriesPrices.get(lineSeriesRef.current);
-			toolTip.style.display = 'block';
-			const dateStr = new Date(param.time * 1000).toLocaleDateString();
-			toolTip.innerHTML = `<strong>${dateStr}</strong><br/>Price: ${price}`;
-			const coordinate = lineSeriesRef.current.priceToCoordinate(price);
-			let toolTipY = coordinate - toolTip.clientHeight - 10;
-			if (toolTipY < 0) {
-				toolTipY = coordinate + 10;
-			}
-
-			const toolTipX = param.point.x - toolTip.clientWidth / 2;
-			toolTip.style.left = `${toolTipX}px`;
-			toolTip.style.top = `${toolTipY}px`;
-		};
-
-		chartRef.current.subscribeCrosshairMove(handleCrosshairMove);
-
-		return () => {
-			chartRef.current.unsubscribeCrosshairMove(handleCrosshairMove);
-			chartContainerRef.current.removeChild(toolTip);
-		};
-	}, []);
 
 	return (
 		<div ref={chartContainerRef} style={{ width: '100%', height: '100%' }} />
