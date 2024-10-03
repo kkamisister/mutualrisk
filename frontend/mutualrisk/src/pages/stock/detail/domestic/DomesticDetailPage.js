@@ -83,7 +83,7 @@ const DomesticDetailPage = ({ assetInfo }) => {
 					sx={{
 						width: '100%',
 					}}>
-					<StockInfoTab market={market} code={code} />
+					<StockInfoTab market={market} code={code} assetId={assetId} />
 				</Box>
 			)}
 			{tabMenu === 'news' && <StockNewsTab newsList={newsList} />}

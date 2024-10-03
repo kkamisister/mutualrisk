@@ -3,7 +3,7 @@ import { Stack, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import SubTitle from 'components/title/SubTitle';
 
-const StockProfileWidget = ({ data }) => {
+const StockProfileWidget = ({ market, data }) => {
 	return (
 		<Stack
 			spacing={1}
@@ -13,7 +13,7 @@ const StockProfileWidget = ({ data }) => {
 				borderRadius: '10px',
 				border: `solid 1px ${colors.point.stroke}`,
 			}}>
-			<SubTitle text={`${data.name}(${data.code})`} />
+			<SubTitle text={data.name} caption={`(${market} · ${data.code})`} />
 			<Typography color={colors.text.sub1} fontSize={16}>
 				{data.summary}
 			</Typography>
