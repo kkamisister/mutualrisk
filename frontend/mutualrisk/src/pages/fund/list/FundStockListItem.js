@@ -2,62 +2,138 @@ import { colors } from 'constants/colors';
 import React from 'react';
 import { Stack, Avatar, Box } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
-const stockInfoSample = {
-	title: '엔비디아',
-	market: 'NASDAQ',
-	symbol: 'NVDA',
-	holding: 1000000,
-	imageURL:
-		'https://thumb.tossinvest.com/image/resized/96x0/https%3A%2F%2Fstatic.toss.im%2Fpng-icons%2Fsecurities%2Ficn-sec-fill-NAS00208X-E0.png',
-};
-const FundStockListItem = () => {
+import StockItemCard from 'components/card/StockItemCard';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
+import RemoveIcon from '@mui/icons-material/Remove';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import StarOutlineIcon from '@mui/icons-material/StarOutline';
+import { addBookmark, removeBookmark } from 'utils/apis/interest';
+const FundStockListItem = ({
+	assetId,
+	code,
+	name,
+	region,
+	market,
+	rank,
+	mvRank,
+	valueOfHolding,
+	currentValue,
+	bookmark,
+}) => {
+	const queryClient = useQueryClient();
+
+	// 북마크 추가를 처리하는 Mutation
+	const removeMutation = useMutation({
+		mutationFn: removeBookmark,
+		onSuccess: () => {
+			// 북마크 추가 후에 북마크 리스트를 다시 가져오기
+			queryClient.invalidateQueries('bookmark');
+			// setOpenSuccessSnackbar(true);
+		},
+		// Optimistic 처리를 위해 onMutate 사용
+		onMutate: assetId => {
+			const queryAssetList = queryClient.getQueryData(['stockSearchResult']); // queryClient 내 저장되어 있는 assetList 값
+
+			return () =>
+				queryClient.setQueryData(() =>
+					queryAssetList.filter(asset => {
+						return asset !== assetId;
+					})
+				);
+		},
+	});
+	const addMutation = useMutation({
+		mutationFn: addBookmark,
+		onSuccess: () => {
+			// 북마크 추가 후에 북마크 리스트를 다시 가져오기
+			queryClient.invalidateQueries('fundList');
+			// setOpenSuccessSnackbar(true);
+		},
+		// Optimistic 처리를 위해 onMutate 사용
+		onMutate: assetId => {
+			const queryAssetList = queryClient.getQueryData(['fundList']); // queryClient 내 저장되어 있는 assetList 값
+
+			return () =>
+				queryClient.setQueryData(() => {
+					queryAssetList.topHoldAndBuyAmount.topHoldAsset.filter(asset => {
+						return asset === assetId;
+					});
+
+					queryAssetList.topHoldAndBuyAmount.topBuyAsset.filter(asset => {
+						return asset === assetId;
+					});
+					return queryAssetList.topHoldAndBuyAmount;
+				});
+		},
+	});
+	const handleAddBookmark = assetId => {
+		addMutation.mutate(assetId);
+	};
+	const handleRemoveBookmark = assetId => {
+		removeMutation.mutate(assetId);
+	};
+
 	return (
-		<Stack
-			direction="row"
-			spacing={0.5}
-			sx={{
-				backgroundColor: colors.background.box,
-				padding: '10px',
-				borderRadius: '10px',
-				justifyContent: 'space-between',
-				alignItems: 'center',
-			}}>
-			<Stack
-				direction="row"
-				spacing={0.5}
-				sx={{
-					justifyContent: 'space-between',
-					alignItems: 'center',
-				}}>
-				<Avatar alt="종목 이미지" src={stockInfoSample.imageURL} />
-				&nbsp;
-				<Box sx={{ fontWeight: 'bold' }}>{stockInfoSample.title}</Box>
-				<Box
-					sx={{
-						color: colors.text.sub2,
-					}}>{`${stockInfoSample.symbol}(${stockInfoSample.market})`}</Box>
-			</Stack>
+		<StockItemCard
+			assetId={assetId}
+			code={code}
+			market={market}
+			name={name}
+			image={`/stockImage/${assetId}`}
+			sx={{ width: 'calc(100%-40px)' }}>
 			<Stack
 				direction="row"
 				spacing={1}
 				sx={{
-					justifyContent: 'space-between',
+					justifyContent: 'flex-start',
 					alignItems: 'center',
 				}}>
-				<Box>
-					{stockInfoSample.holding.toLocaleString('ko-KR')}
-					&nbsp;USD
-				</Box>
+				<Box>${valueOfHolding.toLocaleString('ko-KR')}</Box>
 				<Box
 					sx={{
 						fontWeight: 'bold',
-						fontSize: '20px',
+						fontSize: '14px',
 					}}>
-					1위
+					{`${rank}위(${mvRank})`}
 				</Box>
-				<StarIcon sx={{ color: colors.point.yellow }} />
+
+				{mvRank > 0 && <ArrowDropUpIcon sx={{ color: colors.point.red }} />}
+				{mvRank < 0 && (
+					<ArrowDropDownIcon sx={{ color: colors.point.blue }} />
+				)}
+				{mvRank === 0 && <RemoveIcon />}
+				{bookmark ? (
+					<StarIcon
+						fontSize="large"
+						onClick={event => {
+							handleRemoveBookmark(assetId);
+							event.stopPropagation();
+						}}
+						sx={{
+							color: colors.point.yellow,
+							cursor: 'pointer',
+							'&:hover': { color: colors.point.yellowHover },
+							transition: '0.3s',
+						}}
+					/>
+				) : (
+					<StarOutlineIcon
+						onClick={event => {
+							handleAddBookmark(assetId);
+							event.stopPropagation();
+						}}
+						fontSize="large"
+						sx={{
+							color: colors.text.main,
+							cursor: 'pointer',
+							'&:hover': { color: colors.text.sub2 },
+							transition: '0.3s',
+						}}
+					/>
+				)}
 			</Stack>
-		</Stack>
+		</StockItemCard>
 	);
 };
 
