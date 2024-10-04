@@ -7,13 +7,14 @@ import WidgetContainer from 'components/container/WidgetConatiner';
 
 const SelectedList = ({ assets, onItemsConfirm, onStockSelect }) => {
 	return (
-		<Box sx={{ height: '40vh' }}>
+		<Box height="100%">
 			{assets.length > 0 && (
 				<>
 					<WidgetContainer
 						sx={{
 							overflowY: 'auto',
-							height: 'calc(100% - 16px)', // 공백 수정
+							height: 'calc(100% - 40vh - 16px)',
+							boxSizing: 'border-box',
 						}}>
 						<Title text="담은 종목" />
 						{assets.map(asset => (
