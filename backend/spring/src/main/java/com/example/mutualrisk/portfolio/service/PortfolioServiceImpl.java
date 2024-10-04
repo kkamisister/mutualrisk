@@ -708,19 +708,19 @@ public class PortfolioServiceImpl implements PortfolioService{
         Map<String, Object> recommendBody = getRecommendBody(initInfo);
 
         // 5. hadoop fastapi로 요청을 보낸다
-//        Map<String, Object> res;
-//        try {
-//            res = fastApiService.getRecommendData(recommendBody);
-//            // for (Entry<String, Object> entry : res.entrySet()) {
-//            //     System.out.println("entry = " + entry.getKey());
-//            //     System.out.println("entry = " + entry.getValue());
-//            // }
-//
-//        } catch (RuntimeException e) {
-//            // 예외 처리
-//            log.error("Hadoop 서버와의 통신 중 오류가 발생했습니다.", e);
-//            throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
-//        }
+       Map<String, Object> res;
+       try {
+           res = fastApiService.getRecommendData(recommendBody);
+           for (Entry<String, Object> entry : res.entrySet()) {
+               System.out.println("entry = " + entry.getKey());
+               System.out.println("entry = " + entry.getValue());
+           }
+
+       } catch (RuntimeException e) {
+           // 예외 처리
+           log.error("Hadoop 서버와의 통신 중 오류가 발생했습니다.", e);
+           throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
+       }
 
         // 6. 프론트에 던진다
         return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 제작 미리보기 입니다", calculatedPortfolio);
@@ -887,6 +887,8 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         recommendBody.put("existing_assets", initInfo.assetIds());
         recommendBody.put("new_assets", newAssetIds);
+        recommendBody.put("lower_bounds",initInfo.lowerBounds());
+        recommendBody.put("upper_bounds",initInfo.upperBounds());
 
         return recommendBody;
     }
