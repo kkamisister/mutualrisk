@@ -7,16 +7,15 @@ import WidgetContainer from 'components/container/WidgetConatiner';
 
 const SelectedList = ({ assets, onItemsConfirm, onStockSelect }) => {
 	return (
-		<Box>
+		<Box sx={{ height: '40vh' }}>
 			{assets.length > 0 && (
 				<>
-					<Title text="담은 종목" />
 					<WidgetContainer
 						sx={{
-							maxHeight: '40vh',
 							overflowY: 'auto',
-							p: 2,
+							height: 'calc(100% - 16px)', // 공백 수정
 						}}>
+						<Title text="담은 종목" />
 						{assets.map(asset => (
 							<SelectedListItem
 								key={asset.assetId}
