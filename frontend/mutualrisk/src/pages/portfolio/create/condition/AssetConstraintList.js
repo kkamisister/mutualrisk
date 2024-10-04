@@ -55,11 +55,6 @@ const AssetConstraintList = ({ assets }) => {
 	const createInitPortfolio = async () => {
 		try {
 			const assetIds = assets.map(asset => asset.assetId);
-			// console.log('assetIds:', assetIds);
-			// console.log('totalCash:', totalCash);
-			// console.log('lowerBounds:', lowerBounds);
-			// console.log('upperBounds', upperBounds);
-
 			const response = await createPortfolio({
 				totalCash,
 				assetIds,

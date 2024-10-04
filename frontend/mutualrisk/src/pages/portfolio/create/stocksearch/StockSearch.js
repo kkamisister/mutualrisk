@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { Box, Typography, CircularProgress, Stack } from '@mui/material';
 import StockList from 'pages/portfolio/create/stocksearch/StockList';
 import BasicButton from 'components/button/BasicButton';
 import { colors } from 'constants/colors';
@@ -55,50 +55,47 @@ const StockSearch = ({ onConfirm, selectedStocks, onStockSelect, sx }) => {
 		onConfirm([...selectedStocks, ...newStocks]);
 	};
 	return (
-		<Box
-			sc={{
+		<Stack
+			spacing={1}
+			sx={{
+				bgcolor: colors.background.white,
+				borderRadius: '16px',
+				border: `solid 1px ${colors.point.stroke}`,
+				p: 2,
 				...sx,
 			}}>
 			<Title text="종목 검색" />
-			<Box
-				sx={{
-					bgcolor: colors.background.white,
-					borderRadius: '16px',
-					border: `solid 1px ${colors.point.stroke}`,
-					p: 2,
-				}}>
-				<StockSearchBar onKeywordChange={setKeyword} />
+			<StockSearchBar onKeywordChange={setKeyword} />
 
-				{!isLoading && keyword === '' && (
-					<SearchStatusBox Icon={SearchIcon} text="종목을 검색하세요." />
-				)}
+			{!isLoading && keyword === '' && (
+				<SearchStatusBox Icon={SearchIcon} text="종목을 검색하세요." />
+			)}
 
-				{isLoading && (
-					<SearchStatusBox Icon={CircularProgress} text="로딩 중입니다." />
-				)}
+			{isLoading && (
+				<SearchStatusBox Icon={CircularProgress} text="로딩 중입니다." />
+			)}
 
-				{!isLoading && keyword && searchResult.length === 0 && (
-					<SearchStatusBox
-						Icon={CloseIcon}
-						text="검색 결과가 존재하지 않습니다."
+			{!isLoading && keyword && searchResult.length === 0 && (
+				<SearchStatusBox
+					Icon={CloseIcon}
+					text="검색 결과가 존재하지 않습니다."
+				/>
+			)}
+
+			{!isLoading && searchResult.length > 0 && (
+				<>
+					<StockList
+						assets={searchResult}
+						selectedStocks={tempStocks}
+						onStockSelect={handleTempStocks}
 					/>
-				)}
 
-				{!isLoading && searchResult.length > 0 && (
-					<>
-						<StockList
-							assets={searchResult}
-							selectedStocks={tempStocks}
-							onStockSelect={handleTempStocks}
-						/>
-
-						<Box sx={{ display: 'flex', justifyContent: 'center' }}>
-							<BasicButton text="추가" onClick={confirmSelectedStocks} />
-						</Box>
-					</>
-				)}
-			</Box>
-		</Box>
+					<Box sx={{ display: 'flex', justifyContent: 'center' }}>
+						<BasicButton text="추가" onClick={confirmSelectedStocks} />
+					</Box>
+				</>
+			)}
+		</Stack>
 	);
 };
 

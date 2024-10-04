@@ -36,13 +36,13 @@ const FundSummary = ({ title, data }) => {
 				<Stack direction="row" spacing={2}>
 					<DataBox
 						title="보유종목 가치"
-						content="100,000,000,000 USD"
+						content={`$${data.valueOfHoldings.toLocaleString('ko-KR')}`}
 						titleColor={colors.text.main}
 						contentColor={colors.text.sub1}
 					/>
 					<DataBox
-						title="보유종목 개수"
-						content="100,000,000,000 USD"
+						title="보유종목 개수(미국)"
+						content={`${data.asset.length}개`}
 						titleColor={colors.text.main}
 						contentColor={colors.text.sub1}
 					/>
@@ -50,14 +50,22 @@ const FundSummary = ({ title, data }) => {
 				<Stack direction="row" spacing={2}>
 					<DataBox
 						title="QoQ 회전율"
-						content="27.5%"
+						content={
+							data.QoQTurnOver
+								? `${data.QoQTurnOver.toPrecision(2)}%`
+								: ' - '
+						}
 						bgColor={colors.background.green}
 						titleColor={colors.text.main}
 						contentColor={colors.point.green}
 					/>
 					<DataBox
 						title="QoQ 가치 변화"
-						content="27.5%"
+						content={
+							data.QoQChangeOfValue
+								? `${data.QoQChangeOfValue.toPrecision(2)}%`
+								: ' - '
+						}
 						bgColor={colors.background.green}
 						titleColor={colors.text.main}
 						contentColor={colors.point.green}

@@ -21,6 +21,16 @@ const DataBox = ({ title, content, bgColor, titleColor, contentColor }) => {
 		</Stack>
 	);
 };
+
+const formatDate = dateString => {
+	const date = new Date(dateString);
+
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 1을 더해줍니다.
+	const day = String(date.getDate()).padStart(2, '0');
+
+	return `${year}년 ${month}월 ${day}일`;
+};
 const FundInfo = ({ title, data }) => {
 	return (
 		<Stack
@@ -36,14 +46,14 @@ const FundInfo = ({ title, data }) => {
 				<Stack direction="row" spacing={2}>
 					<DataBox
 						title="이름"
-						content="워런 버핏"
+						content={data.ceo}
 						titleColor={colors.text.main}
 						contentColor={colors.text.sub1}
 					/>
 
 					<DataBox
 						title="회사명"
-						content="버크셔 해서웨이(Berkshire Hathaway)"
+						content={data.company}
 						titleColor={colors.text.main}
 						contentColor={colors.text.sub1}
 					/>
@@ -51,15 +61,7 @@ const FundInfo = ({ title, data }) => {
 				<Stack direction="row" spacing={2}>
 					<DataBox
 						title="실적 발표일"
-						content="2024년 01월 23일"
-						bgColor={colors.background.box}
-						titleColor={colors.text.main}
-						contentColor={colors.text.sub1}
-					/>
-
-					<DataBox
-						title="서류 제출 날짜"
-						content="2024년 01월 05일"
+						content={formatDate(data.submissionDate)}
 						bgColor={colors.background.box}
 						titleColor={colors.text.main}
 						contentColor={colors.text.sub1}
