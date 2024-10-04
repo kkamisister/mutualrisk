@@ -37,7 +37,7 @@ const ScrollItem = ({
 				textAlign: 'center',
 				...sx,
 			}}>
-			{imagePath && (
+			{!icon && (
 				<Avatar
 					sx={{
 						width: '64px',
@@ -54,7 +54,7 @@ const ScrollItem = ({
 			</Box>
 			{capital && ( // 자본 정보가 있을 때만 표시
 				<Box sx={{ fontSize: '12px', marginBottom: '10px' }}>
-					${capital.toLocaleString('ko-KR')}
+					${capital.toLocaleString('ko-KR')}M
 				</Box>
 			)}
 		</Stack>

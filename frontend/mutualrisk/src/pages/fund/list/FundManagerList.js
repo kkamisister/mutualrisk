@@ -5,7 +5,12 @@ import HorizontalScrollContainer from 'components/scroll/HorizontalScrollContain
 import FundViewAllButton from './FundViewAllButton';
 
 import ScrollSkeletonCard from 'components/card/ScrollSkeletonCard';
-
+const truncateString = (str, n) => {
+	if (str.length > n) {
+		return str.slice(0, n - 3) + '...';
+	}
+	return str;
+};
 const FundManagerList = ({ fundList }) => {
 	return (
 		<Box>
@@ -18,8 +23,8 @@ const FundManagerList = ({ fundList }) => {
 					<FundManagerListItem
 						key={info.id}
 						id={info.id}
-						company={info.company}
-						valueOfHoldings={info.valueOfHoldings}
+						company={truncateString(info.company, 28)}
+						valueOfHoldings={Math.round(info.valueOfHoldings / 1000000)}
 						image={info.image}
 						clicked={info.clicked}
 					/>

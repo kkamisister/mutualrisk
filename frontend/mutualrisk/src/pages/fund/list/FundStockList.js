@@ -15,16 +15,23 @@ const FundStockList = ({ title, data }) => {
 				borderRadius: '20px',
 				border: `solid 1px ${colors.point.stroke}`,
 			}}>
-			<Title text={title} caption="(최근 업데이트: 2024/12/31)"></Title>
+			<Title text={title} caption="(단위: 1000만 달러)"></Title>
 			<FundStockBarChart data={data} />
-			<FundStockListItem />
-			<FundStockListItem />
-			<FundStockListItem />
-			<FundStockListItem />
-			<FundStockListItem />
-			<FundStockListItem />
-			<FundStockListItem />
-			<FundStockListItem />
+			{data.map((asset, idx) => (
+				<FundStockListItem
+					key={asset.assetId}
+					assetId={asset.assetId}
+					code={asset.code}
+					name={asset.name}
+					region={asset.region}
+					market={asset.market}
+					mvRank={asset.rank}
+					rank={idx + 1}
+					valueOfHolding={asset.valueOfHolding}
+					currentValue={asset.currentValue}
+					bookmark={asset.interest}
+				/>
+			))}
 		</Stack>
 	);
 };
