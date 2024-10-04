@@ -16,7 +16,7 @@ const SearchStatusBox = ({ Icon, text }) => {
 				display: 'flex',
 				flexDirection: 'column',
 				color: colors.text.sub1,
-				p: 4,
+				p: 2,
 				justifyContent: 'center',
 				alignItems: 'center',
 				textAlign: 'center',
