@@ -1,16 +1,17 @@
 import React from 'react';
 import ScrollItem from 'components/scroll/ScrollItem';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-const FundManagerListItem = ({ id, name, capital, imagePath, clicked }) => {
+const FundManagerListItem = ({ id, company, valueOfHoldings, image }) => {
 	const navigate = useNavigate();
-
+	const params = useParams();
+	const checkClicked = id === params?.fundId;
 	return (
 		<ScrollItem
-			name={name}
-			imagePath={imagePath}
-			capital={capital}
-			clicked={clicked}
+			name={company}
+			capital={valueOfHoldings}
+			imagePath={image}
+			clicked={checkClicked}
 			onClick={() => navigate(`/fund/detail/${id}`)}
 		/>
 	);
