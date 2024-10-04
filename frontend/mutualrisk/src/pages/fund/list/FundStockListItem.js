@@ -73,14 +73,14 @@ const FundStockListItem = ({
 	const handleRemoveBookmark = assetId => {
 		removeMutation.mutate(assetId);
 	};
-
+	console.log(`https://j11a607.p.ssafy.io/stockImage/${assetId}.png`);
 	return (
 		<StockItemCard
 			assetId={assetId}
 			code={code}
 			market={market}
 			name={name}
-			image={`/stockImage/${assetId}`}
+			image={`https://j11a607.p.ssafy.io/stockImage/${code}.png`}
 			sx={{ width: 'calc(100%-40px)' }}>
 			<Stack
 				direction="row"
