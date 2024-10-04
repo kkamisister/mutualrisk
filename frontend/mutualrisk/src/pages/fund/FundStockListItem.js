@@ -29,12 +29,12 @@ const FundStockListItem = ({
 		mutationFn: removeBookmark,
 		onSuccess: () => {
 			// 북마크 추가 후에 북마크 리스트를 다시 가져오기
-			queryClient.invalidateQueries('fundList');
+			queryClient.invalidateQueries('bookmark');
 			// setOpenSuccessSnackbar(true);
 		},
 		// Optimistic 처리를 위해 onMutate 사용
 		onMutate: assetId => {
-			const queryAssetList = queryClient.getQueryData(['fundList']); // queryClient 내 저장되어 있는 assetList 값
+			const queryAssetList = queryClient.getQueryData(['stockSearchResult']); // queryClient 내 저장되어 있는 assetList 값
 
 			return () =>
 				queryClient.setQueryData(() =>
@@ -48,7 +48,7 @@ const FundStockListItem = ({
 		mutationFn: addBookmark,
 		onSuccess: () => {
 			// 북마크 추가 후에 북마크 리스트를 다시 가져오기
-			queryClient.invalidateQueries('fundList');
+			queryClient.invalidateQueries('fundList', 'fundDetail');
 			// setOpenSuccessSnackbar(true);
 		},
 		// Optimistic 처리를 위해 onMutate 사용
