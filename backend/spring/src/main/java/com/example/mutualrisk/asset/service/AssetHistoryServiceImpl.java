@@ -37,7 +37,7 @@ public class AssetHistoryServiceImpl implements AssetHistoryService {
     // (해당 날짜가 비영업일일 수도 있기 때문)
     @Override
     public Double getAssetPrice(Asset asset, LocalDateTime targetDate) {
-        LocalDateTime pastDate = targetDate.minusDays(5);
+        LocalDateTime pastDate = targetDate.minusDays(10);
 
         List<AssetHistory> assetHistories = assetHistoryRepository.findRecentHistoriesBetweenDates(asset, pastDate, targetDate);
 

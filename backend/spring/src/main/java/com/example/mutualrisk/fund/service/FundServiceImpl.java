@@ -285,7 +285,7 @@ public class FundServiceImpl implements FundService {
 		// 입력받은 펀드의 현재시점으로부터 period 전의 펀드 데이터를 구한다
 		List<Fund> fundsByPeriod = fundRepository.getFundsByPeriod(company, period);
 
-		List<FundReturnDto> fundReturnDtoList = IntStream.range(0, fundsByPeriod.size() - 1)
+		List<FundReturnDto> fundReturnDtoList = IntStream.range(0, fundsByPeriod.size())
 			.mapToObj(i -> {
 				var fund = fundsByPeriod.get(i);
 				Double fundReturn = getFundReturn(fund, 3);
@@ -312,7 +312,7 @@ public class FundServiceImpl implements FundService {
 
 	// 펀드의 수익률 계산
 	private Double getFundReturn(Fund fund, int dMonth) {
-		LocalDateTime targetDate = fund.getSubmissionDate().withHour(0);
+		LocalDateTime targetDate = fund.getSubmissionDate().withHour(0).minusMonths(dMonth);
 
 		List<Long> valueOfHoldingList = new ArrayList<>();
 		List<FundAsset> topHoldAsset = fund.getTopHoldAsset();
