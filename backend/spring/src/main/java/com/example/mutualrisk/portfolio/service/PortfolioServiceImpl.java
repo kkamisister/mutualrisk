@@ -1375,6 +1375,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         requestBody.put("prices_dataFrame", portfolioRequestDto.pricesDataFrame());
         requestBody.put("lower_bounds", portfolioRequestDto.lowerBounds());
         requestBody.put("upper_bounds", portfolioRequestDto.upperBounds());
+        requestBody.put("exact_proportion", portfolioRequestDto.exactProportion());
         return requestBody;
     }
 
@@ -1428,6 +1429,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             .pricesDataFrame(pricesDataFrame)
             .lowerBounds(initInfo.lowerBounds())
             .upperBounds(initInfo.upperBounds())
+            .exactProportion(initInfo.exactProportion())
             .findAssets(findAssets)
             .build();
 

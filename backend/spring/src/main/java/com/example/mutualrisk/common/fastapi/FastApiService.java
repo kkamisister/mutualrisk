@@ -18,7 +18,6 @@ public class FastApiService {
 
 	public Map<String, Object> sendPortfolioData(Map<String, Object> requestBody) {
 		String url = "https://j11a607.p.ssafy.io/fastapi/v1/portfolio";
-
 		try {
 
 			ResponseEntity<Map> response = restTemplate.postForEntity(url, requestBody, Map.class);

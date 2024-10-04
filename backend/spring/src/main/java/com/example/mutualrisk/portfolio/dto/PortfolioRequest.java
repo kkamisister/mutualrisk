@@ -44,13 +44,15 @@ public record PortfolioRequest() {
 			implementation = Double.class
 		))
 		@JsonProperty("upper_bounds")
-		List<Double> upperBounds
-		// @ArraySchema(schema = @Schema(
-		// 	description = "유저가 설정한 자산별 확정비율",
-		// 	example = "null,0.2,null,0.3,null",
-		// 	implementation = Double.class
-		// ))
-		// List<Double> exactProportion
+		List<Double> upperBounds,
+
+		@JsonProperty("exact_proportion")
+		@ArraySchema(schema = @Schema(
+		description = "유저가 설정한 자산별 확정비율",
+		example = "null,0.2,null,0.3,null",
+		implementation = Double.class
+		))
+		List<Double> exactProportion
 	){
 	}
 
@@ -61,7 +63,8 @@ public record PortfolioRequest() {
 		List<List<Double>> pricesDataFrame,
 		List<Double> lowerBounds,
 		List<Double> upperBounds,
-		List<Asset> findAssets
+		List<Asset> findAssets,
+		List<Double> exactProportion
 		) {
 
 	}
