@@ -42,6 +42,7 @@ public record FundResponse() {
 		public static FundInfo of(Fund fund,List<FundAssetInfo> asset){
 			return FundInfo.builder()
 				.assetNum(asset.size())
+				.ceo(fund.getCeo())
 				.type(fund.getType())
 				.company(fund.getCompany())
 				.submissionDate(fund.getSubmissionDate())
