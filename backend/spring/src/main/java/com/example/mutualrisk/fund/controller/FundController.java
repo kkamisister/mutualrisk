@@ -72,7 +72,6 @@ public class FundController {
 	public ResponseEntity<ResponseWithData<List<FundReturnDto>>> getHistory(@RequestParam("period") Integer period,
                                                                             @RequestParam("company") @Parameter(description = "회사명", required = true) String company,
                                                                             HttpServletRequest request){
-
 		Integer userId = (Integer)request.getAttribute("userId");
 		// log.info("user Id : {}",userId);
 
