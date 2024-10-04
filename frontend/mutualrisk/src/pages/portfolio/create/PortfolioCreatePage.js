@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Button, Stack } from '@mui/material';
+import { Box, Stack, Grid } from '@mui/material';
 import BoxTitle from 'components/title/BoxTitle';
 import StockSearch from 'pages/portfolio/create/stocksearch/StockSearch';
 import ConditionSetting from 'pages/portfolio/create/condition/ConditionSetting';
-import { colors } from 'constants/colors';
 import SelectedList from 'pages/portfolio/create/selectedstock/SelectedList';
 import AssetInputModal from 'pages/portfolio/create/AssetInputModal';
 import SuccessSnackbar from 'components/snackbar/SuccessSnackbar';
 import { fetchPortfolioList } from 'utils/apis/analyze';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const PortfolioCreatePage = () => {
 	const [showSelectedItems, setShowSelectedItems] = useState(false);
@@ -67,42 +66,48 @@ const PortfolioCreatePage = () => {
 	};
 
 	return (
-		<Stack spacing={1}>
+		<Stack spacing={1} sx={{ height: '100vh' }}>
 			<BoxTitle title="포트폴리오 제작" />
-			<Box display="flex" width="100%" gap={2}>
-				<Box width="40%">
-					<StockSearch
-						onConfirm={handleSearchConfirm}
-						selectedStocks={selectedStocks}
-						onStockSelect={handleStockSelect}
-						sx={{
-							height: '40vh',
-							overflowY: 'auto',
-							boxSizing: 'border-box',
-							mb: 2,
-						}}
-					/>
-					{showSelectedItems && (
-						<SelectedList
-							assets={selectedStocks}
-							onItemsConfirm={handleItemsConfirm}
-							onStockSelect={handleStockSelect}
-						/>
-					)}
-				</Box>
-				<Box width="60%">
-					{showConditionSetting && (
-						<ConditionSetting assets={selectedStocks} />
-					)}
-				</Box>
-			</Box>
+			<Grid
+				container
+				justifyContent={'space-between'}
+				sx={{ height: '90vh', overflowY: 'hidden' }}>
+				<Grid item xs={4.8} sx={{ height: '100%' }}>
+					<Stack spacing={2} height="100%" alignContent={'space-between'}>
+						<Box sx={{ flex: 1 }}>
+							<StockSearch
+								onConfirm={handleSearchConfirm}
+								selectedStocks={selectedStocks}
+								onStockSelect={handleStockSelect}
+							/>
+						</Box>
+						<Box sx={{ flex: 1 }}>
+							{showSelectedItems && (
+								<SelectedList
+									assets={selectedStocks}
+									onItemsConfirm={handleItemsConfirm}
+									onStockSelect={handleStockSelect}
+									sx={{ height: '100%' }}
+								/>
+							)}
+						</Box>
+					</Stack>
+				</Grid>
+
+				<Grid item xs={7} sx={{ height: '100%' }}>
+					<Box sx={{ height: '100%' }}>
+						{showConditionSetting && (
+							<ConditionSetting assets={selectedStocks} />
+						)}
+					</Box>
+				</Grid>
+			</Grid>
 			{!hasPortfolio && (
 				<AssetInputModal
 					open={isModalOpen}
 					handleClose={handleModalClose}
 				/>
 			)}
-
 			<SuccessSnackbar
 				message="담은 종목에 추가하였습니다"
 				openSnackbar={openAddSnackbar}

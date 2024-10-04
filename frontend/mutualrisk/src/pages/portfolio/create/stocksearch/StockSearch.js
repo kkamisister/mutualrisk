@@ -13,8 +13,6 @@ const SearchStatusBox = ({ Icon, text }) => {
 	return (
 		<Box
 			sx={{
-				display: 'flex',
-				flexDirection: 'column',
 				color: colors.text.sub1,
 				p: 2,
 				justifyContent: 'center',

@@ -5,15 +5,15 @@ import BasicButton from 'components/button/BasicButton';
 import SelectedListItem from 'pages/portfolio/create/selectedstock/SelectedListItem';
 import WidgetContainer from 'components/container/WidgetConatiner';
 
-const SelectedList = ({ assets, onItemsConfirm, onStockSelect }) => {
+const SelectedList = ({ assets, onItemsConfirm, onStockSelect, sx }) => {
 	return (
-		<Box height="100%">
+		<Box sx={{ ...sx }}>
 			{assets.length > 0 && (
 				<>
 					<WidgetContainer
 						sx={{
+							height: '100%',
 							overflowY: 'auto',
-							height: 'calc(100% - 40vh - 16px)',
 							boxSizing: 'border-box',
 						}}>
 						<Title text="담은 종목" />
