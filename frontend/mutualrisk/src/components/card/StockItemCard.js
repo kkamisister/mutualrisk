@@ -12,7 +12,15 @@ const stockInfoSample = {
 	imageURL:
 		'https://thumb.tossinvest.com/image/resized/96x0/https%3A%2F%2Fstatic.toss.im%2Fpng-icons%2Fsecurities%2Ficn-sec-fill-NAS00208X-E0.png',
 };
-const StockItemCard = ({ assetId, code, name, market, image, children }) => {
+const StockItemCard = ({
+	assetId,
+	code,
+	name,
+	market,
+	image,
+	children,
+	sx,
+}) => {
 	const navigate = useNavigate();
 	return (
 		<Stack
@@ -30,6 +38,7 @@ const StockItemCard = ({ assetId, code, name, market, image, children }) => {
 				},
 				transition: 'all 0.3s ease', // transition 적용
 				cursor: 'pointer',
+				...sx,
 			}}
 			onClick={() => {
 				// assetId를 주면 navigate 활성화
