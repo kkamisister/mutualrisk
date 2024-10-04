@@ -99,8 +99,6 @@ public class AssetServiceImpl implements AssetService{
             .map(InterestAsset::getAsset)
             .toList();
 
-        log.warn("userInterestAssetList : {}",userInterestAssetList);
-
         // 관심자산이 없으면 바로 응답을 반환한다
         if(userInterestAssetList.isEmpty()){
             AssetResultDto result = AssetResultDto.builder()
@@ -108,46 +106,21 @@ public class AssetServiceImpl implements AssetService{
             return new ResponseWithData<>(HttpStatus.OK.value(),"유저 관심종목 조회 성공",result);
         }
 
-
-        // 관심자산들 중, 첫번째 자산의 최근종가일 2개를 가지고온다
-        // Todo : KR,US의 리스트를 따로 구분하여, 각각의 최근종가일을 구분하여 가져오기
-
-        List<LocalDateTime> twoValidDate = assetHistoryService.getValidDate(userInterestAssetList.get(0),
-            LocalDateTime.now(), 2);
-
         // 환율을 가져오는 메서드
         Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
+        // 유저의 관심자산을 순회하면서, 각 자산의 최신 가격을 가지고온다
+        List<AssetInfo> userInterestAssetInfoList = new ArrayList<>();
+        Map<Asset,List<AssetHistory>> assetHistoryMap = new HashMap<>();
+        for(Asset asset : userInterestAssetList){
 
-        // 기존에는 오늘과 가장 근접한 영업일을 찾기위해 각 종목별로 (5일전~오늘) 사이에서
-        // findRecentTwoAssetHistory를 통해 종목의 기록을 가져왔다면,
-        // 지금은 일괄적으로 첫번째 자산의 영업일에 나머지 자산의 기록 또한 존재할 것이라 가정하고
-        // 한번의 쿼리로 가져오게 된다
-        // 단, 이것은 엄밀히 따져서 정확하지는 않다.. Todo를 해도 관심자산들 중에 해당 영업일에 종가가 없는
-        // 자산이 존재할 수도 있다.
+            // 1. 자산의 최근 종가를 가지고온다
+            List<AssetHistory> recentTwoAssetHistory = assetHistoryRepository.findRecentTwoAssetHistory(asset);
+            AssetInfo assetInfo = AssetInfo.of(asset, recentTwoAssetHistory, recentExchangeRate);
+            userInterestAssetInfoList.add(assetInfo);
 
-        // 관심자산의 최근 종가를 가지고 온다
-        List<AssetHistory> recentHistory = assetHistoryRepository.findRecentHistoryOfAssetsBetweenDates(
-            userInterestAssetList, twoValidDate.get(1), twoValidDate.get(0));
-
-        // log.warn("자산의 최근 종가  : {}",recentHistory);
-
-        // 1. AssetHistory를 Asset별로 그룹핑한다
-        Map<Asset, List<AssetHistory>> assetHistoryMap = recentHistory.stream()
-            .collect(Collectors.groupingBy(AssetHistory::getAsset));
-
-        // log.warn("그룹핑 완료 : {}",assetHistoryMap);
-
-        // 2. Asset을 각각의 AssetHistory와 매핑하여 AssetInfo 생성
-        List<AssetInfo> userInterestAssetInfoList = userInterestAssetList.stream()
-            .map(asset -> {
-                // Asset에 대응하는 최근 2개의 AssetHistory를 가져온다
-                return getAssetInfo(assetHistoryMap, recentExchangeRate, asset);
-            })
-            .sorted(ordering(orderCondition, order))
-            .toList();
-
-        // log.warn("자산정보 생성 : {}",userInterestAssetInfoList);
+            assetHistoryMap.put(asset,recentTwoAssetHistory);
+        }
 
         // 관심자산과 연관된 뉴스를 가지고온다
         List<NewsInfo> relatedNewsList = getRelatedNewsList(userInterestAssetList,assetHistoryMap,recentExchangeRate);
@@ -365,8 +338,6 @@ public class AssetServiceImpl implements AssetService{
      * @return
      */
     private AssetInfo getAssetInfo(Asset asset,Double recentExchangeRate) {
-
-
 
         LocalDateTime targetDate = LocalDateTime.now();
         List<LocalDateTime> validDate = assetHistoryService.getValidDate(asset, targetDate, 2);
