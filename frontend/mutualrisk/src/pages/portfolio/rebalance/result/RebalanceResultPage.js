@@ -1,12 +1,15 @@
 import React from 'react';
-import { Stack } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Stack, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import TitleDivider from 'components/title/TitleDivider';
 import RebalanceDetail from 'pages/portfolio/rebalance/result/detail/RebalanceDetail';
 import StockChangeList from 'pages/portfolio/rebalance/result/stockchange/StockChangeList';
 import BackTestChart from 'pages/portfolio/rebalance/result/backtest/BackTestChart';
+import CustomButton from 'components/button/BasicButton';
 
 const RebalanceResultPage = () => {
+	const navigate = useNavigate();
 	const stockData = [
 		{
 			name: '엔비디아',
@@ -47,12 +50,49 @@ const RebalanceResultPage = () => {
 				<RebalanceDetail />
 			</Stack>
 			<Stack spacing={1}>
-				<TitleDivider text="종목별 보유량 변화" />
 				<StockChangeList stocks={stockData} />
 			</Stack>
 			<Stack spacing={1}>
-				<TitleDivider text="백테스팅" />
 				<BackTestChart />
+			</Stack>
+			<Stack
+				direction={'row'}
+				sx={{
+					height: '50px',
+					backgroundColor: colors.background.box,
+					padding: '20px 60px',
+					borderRadius: '20px',
+					border: `solid 1px ${colors.point.stroke}`,
+					display: 'flex',
+					justifyContent: 'space-between',
+					alignItems: 'center',
+				}}>
+				<Typography
+					sx={{
+						fontSize: '18px',
+						fontWeight: 'bold',
+						color: colors.text.sub1,
+					}}>
+					리밸런싱을 적용할까요?
+				</Typography>
+				<CustomButton
+					sx={{
+						width: '150px',
+						height: '45px',
+						backgroundColor: colors.main.primary400,
+						border: 'none',
+						color: '#FFFFFF',
+						padding: '10px 20px',
+						fontSize: '16px',
+						fontWeight: 'bold',
+						borderRadius: '5px',
+						textAlign: 'left', // 버튼 텍스트 좌측 정렬
+						'&:hover': {
+							backgroundColor: colors.main.primary200,
+						},
+					}}
+					onClick={() => navigate('/rebalance/result')}
+					text={'리밸런싱 적용'}></CustomButton>
 			</Stack>
 		</Stack>
 	);

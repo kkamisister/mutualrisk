@@ -29,7 +29,7 @@ const InvestorTradingTable = ({ records }) => {
 			headerAlign: 'right',
 			align: 'right',
 			width: 140,
-			valueFormatter: value => value.toLocaleString(),
+			valueFormatter: value => `${value.toLocaleString()}%`,
 		},
 		{
 			field: '기관 순매수',

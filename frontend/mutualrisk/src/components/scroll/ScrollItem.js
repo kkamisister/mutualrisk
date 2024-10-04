@@ -2,7 +2,15 @@ import React from 'react';
 import { Stack, Box, Avatar } from '@mui/material';
 import { colors } from 'constants/colors';
 
-const ScrollItem = ({ name, imagePath, capital, clicked, onClick, sx }) => {
+const ScrollItem = ({
+	name,
+	imagePath,
+	icon,
+	capital,
+	clicked,
+	onClick,
+	sx,
+}) => {
 	return (
 		<Stack
 			onClick={onClick}
@@ -29,15 +37,18 @@ const ScrollItem = ({ name, imagePath, capital, clicked, onClick, sx }) => {
 				textAlign: 'center',
 				...sx,
 			}}>
-			<Avatar
-				sx={{
-					width: '64px',
-					height: '64px',
-					marginTop: '10px',
-				}}
-				alt={name}
-				src={imagePath}
-			/>
+			{imagePath && (
+				<Avatar
+					sx={{
+						width: '64px',
+						height: '64px',
+						marginTop: '10px',
+					}}
+					alt={name}
+					src={imagePath}
+				/>
+			)}
+			{icon}
 			<Box sx={{ fontSize: '14px', marginBottom: capital ? '0px' : '30px' }}>
 				{name}
 			</Box>

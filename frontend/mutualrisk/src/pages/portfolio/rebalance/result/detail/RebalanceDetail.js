@@ -3,6 +3,7 @@ import RebalanceBefore from 'pages/portfolio/rebalance/result/detail/RebalanceBe
 import RebalanceAfter from 'pages/portfolio/rebalance/result/detail/RebalanceAfter';
 import { DoubleArrowRounded } from '@mui/icons-material';
 import { Box, Stack } from '@mui/material';
+import { colors } from 'constants/colors';
 
 const RebalanceDetail = () => {
 	return (
@@ -24,9 +25,9 @@ const RebalanceDetail = () => {
 					alignItems: 'center',
 					flexShrink: 0,
 				}}>
-				<DoubleArrowRounded sx={{ color: '#73748B' }} />
-				<DoubleArrowRounded sx={{ color: '#73748B' }} />
-				<DoubleArrowRounded sx={{ color: '#73748B' }} />
+				<DoubleArrowRounded sx={{ color: colors.main.primary200 }} />
+				<DoubleArrowRounded sx={{ color: colors.main.primary200 }} />
+				<DoubleArrowRounded sx={{ color: colors.main.primary200 }} />
 			</Stack>
 
 			<RebalanceAfter sx={{ flex: 1 }} />
