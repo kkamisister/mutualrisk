@@ -6,7 +6,6 @@ const FundManagerListItem = ({ id, company, valueOfHoldings, image }) => {
 	const navigate = useNavigate();
 	const params = useParams();
 	const checkClicked = id === params?.fundId;
-	console.log({ id, company, valueOfHoldings, image });
 	return (
 		<Tooltip title={company}>
 			<ScrollItem
