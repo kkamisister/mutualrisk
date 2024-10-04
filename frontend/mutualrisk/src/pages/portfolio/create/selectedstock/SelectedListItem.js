@@ -10,6 +10,7 @@ const SelectedListItem = ({ asset, clicked, onClick }) => {
 
 	return (
 		<StockItemCard
+			sx={{ width: 'calc(100% - 20px)' }}
 			code={asset.code}
 			name={asset.name}
 			market={asset.market}

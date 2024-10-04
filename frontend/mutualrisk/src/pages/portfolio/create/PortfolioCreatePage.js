@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, Stack } from '@mui/material';
 import BoxTitle from 'components/title/BoxTitle';
 import StockSearch from 'pages/portfolio/create/stocksearch/StockSearch';
 import ConditionSetting from 'pages/portfolio/create/condition/ConditionSetting';
@@ -18,8 +18,9 @@ const PortfolioCreatePage = () => {
 	const [openAddSnackbar, setOpenAddSnackbar] = useState(false);
 	const [openRemoveSnackbar, setOpenRemoveSnackbar] = useState(false);
 	const [hasPortfolio, setHasPortfolio] = useState(true);
-	const { data: userPortfolio, isLoading } = useQuery({
-		queryKey: ['userPortfolio'],
+
+	const { data, isLoading, isError } = useQuery({
+		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
 		onSuccess: data => {
 			setHasPortfolio(data.hasPortfolio);
@@ -66,22 +67,19 @@ const PortfolioCreatePage = () => {
 	};
 
 	return (
-		<Box
-			sx={{
-				maxHeight: '100vh',
-				overflowY: 'auto',
-			}}>
+		<Stack spacing={1}>
 			<BoxTitle title="포트폴리오 제작" />
-
-			<Box display="flex" width="100%">
-				<Box flex="4 1 0%" sx={{ minWidth: 0 }}>
+			<Box display="flex" width="100%" gap={2}>
+				<Box width="40%">
 					<StockSearch
 						onConfirm={handleSearchConfirm}
 						selectedStocks={selectedStocks}
 						onStockSelect={handleStockSelect}
 						sx={{
-							maxHeight: '40vh',
+							height: '40vh',
 							overflowY: 'auto',
+							boxSizing: 'border-box',
+							mb: 2,
 						}}
 					/>
 					{showSelectedItems && (
@@ -92,7 +90,7 @@ const PortfolioCreatePage = () => {
 						/>
 					)}
 				</Box>
-				<Box flex="6 1 0%">
+				<Box width="60%">
 					{showConditionSetting && (
 						<ConditionSetting assets={selectedStocks} />
 					)}
@@ -115,7 +113,7 @@ const PortfolioCreatePage = () => {
 				openSnackbar={openRemoveSnackbar}
 				handleSnackbarClose={handleRemoveSnackbarClose}
 			/>
-		</Box>
+		</Stack>
 	);
 };
 
