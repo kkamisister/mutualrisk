@@ -71,7 +71,6 @@ class AssetServiceImplTest {
     @Test
     @DisplayName("유저가 존재하지 않는 경우 예외를 반환한다")
     void userInterestAssetUserException(){
-
         //given
         when(userRepository.findById(anyInt()))
             .thenReturn(Optional.empty());

@@ -59,8 +59,13 @@ public class AssetHistoryServiceImpl implements AssetHistoryService {
     public List<LocalDateTime> getValidDate(Asset asset, LocalDateTime targetDate, int num) {
         LocalDateTime startDate = targetDate.minusDays(10 * num);
 
+        log.warn("startDate : {}",startDate);
+        log.warn("endDate : {}",targetDate);
+
         List<AssetHistory> recentHistoriesBetweenDates = assetHistoryRepository.findRecentHistoriesBetweenDates(asset,
             startDate, targetDate);
+
+        log.warn("recentHistoriesBetweenDates : {}",recentHistoriesBetweenDates);
 
         if (recentHistoriesBetweenDates.size() < num) throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
 
