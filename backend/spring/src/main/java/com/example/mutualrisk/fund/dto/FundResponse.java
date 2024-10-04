@@ -103,6 +103,7 @@ public record FundResponse() {
 		String code,
 		String name,
 		String region,
+		String market,
 		Integer rank,
 		Boolean interest,
 		Long valueOfHolding,
@@ -115,6 +116,7 @@ public record FundResponse() {
 				.code(item.getCode())
 				.name(item.getName())
 				.region(item.getRegion())
+				.market(asset.getMarket().toString())
 				.rank(rank)
 				.interest(interest)
 				.currentValue(asset.getRecentPrice())
