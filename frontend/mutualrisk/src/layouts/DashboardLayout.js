@@ -4,6 +4,7 @@ import Stack from '@mui/material/Stack';
 import Sidebar from 'components/sidebar/Sidebar';
 import { colors } from 'constants/colors';
 import { Outlet } from 'react-router-dom';
+
 const DashboardLayout = () => {
 	const [isSidebarHovered, setIsSidebarHovered] = useState(false);
 
@@ -23,7 +24,7 @@ const DashboardLayout = () => {
 					transition: 'width 0.3s ease, left 0.3s ease',
 					position: `absolute`,
 					left: isSidebarHovered ? 200 : 73,
-					minHeight: '100%',
+					minHeight: 'calc(100% - 40px)',
 					maxHeight: 'fit-content',
 					width: `calc(100% - ${isSidebarHovered ? 200 : 73}px - 40px)`, // Sidebar의 hover 상태에 따라 Box의 너비 변경
 					backgroundColor: colors.background.primary,
