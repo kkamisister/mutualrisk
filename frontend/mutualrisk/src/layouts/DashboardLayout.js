@@ -4,7 +4,7 @@ import Stack from '@mui/material/Stack';
 import Sidebar from 'components/sidebar/Sidebar';
 import { colors } from 'constants/colors';
 import { Outlet } from 'react-router-dom';
-import HeaderLayout from './HeaderLayout';
+import HeaderLayout from './header/HeaderLayout';
 
 const DashboardLayout = () => {
 	const [isSidebarHovered, setIsSidebarHovered] = useState(false);
