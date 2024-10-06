@@ -1,5 +1,6 @@
 import React from 'react';
 import ScrollItem from 'components/scroll/ScrollItem';
+import { colors } from 'constants/colors';
 
 const StockListItem = ({ name, imagePath, imageName, clicked, onClick }) => {
 	const imageURL = `https://j11a607.p.ssafy.io${imagePath}/${imageName}`;
@@ -9,7 +10,14 @@ const StockListItem = ({ name, imagePath, imageName, clicked, onClick }) => {
 			imagePath={imageURL}
 			clicked={clicked}
 			onClick={onClick}
-			sx={{ border: 'none' }}
+			sx={{
+				border: 'none',
+				overflow: 'hidden',
+				'&:hover': {
+					overflow: 'visible',
+					backgroundColor: colors.background.box,
+				},
+			}}
 		/>
 	);
 };
