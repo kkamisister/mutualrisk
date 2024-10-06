@@ -7,7 +7,7 @@ const WidgetContainer = ({ children, sx = {} }) => {
 			spacing={1}
 			sx={{
 				backgroundColor: colors.background.white,
-				padding: 2,
+				padding: '20px',
 				borderRadius: '20px',
 				border: `solid 1px ${colors.point.stroke}`,
 				...sx,
