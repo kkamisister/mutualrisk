@@ -30,6 +30,9 @@ public class AssetHistory extends BaseEntity {
     @Column(name = "price", nullable = false)
     private Double price;
 
+    @Column(name = "daily_price_change_rate")
+    private Double dailyPriceChangeRate;
+
     public static AssetHistory of(Asset asset){
         return AssetHistory.builder()
             .asset(asset)
