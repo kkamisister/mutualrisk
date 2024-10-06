@@ -36,6 +36,18 @@ export const fetchPortfolioSummaryByVer = async ver => {
 };
 
 /**
+ * 효율적 포트폴리오 곡선 조회
+ * @param {String} portfolioId - portfolioId
+ * @returns {Object} - Response 내 data 객체, API 문서 참조
+ */
+export const fetchEfficientFrontierByPorfolioId = async portfolioId => {
+	const response = await axiosInstance.get(
+		`/portfolio/frontier?portfolioId=${portfolioId}`
+	);
+	return response.data.data;
+};
+
+/**
  * 포트폴리오 백테스팅 결과 조회
  * @typedef {String} timeInterval -
  * @typedef {String} measure -

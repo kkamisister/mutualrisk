@@ -4,99 +4,93 @@ import Title from 'components/title/Title';
 import {
 	ComposedChart,
 	Line,
-	Scatter,
 	XAxis,
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	Legend,
 	ResponsiveContainer,
+	Scatter,
 } from 'recharts';
+import { fetchEfficientFrontierByPorfolioId } from 'utils/apis/analyze';
 
-// EfficientFrontier 컴포넌트
-const EfficientFrontier = () => {
-	// API 데이터 상태 관리
+const EfficientFrontier = ({ portfolioId }) => {
 	const [frontierPoints, setFrontierPoints] = useState([]);
 	const [optimalPerformance, setOptimalPerformance] = useState(null);
 
 	useEffect(() => {
-		// 실제 API 연결 부분 주석 처리
-		// const fetchData = async () => {
-		// 	try {
-		// 		const response = await axios.get('/api/efficient-frontier');
-		// 		const data = response.data.data;
-
-		// 		setFrontierPoints(data.frontierPoints);
-		// 		setOptimalPerformance(data.optimalPerformance);
-		// 	} catch (error) {
-		// 		console.error('Error fetching efficient frontier data:', error);
-		// 	}
-		// };
-
-		// fetchData();
-
-		// 100개의 더미 데이터 추가 (API Response에 맞게)
-		const dummyFrontierPoints = Array.from({ length: 100 }, (_, index) => ({
-			expectedReturn: 0.02 + index * 0.002, // 임의로 증가하는 기대 수익률
-			volatility: 0.1 + index * 0.003, // 임의로 증가하는 변동성
-			weights: [
-				Math.random(), // 임의의 가중치 데이터
-				Math.random(),
-				Math.random(),
-				Math.random(),
-			],
-		}));
-		// 더미 최대 Sharpe Ratio 포인트
-		const dummyOptimalPerformance = {
-			expectedReturn: 0.6726281197317411,
-			volatility: 0.439295773878391,
-			sharpeRatio: 1.4856234877242553,
+		const fetchData = async () => {
+			try {
+				const data = await fetchEfficientFrontierByPorfolioId(portfolioId);
+				setFrontierPoints(data.frontierPoints);
+				setOptimalPerformance(data.optimalPerformance);
+			} catch (error) {
+				console.error('Error fetching efficient frontier data:', error);
+			}
 		};
-		// 상태 업데이트
-		setFrontierPoints(dummyFrontierPoints);
-		setOptimalPerformance(dummyOptimalPerformance);
-	}, []);
+
+		if (portfolioId) {
+			fetchData();
+		}
+	}, [portfolioId]);
+
+	// 퍼센티지 변환 함수
+	const percentFormatter = value => `${(value * 100).toFixed(2)}%`;
 
 	return (
 		<WidgetContainer>
-			<Title text={'효율적 포트폴리오 곡선'} />
+			<Title text="효율적 포트폴리오 곡선" />
 			<ResponsiveContainer width="100%" height={400}>
 				<ComposedChart
-					data={frontierPoints} // Efficient Frontier 데이터 사용
+					data={frontierPoints}
 					margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
 					<CartesianGrid strokeDasharray="3 3" />
 					<XAxis
 						dataKey="volatility"
-						label={{ value: 'Volatility', position: 'insideBottomRight' }}
+						label={{
+							value: '변동성 (위험도)',
+							position: 'insideBottom',
+							offset: -15,
+						}}
+						type="number"
+						domain={['auto', 'auto']}
+						tickCount={5}
+						tickFormatter={percentFormatter}
 					/>
 					<YAxis
+						dataKey="expectedReturn"
 						label={{
-							value: 'Expected Return',
+							value: '기대 수익률',
 							angle: -90,
 							position: 'insideLeft',
+							offset: -10,
 						}}
+						type="number"
+						domain={['auto', 'auto']}
+						tickCount={5}
+						tickFormatter={percentFormatter}
 					/>
-					<Tooltip />
-					<Legend />
-
-					{/* Efficient Frontier Line */}
+					<Tooltip
+						formatter={percentFormatter}
+						labelFormatter={value => `변동성: ${percentFormatter(value)}`}
+						cursor={{ strokeDasharray: '3 3' }}
+					/>
 					<Line
 						type="monotone"
 						dataKey="expectedReturn"
-						stroke="#8884d8"
-						name="Efficient Frontier"
+						stroke="#000000"
+						name="기대 수익률"
+						dot
 					/>
 
-					{/* Max Sharpe Ratio (Optimal Performance) */}
-					{optimalPerformance && (
+					{/* {optimalPerformance && (
 						<Scatter
-							name="Max Sharpe"
+							name="최적 성과"
 							data={[optimalPerformance]}
-							fill="red"
+							fill="#FF0000"
 							shape="star"
-							dataKey="expectedReturn"
+							// dataKey를 제거여 Scatter의 툴팁과 혼동되지 않도록 설정
 						/>
-					)}
+					)} */}
 				</ComposedChart>
 			</ResponsiveContainer>
 		</WidgetContainer>
