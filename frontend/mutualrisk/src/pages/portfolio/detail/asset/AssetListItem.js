@@ -15,8 +15,9 @@ const AssetListItem = ({ asset }) => {
 				alignItems: 'stretch',
 				marginBottom: '9px',
 			}}>
+			{/* StockItemCard 컴포넌트에 API 데이터를 전달 */}
 			<StockItemCard
-				code={asset.ticker}
+				code={asset.code} // ticker 대신 code로 변경
 				name={asset.name}
 				market={asset.market}
 				image={asset.imagePath}>
@@ -29,11 +30,18 @@ const AssetListItem = ({ asset }) => {
 						textAlign: 'right',
 					}}>
 					<Typography
-						sx={{ color: 'red', fontWeight: 'bold', fontSize: '16px' }}>
-						+{asset.changeAmount}원 ({asset.changeRate}%)
+						sx={{
+							color: asset.dailyPriceChange > 0 ? 'red' : 'blue', // 상승이면 빨간색, 하락이면 파란색
+							fontWeight: 'bold',
+							fontSize: '16px',
+						}}>
+						{/* 일일 가격 변화 표시 */}
+						{asset.dailyPriceChange.toLocaleString()}원 (
+						{asset.dailyPriceChangeRate}%)
 					</Typography>
+					{/* 현재 가격 표시 */}
 					<Typography sx={{ fontSize: '13px', color: colors.text.sub2 }}>
-						{asset.currentPrice}원
+						{asset.price.toLocaleString()}원
 					</Typography>
 				</Box>
 			</StockItemCard>
@@ -55,7 +63,8 @@ const AssetListItem = ({ asset }) => {
 					alignItems: 'center',
 					flex: 1,
 				}}>
-				{asset.ratio}%
+				{/* 비율은 100을 곱해 퍼센트로 표시 */}
+				{(asset.weight * 100).toFixed(1)}%
 			</Box>
 		</Stack>
 	);
