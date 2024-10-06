@@ -4,14 +4,12 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AssetListItem from 'pages/portfolio/detail/asset/AssetListItem';
 
-const AssetList = ({ assets }) => {
+const AssetList = ({ assets, hoveredIndex }) => {
 	const [currentPage, setCurrentPage] = useState(0);
 	const itemsPerPage = 5;
 
-	// 전체 페이지 수 계산
 	const totalPages = Math.ceil(assets.length / itemsPerPage);
 
-	// 현재 페이지에 표시할 항목들
 	const startIndex = currentPage * itemsPerPage;
 	const currentAssets = assets.slice(startIndex, startIndex + itemsPerPage);
 
@@ -48,33 +46,29 @@ const AssetList = ({ assets }) => {
 					}}>
 					<Box sx={{ flex: 1 }}>
 						{currentAssets.map((asset, index) => (
-							<AssetListItem key={index} asset={asset}></AssetListItem>
+							<AssetListItem
+								key={index}
+								asset={asset}
+								highlight={hoveredIndex === index + startIndex} // 현재 hover된 항목 강조
+							/>
 						))}
 					</Box>
 				</Box>
-				{/* 페이지네이션 버튼 */}
 				<Box
 					sx={{
 						display: 'flex',
 						justifyContent: 'center',
 						alignItems: 'center',
 					}}>
-					{/* 왼쪽 화살표 */}
 					<IconButton
 						onClick={handlePrevPage}
 						disabled={currentPage === 0}
-						sx={{
-							color: currentPage === 0 ? 'grey' : 'black',
-						}}>
+						sx={{ color: currentPage === 0 ? 'grey' : 'black' }}>
 						<ChevronLeftIcon fontSize="large" />
 					</IconButton>
-
-					{/* 현재 페이지 / 전체 페이지 */}
 					<Typography variant="body1" sx={{ mx: 2 }}>
 						{currentPage + 1} / {totalPages}
 					</Typography>
-
-					{/* 오른쪽 화살표 */}
 					<IconButton
 						onClick={handleNextPage}
 						disabled={currentPage + 1 >= totalPages}

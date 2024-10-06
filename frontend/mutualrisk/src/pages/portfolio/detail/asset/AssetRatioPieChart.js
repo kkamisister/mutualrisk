@@ -2,23 +2,28 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PieChart, Pie, ResponsiveContainer, Cell, Sector } from 'recharts';
 import { colors } from 'constants/colors';
 
-const AssetRatioPieChart = ({ assets }) => {
+const AssetRatioPieChart = ({ assets, onHover }) => {
 	const [activeIndex, setActiveIndex] = useState(0);
 	const [textWidth, setTextWidth] = useState(0);
 
 	// Pie hover 시 실행되는 함수
-	const onPieEnter = useCallback((_, index) => {
-		setActiveIndex(index);
-	}, []);
+	const onPieEnter = useCallback(
+		(_, index) => {
+			setActiveIndex(index);
+			// 상위 컴포넌트에 현재 hover 중인 인덱스 전달
+			onHover(index);
+		},
+		[onHover]
+	);
 
 	// assets 데이터를 PieChart용 데이터로 변환
 	const chartData = useMemo(
 		() =>
 			assets.map((asset, index) => ({
-				name: asset.name, // 자산 이름
-				value: asset.weight * 100, // 자산 비율 (퍼센트로 변환)
+				name: asset.name,
+				value: asset.weight * 100,
 				color:
-					asset.color || colors.piechart[index % colors.piechart.length], // 색상을 colors.piechart에서 가져오기
+					asset.color || colors.piechart[index % colors.piechart.length],
 			})),
 		[assets]
 	);
@@ -35,13 +40,12 @@ const AssetRatioPieChart = ({ assets }) => {
 	// 활성화된 섹터가 변경될 때마다 텍스트 너비를 업데이트
 	useEffect(() => {
 		if (chartData[activeIndex]) {
-			const font = '20px Arial'; // 텍스트의 폰트 스타일
+			const font = '20px Arial';
 			const width = getTextWidth(chartData[activeIndex].name, font);
 			setTextWidth(width);
 		}
 	}, [activeIndex, chartData, getTextWidth]);
 
-	// 활성화된 섹터의 정보를 렌더링하는 함수
 	const renderActiveShape = useCallback(
 		props => {
 			const {
@@ -60,7 +64,6 @@ const AssetRatioPieChart = ({ assets }) => {
 
 			return (
 				<g>
-					{/* 활성화된 섹터 */}
 					<Sector
 						cx={cx}
 						cy={cy}
@@ -70,40 +73,32 @@ const AssetRatioPieChart = ({ assets }) => {
 						endAngle={endAngle}
 						fill={fill}
 					/>
-
-					{/* 텍스트와 rect 요소 */}
 					<rect
-						x={cx - textWidth / 2 - 10} // 텍스트의 절반 너비만큼 위치 조정하고, 여유 공간 추가
-						y={cy - 32} // rect 위치를 더 위로 조정하여 두 줄 텍스트 공간 확보
-						width={textWidth + 20} // 텍스트 너비보다 20px 더 크게 설정
-						height={64} // rect의 높이를 증가시켜서 두 줄 텍스트가 들어갈 공간 확보
+						x={cx - textWidth / 2 - 10}
+						y={cy - 32}
+						width={textWidth + 20}
+						height={64}
 						fill="white"
 						opacity={0.8}
 						rx={10}
 						ry={10}
 					/>
-
-					{/* 종목명 텍스트 */}
 					<text
 						x={cx}
-						y={cy - 10} // 첫 번째 텍스트 위치 조정
+						y={cy - 10}
 						textAnchor="middle"
 						fill={fill}
-						fontSize="22px"
-						// fontWeight="bold"
-					>
+						fontSize="22px">
 						{payload.name}
 					</text>
-
-					{/* 퍼센티지 텍스트 */}
 					<text
 						x={cx}
-						y={cy + 18} // 두 번째 텍스트 위치를 더 아래로 조정
+						y={cy + 18}
 						textAnchor="middle"
 						fill="#333"
 						fontSize="25px"
 						fontWeight="bold">
-						{`${payload.value.toFixed(1)}%`} {/* 소수점 2자리까지 표시 */}
+						{`${payload.value.toFixed(1)}%`}
 					</text>
 				</g>
 			);
@@ -124,11 +119,10 @@ const AssetRatioPieChart = ({ assets }) => {
 			}}>
 			<ResponsiveContainer width="100%" height={400}>
 				<PieChart>
-					{/* 기본 Pie 차트 */}
 					<Pie
 						activeIndex={activeIndex}
 						activeShape={renderActiveShape}
-						data={chartData} // 변환된 데이터 사용
+						data={chartData}
 						dataKey="value"
 						nameKey="name"
 						cx="50%"

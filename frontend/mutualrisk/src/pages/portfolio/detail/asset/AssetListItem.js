@@ -3,24 +3,34 @@ import { Box, Typography, Stack } from '@mui/material';
 import { colors } from 'constants/colors';
 import StockItemCard from 'components/card/StockItemCard';
 
-const AssetListItem = ({ asset }) => {
+const AssetListItem = ({ asset, highlight }) => {
 	return (
 		<Stack
 			direction="row"
 			sx={{
-				width: '500px',
+				width: highlight ? '520px' : '500px',
+				height: highlight ? '80px' : 'none',
 				maxWidth: '100%',
 				display: 'flex',
 				justifyContent: 'space-between',
 				alignItems: 'stretch',
 				marginBottom: '9px',
+				// border: highlight ? `2px solid ${colors.main.primary500}` : 'none', // highlight 여부에 따른 테두리
+				borderRadius: '10px',
+				// backgroundColor: highlight ? colors.main.primary200 : 'transparent', // 강조된 항목의 배경색
+				transition: 'background-color 0.3s ease, border 0.3s ease', // 부드러운 스타일 전환
 			}}>
 			{/* StockItemCard 컴포넌트에 API 데이터를 전달 */}
 			<StockItemCard
-				code={asset.code} // ticker 대신 code로 변경
+				code={asset.code}
 				name={asset.name}
 				market={asset.market}
-				image={asset.imagePath}>
+				image={asset.imagePath}
+				sx={{
+					backgroundColor: highlight
+						? colors.background.box
+						: colors.background.primary,
+				}}>
 				<Box
 					sx={{
 						height: '100%',
@@ -31,7 +41,7 @@ const AssetListItem = ({ asset }) => {
 					}}>
 					<Typography
 						sx={{
-							color: asset.dailyPriceChange > 0 ? 'red' : 'blue', // 상승이면 빨간색, 하락이면 파란색
+							color: asset.dailyPriceChange > 0 ? 'red' : 'blue',
 							fontWeight: 'bold',
 							fontSize: '16px',
 						}}>
@@ -49,7 +59,9 @@ const AssetListItem = ({ asset }) => {
 			{/* 자산 비율 정보 */}
 			<Box
 				sx={{
-					backgroundColor: colors.main.primary400,
+					backgroundColor: highlight
+						? colors.main.primary400
+						: colors.main.primary200,
 					padding: '10px',
 					borderRadius: '10px',
 					color: '#FFFFFF',

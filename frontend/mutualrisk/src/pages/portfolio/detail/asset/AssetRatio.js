@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Stack, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import AssetRatioPieChart from 'pages/portfolio/detail/asset/AssetRatioPieChart';
 import AssetList from 'pages/portfolio/detail/asset/AssetList';
 import { colors } from 'constants/colors';
 import Title from 'components/title/Title';
-import { fetchPortfolioByPorfolioId } from 'utils/apis/analyze'; // API 호출 함수 가져오기
+import { fetchPortfolioByPorfolioId } from 'utils/apis/analyze';
 
 const AssetRatio = ({ portfolioId }) => {
+	// hover된 자산 인덱스를 상태로 관리
+	const [hoveredAssetIndex, setHoveredAssetIndex] = useState(null);
+
 	// react-query로 API 데이터 가져오기
 	const { data, isLoading, isError } = useQuery({
 		queryKey: ['portfolioDetail', portfolioId],
@@ -30,7 +33,7 @@ const AssetRatio = ({ portfolioId }) => {
 		return <Typography>No portfolio data found.</Typography>;
 	}
 
-	const { assets, performance } = data.portfolio;
+	const { assets } = data.portfolio;
 
 	return (
 		<Stack
@@ -54,11 +57,19 @@ const AssetRatio = ({ portfolioId }) => {
 					alignItems: 'center',
 					flexWrap: 'nowrap',
 				}}>
-				{/* 자산 비율 차트에 데이터 전달 */}
-				<AssetRatioPieChart sx={{ flex: 1 }} assets={assets} />
+				{/* AssetRatioPieChart에 hover 인덱스를 전달하는 콜백 추가 */}
+				<AssetRatioPieChart
+					sx={{ flex: 1 }}
+					assets={assets}
+					onHover={setHoveredAssetIndex} // hover된 종목 인덱스를 설정
+				/>
 
-				{/* 자산 리스트에 데이터 전달 */}
-				<AssetList sx={{ flex: 1 }} assets={assets} />
+				{/* AssetList에 hover된 인덱스를 전달 */}
+				<AssetList
+					sx={{ flex: 1 }}
+					assets={assets}
+					hoveredIndex={hoveredAssetIndex}
+				/>
 			</Stack>
 		</Stack>
 	);
