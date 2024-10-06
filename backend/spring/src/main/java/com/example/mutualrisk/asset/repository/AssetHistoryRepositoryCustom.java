@@ -18,4 +18,6 @@ public interface AssetHistoryRepositoryCustom {
     List<AssetHistory> findRecentHistoriesBetweenDates(Asset asset, LocalDateTime pastDate, LocalDateTime targetDate);
 
     List<AssetHistory> findRecentHistoryOfAssetsBetweenDates(List<Asset> userInterestAssetList, LocalDateTime localDateTime, LocalDateTime now);
+
+    List<Double> getDailyChangeRate(Integer assetId, LocalDateTime startTime, LocalDateTime endTime);
 }
