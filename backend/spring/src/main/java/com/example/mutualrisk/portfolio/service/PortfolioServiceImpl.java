@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -648,8 +649,28 @@ public class PortfolioServiceImpl implements PortfolioService{
      * @return
      */
     @Override
-    @Transactional
+    // @Transactional
     public ResponseWithData<CalculatedPortfolio> initPortfolio(Integer userId, PortfolioInitDto initInfo) {
+
+        // 첫부분에 바로 추천종목을 가져오기 위해 요청을 보내기 위한 body를 가지고온다
+        Map<String, Object> recommendBody = getRecommendBody(initInfo);
+
+        // 비동기 요청을 보낸다
+        CompletableFuture<Map<String, Object>> future = fastApiService.getRecommendData(recommendBody);
+
+        // 비동기 작업 완료 후 결과 처리
+        future.thenAccept(res -> {
+            for (Map.Entry<String, Object> entry : res.entrySet()) {
+                System.out.println("entry = " + entry.getKey());
+                System.out.println("entry = " + entry.getValue());
+            }
+        }).exceptionally(e -> {
+            // 예외 처리
+            log.error("spark 서버와의 통신 중 오류가 발생했습니다.", e);
+            throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
+        });
+
+        log.warn("아직 안끝났는데 시작함1");
         List<Asset> findAssets = assetRepository.findAllById(initInfo.assetIds())
             .stream()
             .sorted(Comparator.comparing(asset -> initInfo.assetIds().indexOf(asset.getId())))
@@ -658,9 +679,12 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 1. 유저가 입력한 dto를 받아서, api에 던질 dto 형식으로 고친다
         // PortfolioInitDto -> PortfolioRequestDto로 변환
         PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(findAssets, initInfo);
+        log.warn("portfolioRequestDto : {}",portfolioRequestDto);
 
         // 2. PortfolioRequestDto를 받아서, Map<String, Object> 형식으로 고친다
         Map<String, Object> requestBody = getRequestBodyFromPortfolioRequestDto(portfolioRequestDto);
+
+        log.warn("아직 안끝났는데 시작함2");
 
         // 3. requestBody를 fastapi 호출해서, 결과를 받아온다
         Map<String, Object> responseBody;
@@ -672,6 +696,8 @@ public class PortfolioServiceImpl implements PortfolioService{
             log.error("FastAPI 서버와의 통신 중 오류가 발생했습니다.", e);
             throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
         }
+
+        log.warn("아직 안끝났는데 시작함3");
 
         // 4. 반환할 데이터 만들기
 
@@ -701,6 +727,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
 
 
+
         CalculatedPortfolio calculatedPortfolio = CalculatedPortfolio.builder()
             .original(original)
             .oldPortfolioAssetInfoList(oldPortfolioAssetInfoList)
@@ -708,23 +735,6 @@ public class PortfolioServiceImpl implements PortfolioService{
             .changeAssetInfoList(changeAssetInfoList)
             //나중에 추천종목 생기면 여기에 추가해서 리턴하기
             .build();
-
-        Map<String, Object> recommendBody = getRecommendBody(initInfo);
-
-        // 5. hadoop fastapi로 요청을 보낸다
-       Map<String, Object> res;
-       try {
-           res = fastApiService.getRecommendData(recommendBody);
-           for (Entry<String, Object> entry : res.entrySet()) {
-               System.out.println("entry = " + entry.getKey());
-               System.out.println("entry = " + entry.getValue());
-           }
-
-       } catch (RuntimeException e) {
-           // 예외 처리
-           log.error("Hadoop 서버와의 통신 중 오류가 발생했습니다.", e);
-           throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
-       }
 
         // 6. 프론트에 던진다
         return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 제작 미리보기 입니다", calculatedPortfolio);

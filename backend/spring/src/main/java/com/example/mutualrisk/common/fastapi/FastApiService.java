@@ -1,11 +1,13 @@
 package com.example.mutualrisk.common.fastapi;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class FastApiService {
@@ -35,26 +37,24 @@ public class FastApiService {
 		}
 	}
 
-	public Map<String,Object> getRecommendData(Map<String, Object> requestBody) {
+	@Async
+	public CompletableFuture<Map<String, Object>> getRecommendData(Map<String, Object> requestBody) {
 
 		String url = "http://j11a607a.p.ssafy.io:8000/optimize";
 
-		try{
+		try {
 			ResponseEntity<Map> response = restTemplate.postForEntity(url, requestBody, Map.class);
 
-			if(response.getStatusCode().is2xxSuccessful()){
+			if (response.getStatusCode().is2xxSuccessful()) {
 				Map<String, Object> responseBody = response.getBody();
-				return responseBody;
-			}
-			else{
+				return CompletableFuture.completedFuture(responseBody);
+			} else {
 				// 에러 응답 처리
 				throw new RuntimeException("FastAPI 서버에서 오류 응답을 받았습니다. 상태 코드: " + response.getStatusCode());
 			}
 
-		}catch(RestClientException e){
-
-			throw new RuntimeException("FastAPI 서버에서 오류 응답을 받았습니다. 상태 코드 : "+ e);
+		} catch (RestClientException e) {
+			throw new RuntimeException("FastAPI 서버와의 통신 중 오류가 발생했습니다. 오류: " + e.getMessage(), e);
 		}
-
 	}
 }
