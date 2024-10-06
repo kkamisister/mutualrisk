@@ -55,10 +55,21 @@ export const fetchEfficientFrontierByPorfolioId = async portfolioId => {
  * @param {{}} assetId - assetId
  * @returns {Object} - Response 내 data 객체, API 문서 참조
  */
-export const fetchStockDetailByAssetId = async assetId => {
-	const response = await axiosInstance.get(
-		`/portfolio/backtest?assetId=${assetId}`
-	);
+export const fetchStockDetailByAssetId = async (
+	portfolioId,
+	timeInterval = 'day', // 기본값 제공
+	measure = 'profit' // 기본값 제공
+) => {
+	const params = {
+		portfolioId,
+		timeInterval,
+		measure,
+	};
+
+	const response = await axiosInstance.get(`/portfolio/backtest`, {
+		params,
+	});
+
 	return response.data.data;
 };
 
