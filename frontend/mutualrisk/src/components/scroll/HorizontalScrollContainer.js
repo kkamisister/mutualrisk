@@ -43,9 +43,9 @@ const HorizontalScrollContainer = ({ children }) => {
 			sx={{
 				display: 'flex',
 				overflowX: 'auto', // 수평 스크롤 가능하게 설정
-				scrollbarWidth: 'none', // 기본 스크롤바 숨기기 (Firefox)
-				'-ms-overflow-style': 'none', // 기본 스크롤바 숨기기 (IE/Edge)
-				'&::-webkit-scrollbar': { display: 'none' }, // 기본 스크롤바 숨기기 (Chrome/Safari)
+				'&::-webkit-scrollbar': { display: 'none' }, // 스크롤바 숨기기
+				msOverflowStyle: 'none', // IE 및 Edge에서 스크롤바 숨기기
+				scrollbarWidth: 'none', // Firefox에서 스크롤바 숨기기
 				'& > *': {
 					// 자식 요소에 flex-shrink: 0을 적용
 					flexShrink: 0,
