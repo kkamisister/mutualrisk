@@ -20,11 +20,9 @@ const SelectedList = ({ assets, onItemsConfirm, onStockSelect, sx }) => {
 					sx={{
 						height: 'calc(100% - 80px)',
 						overflowY: 'auto',
-						'&::-webkit-scrollbar': {
-							display: 'none',
-						},
-						'-ms-overflow-style': 'none', // IE 및 Edge
-						'scrollbar-width': 'none', // Firefox
+						'&::-webkit-scrollbar': { display: 'none' }, // 스크롤바 숨기기
+						msOverflowStyle: 'none', // IE 및 Edge에서 스크롤바 숨기기
+						scrollbarWidth: 'none', // Firefox에서 스크롤바 숨기기
 						boxSizing: 'border-box',
 					}}
 					spacing={1}>
