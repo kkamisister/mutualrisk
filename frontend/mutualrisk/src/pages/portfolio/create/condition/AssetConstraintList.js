@@ -1,33 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Box, Typography, Input } from '@mui/material';
+import { useState } from 'react';
+import { Box, Input, Tooltip, Stack } from '@mui/material';
 import BasicButton from 'components/button/BasicButton';
 import BasicChip from 'components/chip/BasicChip';
-import useAssetStore from 'stores/useAssetStore';
 import { colors } from 'constants/colors';
-import { createPortfolio } from 'utils/apis/portfolio';
-import SuccessAlert from 'components/alert/SucessAlert';
-import ErrorAlert from 'components/alert/ErrorAlert';
 import AssetInputModal from 'pages/portfolio/create/AssetInputModal';
-import { useQuery } from '@tanstack/react-query';
-import { fetchPortfolioList } from 'utils/apis/analyze';
+import { createPortfolio } from 'utils/apis/portfolio';
 
 const AssetConstraintList = ({ assets }) => {
-	const totalCashFromStore = useAssetStore(state => state.totalCash);
-	const { data: userPortfolio, isLoading } = useQuery({
-		queryKey: ['userPortfolio'],
-		queryFn: fetchPortfolioList,
-	});
-
-	const [totalCash, setTotalCash] = useState(totalCashFromStore);
-	useEffect(() => {
-		if (totalCashFromStore === 0 && !isLoading && userPortfolio) {
-			setTotalCash(userPortfolio.recentValuation);
-		} else if (isLoading) {
-			console.log('로딩 중...');
-		}
-	}, [totalCashFromStore, isLoading, userPortfolio]);
-
-	const [openInputModal, setOpenInputModal] = useState(true);
+	const [openInputModal, setOpenInputModal] = useState(false);
 	const [lowerBounds, setLowerBounds] = useState(Array(assets.length).fill(0));
 	const [upperBounds, setUpperBounds] = useState(Array(assets.length).fill(1));
 	const [exactProportion, setExactProportion] = useState(
@@ -36,51 +16,32 @@ const AssetConstraintList = ({ assets }) => {
 
 	const handleLowerChange = (index, value) => {
 		const updated = [...lowerBounds];
-		updated[index] = value !== '' ? parseFloat(value) / 100 : 0; // 입력 값을 100으로 나눔
+		updated[index] = value !== '' ? parseFloat(value) / 100 : 0;
 		setLowerBounds(updated);
 	};
 
 	const handleUpperChange = (index, value) => {
 		const updated = [...upperBounds];
-		updated[index] = value !== '' ? parseFloat(value) / 100 : 1; // 입력 값을 100으로 나눔
+		updated[index] = value !== '' ? parseFloat(value) / 100 : 1;
 		setUpperBounds(updated);
 	};
 
 	const handleExactChange = (index, value) => {
 		const updated = [...exactProportion];
-		updated[index] = value !== '' ? parseFloat(value) / 100 : null; // 입력 값을 100으로 나눔
+		updated[index] = value !== '' ? parseFloat(value) / 100 : null;
 		setExactProportion(updated);
 	};
 
-	const createInitPortfolio = async () => {
-		try {
-			const assetIds = assets.map(asset => asset.assetId);
-			const response = await createPortfolio({
-				totalCash,
-				assetIds,
-				lowerBounds,
-				upperBounds,
-				exactProportion,
-			});
-
-			console.log('포트폴리오 생성 성공:', response.data);
-		} catch (error) {
-			console.error('포트폴리오 생성 중 오류 발생:', error);
-		}
-	};
-
 	const handleSubmit = () => {
-		// setOpenInputModal(true);
-		createInitPortfolio();
+		setOpenInputModal(true);
 	};
 
 	return (
-		<Box>
+		<Box sx={{ height: '100%', position: 'relative' }}>
 			<Box
 				sx={{
 					display: 'flex',
 					justifyContent: 'space-between',
-					mb: 2,
 					gap: 2,
 				}}>
 				<BasicChip label="종목 이름" />
@@ -89,63 +50,94 @@ const AssetConstraintList = ({ assets }) => {
 				<BasicChip label="지정 비율 (%)" />
 			</Box>
 
-			{assets.map((asset, index) => (
-				<Box
-					key={asset.assetId}
-					sx={{
-						display: 'flex',
-						justifyContent: 'space-between',
-						mb: 2,
-						flexWrap: 'nowrap',
-					}}>
-					<Box
-						sx={{
-							flex: 1,
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'center',
-							bgcolor: colors.background.box,
-							borderRadius: '8px',
-							fontSize: '12px',
-							fontWeight: 'bold',
-							whiteSpace: 'nowrap',
-							textOverflow: 'ellipsis',
-						}}>
-						{asset.name}
-					</Box>
+			{/* 스크롤 가능한 영역 */}
+			<Box
+				sx={{
+					pt: 2,
+					height: 'calc(100% - 100px)',
+					overflowY: 'auto',
+					'&::-webkit-scrollbar': { display: 'none' }, // 스크롤바 숨기기
+					msOverflowStyle: 'none', // IE 및 Edge에서 스크롤바 숨기기
+					scrollbarWidth: 'none', // Firefox에서 스크롤바 숨기기
+				}}>
+				<Stack spacing={2}>
+					{assets.map((asset, index) => (
+						<Box
+							key={asset.assetId}
+							sx={{
+								display: 'flex',
+								justifyContent: 'space-between',
+								flexWrap: 'nowrap',
+							}}>
+							<Stack
+								sx={{
+									flex: 1,
+									alignItems: 'center',
+									justifyContent: 'center',
+									bgcolor: colors.background.box,
+									borderRadius: '8px',
+									fontSize: '12px',
+									fontWeight: 'bold',
+								}}>
+								{asset.region === 'KR' ? (
+									asset.name
+								) : (
+									<Tooltip title={asset.name}>
+										<span>{asset.code}</span>
+									</Tooltip>
+								)}
+							</Stack>
 
-					<Box sx={{ flex: 1, mx: 1 }}>
-						<Typography variant="caption">최솟값</Typography>
-						<Input
-							fullWidth
-							type="number"
-							defaultValue={0}
-							onChange={e => handleLowerChange(index, e.target.value)}
-						/>
-					</Box>
+							<Box sx={{ flex: 1, mx: 1 }}>
+								{/* 최솟값 */}
+								<Input
+									fullWidth
+									type="number"
+									defaultValue={0}
+									onChange={e =>
+										handleLowerChange(index, e.target.value)
+									}
+								/>
+							</Box>
 
-					<Box sx={{ flex: 1, mx: 1 }}>
-						<Typography variant="caption">최댓값</Typography>
-						<Input
-							type="number"
-							defaultValue={100}
-							onChange={e => handleUpperChange(index, e.target.value)}
-						/>
-					</Box>
+							<Box sx={{ flex: 1, mx: 1 }}>
+								{/* 최댓값 */}
+								<Input
+									type="number"
+									defaultValue={100}
+									onChange={e =>
+										handleUpperChange(index, e.target.value)
+									}
+								/>
+							</Box>
 
-					<Box sx={{ flex: 1, mx: 1 }}>
-						<Typography variant="caption">지정비율</Typography>
-						<Input
-							type="number"
-							defaultValue={null}
-							onChange={e => handleExactChange(index, e.target.value)}
-						/>
-					</Box>
-				</Box>
-			))}
+							<Box sx={{ flex: 1, mx: 1 }}>
+								{/* 지정비율 */}
+								<Input
+									type="number"
+									defaultValue=""
+									onChange={e =>
+										handleExactChange(index, e.target.value)
+									}
+								/>
+							</Box>
+						</Box>
+					))}
+				</Stack>
+			</Box>
 
-			<BasicButton text="포트폴리오 제작하기" onClick={handleSubmit} />
-			{!totalCash && (
+			{/* 하단 버튼 */}
+			<Box
+				sx={{
+					position: 'absolute',
+					left: '50%',
+					bottom: 0,
+					transform: 'translateX(-50%)',
+				}}>
+				<BasicButton text="포트폴리오 제작하기" onClick={handleSubmit} />
+			</Box>
+
+			{openInputModal && (
 				<AssetInputModal
 					open={openInputModal}
 					onClose={() => setOpenInputModal(false)}
