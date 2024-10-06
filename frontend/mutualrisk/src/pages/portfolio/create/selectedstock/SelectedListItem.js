@@ -20,7 +20,7 @@ const SelectedListItem = ({ asset, clicked, onClick }) => {
 				justifyContent="space-between"
 				alignItems="center">
 				<Stack sx={{ textAlign: 'right' }}>
-					<Typography>{price}원</Typography>
+					<Typography fontSize={'14px'}>{price}원</Typography>
 					<Typography
 						sx={{
 							color:

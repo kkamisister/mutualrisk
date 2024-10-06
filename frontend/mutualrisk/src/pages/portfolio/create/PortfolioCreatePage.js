@@ -74,14 +74,14 @@ const PortfolioCreatePage = () => {
 				sx={{ height: '90vh', overflowY: 'hidden' }}>
 				<Grid item xs={4.8} sx={{ height: '100%' }}>
 					<Stack spacing={2} height="100%" alignContent={'space-between'}>
-						<Box sx={{ flex: 1 }}>
+						<Box height="50%">
 							<StockSearch
 								onConfirm={handleSearchConfirm}
 								selectedStocks={selectedStocks}
 								onStockSelect={handleStockSelect}
 							/>
 						</Box>
-						<Box sx={{ flex: 1 }}>
+						<Box height="50%">
 							{showSelectedItems && (
 								<SelectedList
 									assets={selectedStocks}
@@ -94,7 +94,7 @@ const PortfolioCreatePage = () => {
 					</Stack>
 				</Grid>
 
-				<Grid item xs={7} sx={{ height: '100%' }}>
+				<Grid item xs={7} sx={{ height: '100%', maxHeight: '800px' }}>
 					<Box sx={{ height: '100%' }}>
 						{showConditionSetting && (
 							<ConditionSetting assets={selectedStocks} />
