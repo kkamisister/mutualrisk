@@ -25,14 +25,11 @@ class OauthLoginServiceTest {
 
 	}
 
-	@Test
-	@DisplayName("로그인 유형에 알맞은 리다이렉트 url을 반환할 수 있다")
-	void getAuthCodeRequestUrl() {
+	// @Test
+	// @DisplayName("로그인 유형에 알맞은 리다이렉트 url을 반환할 수 있다")
+	// void getAuthCodeRequestUrl() {
+	//
+	//
+	// }
 
-
-	}
-
-	@Test
-	void login() {
-	}
 }
