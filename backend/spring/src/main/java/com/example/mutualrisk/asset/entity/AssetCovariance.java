@@ -5,7 +5,7 @@ import com.example.mutualrisk.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Table(name = "asset_covariance")
+@Table(name = "asset_covariance_real")
 @Entity
 @Getter
 @Builder

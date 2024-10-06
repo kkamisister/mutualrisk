@@ -9,6 +9,7 @@ import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
 import com.example.mutualrisk.asset.service.AssetHistoryService;
 import com.example.mutualrisk.asset.service.AssetService;
+import com.example.mutualrisk.common.constants.BenchMark;
 import com.example.mutualrisk.common.dto.CommonResponse.*;
 import com.example.mutualrisk.common.enums.Market;
 import com.example.mutualrisk.common.enums.PerformanceMeasure;
@@ -49,6 +50,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+
+import static com.example.mutualrisk.common.constants.Constants.SECTOR_BENCHMARK_LIST;
 
 @Service
 @Slf4j
@@ -652,8 +656,55 @@ public class PortfolioServiceImpl implements PortfolioService{
     // @Transactional
     public ResponseWithData<CalculatedPortfolio> initPortfolio(Integer userId, PortfolioInitDto initInfo) {
 
+        List<Asset> findAssets = assetRepository.findAllById(initInfo.assetIds())
+            .stream()
+            .sorted(Comparator.comparing(asset -> initInfo.assetIds().indexOf(asset.getId())))
+            .collect(Collectors.toList());
+
+        // 1. 유저가 입력한 dto를 받아서, api에 던질 dto 형식으로 고친다
+        // PortfolioInitDto -> PortfolioRequestDto로 변환
+        PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(findAssets, initInfo);
+        log.warn("portfolioRequestDto : {}",portfolioRequestDto);
+
+        // 2. PortfolioRequestDto를 받아서, Map<String, Object> 형식으로 고친다
+        Map<String, Object> requestBody = getRequestBodyFromPortfolioRequestDto(portfolioRequestDto);
+
+        // 3. requestBody를 fastapi 호출해서, 결과를 받아온다
+        Map<String, Object> responseBody;
+        try {
+            // FastApiService를 사용하여 요청을 보낸다
+            responseBody = fastApiService.sendPortfolioData(requestBody);
+        } catch (RuntimeException e) {
+            // 예외 처리
+            log.error("FastAPI 서버와의 통신 중 오류가 발생했습니다.", e);
+            throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
+        }
+
+        log.warn("아직 안끝났는데 시작함3");
+
+        // 4. hadoop api 실행
+        List<Asset> assetList = portfolioRequestDto.findAssets();
+        Map<String, Double> fictionalWeights = (Map<String, Double>) responseBody.get("weights");
+
+        List<Double> dailyPriceChangeRateHistory = getDailyPriceChangeRateHistory(assetList, fictionalWeights);
+
+        int minCovarianceSectorId = -1;
+        Double minCovariance = Double.MAX_VALUE;
+        for (int idx=0; idx<SECTOR_BENCHMARK_LIST.length; idx++) {
+            BenchMark benchMark = SECTOR_BENCHMARK_LIST[idx];
+            List<Double> dailyPriceChangeRateHistoryOfBenchMark = assetHistoryRepository.getDailyChangeRate(benchMark.getAssetId(), LocalDateTime.now().minusYears(1), LocalDateTime.now());
+            double covariance = calculateCovariance(dailyPriceChangeRateHistory, dailyPriceChangeRateHistoryOfBenchMark);
+            if (covariance < minCovariance) {
+                minCovariance = covariance;
+                minCovarianceSectorId = idx;
+            }
+        }
+
+        log.warn("minCovarianceSectorId: {}", minCovarianceSectorId);
+        log.warn("minCovariance: {}", minCovariance);
+
         // 첫부분에 바로 추천종목을 가져오기 위해 요청을 보내기 위한 body를 가지고온다
-        Map<String, Object> recommendBody = getRecommendBody(initInfo);
+        Map<String, Object> recommendBody = getRecommendBody(initInfo, minCovarianceSectorId);
 
         // 비동기 요청을 보낸다
         CompletableFuture<Map<String, Object>> future = fastApiService.getRecommendData(recommendBody);
@@ -671,36 +722,8 @@ public class PortfolioServiceImpl implements PortfolioService{
         });
 
         log.warn("아직 안끝났는데 시작함1");
-        List<Asset> findAssets = assetRepository.findAllById(initInfo.assetIds())
-            .stream()
-            .sorted(Comparator.comparing(asset -> initInfo.assetIds().indexOf(asset.getId())))
-            .collect(Collectors.toList());
-
-        // 1. 유저가 입력한 dto를 받아서, api에 던질 dto 형식으로 고친다
-        // PortfolioInitDto -> PortfolioRequestDto로 변환
-        PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(findAssets, initInfo);
-        log.warn("portfolioRequestDto : {}",portfolioRequestDto);
-
-        // 2. PortfolioRequestDto를 받아서, Map<String, Object> 형식으로 고친다
-        Map<String, Object> requestBody = getRequestBodyFromPortfolioRequestDto(portfolioRequestDto);
-
-        log.warn("아직 안끝났는데 시작함2");
-
-        // 3. requestBody를 fastapi 호출해서, 결과를 받아온다
-        Map<String, Object> responseBody;
-        try {
-            // FastApiService를 사용하여 요청을 보낸다
-            responseBody = fastApiService.sendPortfolioData(requestBody);
-        } catch (RuntimeException e) {
-            // 예외 처리
-            log.error("FastAPI 서버와의 통신 중 오류가 발생했습니다.", e);
-            throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
-        }
-
-        log.warn("아직 안끝났는데 시작함3");
 
         // 4. 반환할 데이터 만들기
-
         // 4-1. 새롭게 추천해주는 포트폴리오에 대한 정보
         PortfolioAnalysis original = getPortfolioAnalysis(initInfo, responseBody, portfolioRequestDto);
 
@@ -711,7 +734,6 @@ public class PortfolioServiceImpl implements PortfolioService{
             Portfolio latestPortfolio = myPortfolioList.get(0);
             oldPortfolioAssetInfoList = getRecommendAssetInfoFrom(latestPortfolio);
         }
-
         // 4-3. newPortfolioAssetInfoList 구하기
         List<RecommendAssetInfo> newPortfolioAssetInfoList = original.assets();
 
@@ -725,9 +747,6 @@ public class PortfolioServiceImpl implements PortfolioService{
             changeAssetInfoList = getChangeassetInfoList(newPortfolioAssetInfoList);
         }
 
-
-
-
         CalculatedPortfolio calculatedPortfolio = CalculatedPortfolio.builder()
             .original(original)
             .oldPortfolioAssetInfoList(oldPortfolioAssetInfoList)
@@ -738,6 +757,98 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 6. 프론트에 던진다
         return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 제작 미리보기 입니다", calculatedPortfolio);
+    }
+
+    private double calculateCovariance(List<Double> list1, List<Double> list2) {
+        // 두 리스트 중 더 작은 길이를 찾음
+        int minLength = Math.min(list1.size(), list2.size());
+
+        // 평균 계산
+        double mean1 = 0.0;
+        double mean2 = 0.0;
+        for (int i = 0; i < minLength; i++) {
+            mean1 += list1.get(i);
+            mean2 += list2.get(i);
+        }
+        mean1 /= minLength;
+        mean2 /= minLength;
+
+        // 공분산 계산
+        double covariance = 0.0;
+        for (int i = 0; i < minLength; i++) {
+            covariance += (list1.get(i) - mean1) * (list2.get(i) - mean2);
+        }
+        covariance /= minLength; // n으로 나누어 공분산 값 계산
+
+        return covariance;
+    }
+
+    private List<Double> getDailyPriceChangeRateHistory(List<Asset> assetList, Map<String, Double> weights) {
+//        // 각 자산의 예상 수익
+//        List<Double> expectedReturns = findAssets.stream()
+//            .map(Asset::getExpectedReturn)
+//            .toList();
+
+        Double[] realWeights = new Double[assetList.size()];
+        for (int i = 0; i < assetList.size(); i++) {
+            realWeights[i] = weights.get(String.valueOf(i));
+        }
+
+        // 가져올 자산의 기간을 설정한다
+        LocalDateTime endDate = LocalDateTime.now();
+        LocalDateTime startDate = endDate.minusYears(1);
+
+        // 기간 내의 가격 기록을 가지고온다
+        List<AssetHistory> historyOfAssets = assetHistoryRepository.findRecentHistoryOfAssetsBetweenDates(
+            assetList, startDate, endDate);
+
+        // historyOfAssets를 순회하면서, (자산,[가격리스트])의 맵을 만든다
+        Map<Asset, List<Double>> dailyPriceChangeRateMap = new HashMap<>();
+        for (AssetHistory assetHistory : historyOfAssets) {
+            Asset asset = assetHistory.getAsset();
+
+            if (!dailyPriceChangeRateMap.containsKey(asset)) {
+                dailyPriceChangeRateMap.put(asset, new ArrayList<>());
+            } else { // 각 자산별로 가격 변화율의 리스트를 생성
+                dailyPriceChangeRateMap.get(asset).add(assetHistory.getDailyPriceChangeRate());
+            }
+        }
+
+        // 각 자산별 리스트를 돌면서, 가장 길이가 짧은 가격 리스트를 반환한다
+        int minLen = Integer.MAX_VALUE;
+        for (Entry<Asset, List<Double>> entry : dailyPriceChangeRateMap.entrySet()) {
+            List<Double> priceList = entry.getValue();
+
+            minLen = Math.min(minLen, priceList.size());
+        }
+
+        // 각 자산별로 minLen길이만큼 잘라서 리스트에 넣는다
+        List<List<Double>> dailyPriceChangeRateList = new ArrayList<>();
+        for (Entry<Asset, List<Double>> entry : dailyPriceChangeRateMap.entrySet()) {
+            List<Double> priceList = entry.getValue();
+
+            dailyPriceChangeRateList.add(priceList.subList(0, minLen));
+        }
+
+        int numDays = dailyPriceChangeRateList.get(0).size(); // 모든 리스트의 길이가 같다고 가정
+        List<Double> weightedAverages = new ArrayList<>(); // 가중평균을 저장할 리스트
+
+        // 각 날짜별로 가중평균 계산
+        for (int day = 0; day < numDays; day++) {
+            double weightedSum = 0.0;
+
+            // 각 자산에 대해 가중치를 적용하여 해당 날짜의 값을 합산
+            for (int asset = 0; asset < realWeights.length; asset++) {
+                double priceChange = dailyPriceChangeRateList.get(asset).get(day);
+                double weight = realWeights[asset];
+                weightedSum += priceChange * weight;
+            }
+
+            // 가중평균 계산
+            weightedAverages.add(weightedSum);
+        }
+
+        return weightedAverages;
     }
 
     /**
@@ -891,12 +1002,16 @@ public class PortfolioServiceImpl implements PortfolioService{
             .toList();
     }
 
-    private Map<String, Object> getRecommendBody(PortfolioInitDto initInfo) {
+    /**
+     * 유저의 포트폴리오 제작시 요청 정보(initInfo)를 받아서, hadoop api에 날릴 requeset를 만드는 함수
+     */
+    private Map<String, Object> getRecommendBody(PortfolioInitDto initInfo, int minCovarianceSectorId) {
         // hadoop에 보낼 JSON 요청 본문을 만든다
         Map<String, Object> recommendBody = new HashMap<>();
 
         // 새로운 자산 id들을 가지고온다
-        List<Asset> assetsNotInList = assetRepository.findAssetsNotInList(initInfo.assetIds());
+        List<Asset> assetsNotInList = assetRepository.findAssetsNotInList(initInfo.assetIds(), minCovarianceSectorId);
+
         List<Integer> newAssetIds = assetsNotInList.stream().map(Asset::getId).toList();
 
         recommendBody.put("existing_assets", initInfo.assetIds());
@@ -1118,7 +1233,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         }
 
 
-        Map<String, Object> recommendBody = getRecommendBody(initInfo);
+//        Map<String, Object> recommendBody = getRecommendBody(initInfo, minCovarianceSectorId);
 
         // 3. hadoop fastapi로 요청을 보낸다
 //        Map<String, Object> res;
