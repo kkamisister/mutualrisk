@@ -15,6 +15,9 @@ public class DateUtil {
         else if (timeInterval == TimeInterval.MONTH) {
             return dateTime.minusMonths(dDate);
         }
+        else if (timeInterval == TimeInterval.WEEK){
+            return dateTime.minusWeeks(dDate);
+        }
         else {
             return dateTime.minusYears(dDate);
         }
