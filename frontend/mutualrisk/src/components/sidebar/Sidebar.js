@@ -76,7 +76,7 @@ const Sidebar = ({ onHoverChange }) => {
 				alignItems: 'center',
 				width: hover ? '200px' : '73px', // hover 시 Sidebar의 너비 변경
 				height: '100%',
-				zIndex: '1',
+				zIndex: '2',
 			}}
 			onMouseEnter={handleMouseEnter}
 			onMouseLeave={handleMouseLeave}>
