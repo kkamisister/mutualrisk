@@ -15,19 +15,31 @@ export const fetchPortfolioList = async () => {
 
 /**
  * 유저 포트폴리오 조회
- * @param {Number} portfolioId - portfolioId
+ * @param {String} portfolioId - portfolioId
  * @returns {Object} - Response 내 data 객체, API 문서 참조
  */
 export const fetchPortfolioByPorfolioId = async portfolioId => {
-	const response = await axiosInstance.get(`/portfolio/detail?portfolioId=${portfolioId}`);
+	const response = await axiosInstance.get(
+		`/portfolio/detail?portfolioId=${portfolioId}`
+	);
+	return response.data.data;
+};
+
+/**
+ * 포트폴리오 현황 요약 조회
+ * @param {int} ver - ver
+ * @returns {Object} - Response 내 data 객체, API 문서 참조
+ */
+export const fetchPortfolioSummaryByVer = async ver => {
+	const response = await axiosInstance.get(`/portfolio/summary?ver=${ver}`);
 	return response.data.data;
 };
 
 /**
  * 포트폴리오 백테스팅 결과 조회
- * @typedef {String} timeInterval - 
- * @typedef {String} measure - 
- * @typedef {Number} portfolioId
+ * @typedef {String} timeInterval -
+ * @typedef {String} measure -
+ * @typedef {String} portfolioId
  * @param {{}} assetId - assetId
  * @returns {Object} - Response 내 data 객체, API 문서 참조
  */
@@ -57,7 +69,7 @@ export const fetchEtfByAssetId = async assetId => {
  * @param {{assetId, period}}
  * @returns {Object} - Response 내 data 객체, API 문서 참조
  */
-export const fetchAssetHistoryByAssetId = async ({assetId, period}) => {
+export const fetchAssetHistoryByAssetId = async ({ assetId, period }) => {
 	const response = await axiosInstance.get(
 		`/asset/history/${assetId}?period=${period}`
 	);

@@ -4,6 +4,8 @@ import Stack from '@mui/material/Stack';
 import Sidebar from 'components/sidebar/Sidebar';
 import { colors } from 'constants/colors';
 import { Outlet } from 'react-router-dom';
+import HeaderLayout from './header/HeaderLayout';
+
 const DashboardLayout = () => {
 	const [isSidebarHovered, setIsSidebarHovered] = useState(false);
 
@@ -17,19 +19,30 @@ const DashboardLayout = () => {
 			}}>
 			{/* Sidebar 컴포넌트에 hover 상태 변경 핸들러 전달 */}
 			<Sidebar onHoverChange={setIsSidebarHovered} />
-			<Box
-				sx={{
-					padding: '20px 20px 20px 20px',
-					transition: 'width 0.3s ease, left 0.3s ease',
-					position: `absolute`,
-					left: isSidebarHovered ? 200 : 73,
-					minHeight: '100%',
-					maxHeight: 'fit-content',
-					width: `calc(100% - ${isSidebarHovered ? 200 : 73}px - 40px)`, // Sidebar의 hover 상태에 따라 Box의 너비 변경
-					backgroundColor: colors.background.primary,
-				}}>
-				<Outlet />
-			</Box>
+
+			<Stack direction="column" sx={{ width: '100%' }}>
+				<HeaderLayout
+					sx={{
+						width: `calc(100% - ${isSidebarHovered ? 200 : 73}px)`, // Sidebar의 hover 상태에 따라 Box의 너비 변경
+						left: isSidebarHovered ? 200 : 73,
+						transition: 'width 0.3s ease, left 0.3s ease',
+						position: 'sticky',
+						top: 0,
+					}}
+				/>
+				<Box
+					sx={{
+						padding: '20px 20px 20px 20px',
+						transition: 'all 0.3s ease, left 0.3s ease',
+						marginLeft: isSidebarHovered ? '200px' : '73px',
+						minHeight: 'calc(100% - 40px)',
+						maxHeight: 'fit-content',
+						backgroundColor: colors.background.primary,
+						width: `calc(100% - ${isSidebarHovered ? 200 : 73}px - 40px)`, // Sidebar의 hover 상태에 따라 Box의 너비 변경
+					}}>
+					<Outlet />
+				</Box>
+			</Stack>
 		</Stack>
 	);
 };

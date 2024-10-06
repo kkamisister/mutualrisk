@@ -24,7 +24,7 @@ export const fetchFundByFundId = async fundId => {
 };
 
 /**
- * 펀드 평가액 변동 기록 조회 
+ * 펀드 평가액 변동 기록 조회
  * [추후 회사 이름으로 조회하는 부분은 변경될 소지가 있음]
  * - 한 틱은 분기단위(3개월)
  * - 1년 3년 5년으로 요청을 받아서 반환
@@ -34,7 +34,13 @@ export const fetchFundByFundId = async fundId => {
  * @param {{company, period}}
  * @returns {Object} - Response 내 data 객체, API 문서 참조
  */
-export const fetchStockDetailByAssetId = async ({company, period}) => {
-	const response = await axiosInstance.get(`/funds/history?company=${company}&period=${period}`);
+export const fetchFundEvaluateFluctuateByCompany = async ({
+	company,
+	period,
+}) => {
+	console.log(company.period);
+	const response = await axiosInstance.get(
+		`/funds/history?company=${company}&period=${period}`
+	);
 	return response.data.data;
 };
