@@ -32,7 +32,10 @@ const AssetEvaluationChart = ({ title, company }) => {
 			const [, company, period] = queryKey;
 
 			return (
-				await fetchFundEvaluateFluctuateByCompany({ company, period })
+				await fetchFundEvaluateFluctuateByCompany({
+					company: encodeURIComponent(company),
+					period,
+				})
 			).map(history => ({
 				...history,
 				submissionDateString: `${history.submissionDate.year}/${history.submissionDate.quarter}`,
