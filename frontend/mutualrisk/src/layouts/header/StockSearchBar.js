@@ -19,6 +19,10 @@ const StockSearchBar = () => {
 
 	// Function to handle Enter key to navigate to the first result
 	const handleEnterKey = event => {
+		console.log(event);
+		if (searchResult.length === 0) {
+			return;
+		}
 		if (event.key === 'Enter' && searchResult.length > 0) {
 			// Set the TextField value to the first result's name
 			setKeyword(searchResult[0].name);
@@ -50,7 +54,9 @@ const StockSearchBar = () => {
 				onInputChange={(event, newValue) => {
 					setKeyword(newValue); // Update keyword when input changes
 				}}
-				getOptionLabel={option => option.name}
+				getOptionLabel={option => {
+					return option.name ? option.name : option;
+				}}
 				renderOption={(props, option) => (
 					<Stack
 						{...props}
