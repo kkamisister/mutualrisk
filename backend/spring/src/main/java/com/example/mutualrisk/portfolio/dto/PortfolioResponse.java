@@ -6,6 +6,7 @@ import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.portfolio.entity.FrontierPoint;
 import com.example.mutualrisk.portfolio.entity.Portfolio;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
@@ -47,6 +48,14 @@ public record PortfolioResponse() {
         String portfolioId,
         PortfolioPerformance performance,
         List<PortfolioAssetInfo> assets
+    ) {
+
+    }
+
+    @Builder
+    @Schema(name = "포트폴리오 종목 추천 결과")
+    public record PortfolioRecommendResultDto(
+
     ) {
 
     }
@@ -266,6 +275,63 @@ public record PortfolioResponse() {
         Double weight
     ) {
         public static AssetWeightDto of(Asset asset, Double weight) { return new AssetWeightDto(asset, weight);}
+    }
+
+    /**
+     * hadoop 종목 추천 api 반환 dto
+     */
+    public record HadoopRecommendAssetResultDto(
+        @JsonProperty("top_5_assets")
+        List<HadoopRecommendAssetInfo> top5Assets
+    ) {
+
+    }
+
+    /**
+     * 하둡이 추천하는 각 자산별 정보
+     */
+    public record HadoopRecommendAssetInfo(
+        Integer newAssetId,
+        Double expectedReturn,
+        Double volatility,
+        Double sharpeRatio,
+        List<Double> weights
+    ) {
+
+    }
+
+    /**
+     * /recommend api 반환 결과 dto
+     */
+    @Builder
+    public record RecommendAssetResponseResultDto(
+        Integer assetId,
+        String name,
+        String code,
+        String imagePath,
+        String imageName,
+        Double price,
+        String region,
+        String market,
+        Double expectedReturn,
+        Double volatility,
+        Double sharpeRatio
+    ) {
+        public static RecommendAssetResponseResultDto of(Asset asset, Double expectedReturn, Double volatility, Double sharpeRatio) {
+            return RecommendAssetResponseResultDto.builder()
+                .assetId(asset.getId())
+                .name(asset.getName())
+                .code(asset.getCode())
+                .imagePath(asset.getImagePath())
+                .imageName(asset.getCode() + ".png")
+                .price(asset.getRecentPrice())
+                .region(asset.getRegion().toString())
+                .market(asset.getMarket().name())
+                .expectedReturn(expectedReturn)
+                .volatility(volatility)
+                .sharpeRatio(sharpeRatio)
+                .build();
+        }
     }
 
 

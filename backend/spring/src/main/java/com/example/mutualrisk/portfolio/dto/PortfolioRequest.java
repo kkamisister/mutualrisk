@@ -73,12 +73,42 @@ public record PortfolioRequest() {
 	@Builder
 	@Schema(name = "계산된 비중을 기반으로 새로운 자산추천을 요청하는 DTO")
 	public record RecommendAssetRequestDto(
+		@JsonProperty("totalCash")
+		Double totalCash,
 		@JsonProperty("lower_bounds")
 		List<Double> lowerBounds,
 		@JsonProperty("upper_bounds")
 		List<Double> upperBounds,
+		@JsonProperty("exact_proportion")
+		List<Double> exactProportion,
+
 		List<RecommendAssetInfo> newPortfolioAssetInfoList
 	){
+
+	}
+
+	/**
+	 * hadoop 추천 api에 보낼 때 사용하는 request dto
+	 */
+	@Builder
+	@Schema(name = "하둡 추천 api용 request dto")
+	public record HadoopRecommendAssetRequestDto(
+
+		@JsonProperty("existing_assets")
+		List<Integer> existingAssets,
+
+		@JsonProperty("new_assets")
+		List<Integer> newAssets,
+
+		@JsonProperty("lower_bounds")
+		List<Double> lowerBounds,
+
+		@JsonProperty("upper_bounds")
+		List<Double> upperBounds,
+
+		@JsonProperty("exact_proportion")
+		List<Double> exactProportion
+	) {
 
 	}
 
