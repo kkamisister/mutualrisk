@@ -13,49 +13,52 @@ import DashboardLayout from 'layouts/DashboardLayout';
 import MainLayout from 'layouts/MainLayout';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { SnackbarProvider } from 'notistack';
 
 const queryClient = new QueryClient();
 
 const App = () => {
 	return (
-		<QueryClientProvider client={queryClient}>
-			<BrowserRouter>
-				<Routes>
-					<Route element={<MainLayout />}>
-						<Route path="/" element={<HomePage />}></Route>
-						<Route path="/login" element={<LoginPage />}></Route>
-					</Route>
-					<Route
-						path="/login/kakao/callback"
-						element={<LoginCallbackPage />}></Route>
-					<Route element={<DashboardLayout />}>
+		<SnackbarProvider autoHideDuration={1000}>
+			<QueryClientProvider client={queryClient}>
+				<BrowserRouter>
+					<Routes>
+						<Route element={<MainLayout />}>
+							<Route path="/" element={<HomePage />}></Route>
+							<Route path="/login" element={<LoginPage />}></Route>
+						</Route>
 						<Route
-							path="/portfolio/detail"
-							element={<PortfolioDetailPage />}></Route>
-						<Route
-							path="/rebalance"
-							element={<RebalanceMainPage />}></Route>
-						<Route
-							path="/rebalance/result"
-							element={<RebalanceResultPage />}></Route>
-						<Route
-							path="/portfolio/create"
-							element={<PortfolioCreatePage />}></Route>
-						<Route
-							path="/stock/bookmark"
-							element={<StockBookmarkPage />}></Route>
-						<Route
-							path="/stock/detail/:assetId"
-							element={<StockDetailPage />}></Route>
-						<Route path="/fund/list" element={<FundPage />}></Route>
-						<Route
-							path="/fund/detail/:fundId"
-							element={<FundPage />}></Route>
-					</Route>
-				</Routes>
-			</BrowserRouter>
-			<ReactQueryDevtools />
-		</QueryClientProvider>
+							path="/login/kakao/callback"
+							element={<LoginCallbackPage />}></Route>
+						<Route element={<DashboardLayout />}>
+							<Route
+								path="/portfolio/detail"
+								element={<PortfolioDetailPage />}></Route>
+							<Route
+								path="/rebalance"
+								element={<RebalanceMainPage />}></Route>
+							<Route
+								path="/rebalance/result"
+								element={<RebalanceResultPage />}></Route>
+							<Route
+								path="/portfolio/create"
+								element={<PortfolioCreatePage />}></Route>
+							<Route
+								path="/stock/bookmark"
+								element={<StockBookmarkPage />}></Route>
+							<Route
+								path="/stock/detail/:assetId"
+								element={<StockDetailPage />}></Route>
+							<Route path="/fund/list" element={<FundPage />}></Route>
+							<Route
+								path="/fund/detail/:fundId"
+								element={<FundPage />}></Route>
+						</Route>
+					</Routes>
+				</BrowserRouter>
+				<ReactQueryDevtools />
+			</QueryClientProvider>
+		</SnackbarProvider>
 	);
 };
 

@@ -17,13 +17,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchAssetsByKeyword } from 'utils/apis/asset';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 
-const StockSearchModal = ({
-	open,
-	handleClose,
-	setOpenAddSnackbar,
-	setOpenRemoveSnackbar,
-	assetList,
-}) => {
+const StockSearchModal = ({ open, handleClose, assetList }) => {
 	const [keyword, setKeyword] = useState('');
 
 	const { isLoading, data: searchResult = [] } = useQuery({
@@ -125,8 +119,6 @@ const StockSearchModal = ({
 											return asset.assetId === data.assetId;
 										}).length !== 0
 									}
-									setOpenAddSnackbar={setOpenAddSnackbar}
-									setOpenRemoveSnackbar={setOpenRemoveSnackbar}
 								/>
 							))}
 						</Stack>
