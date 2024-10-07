@@ -9,6 +9,7 @@ import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
 import com.example.mutualrisk.asset.service.AssetHistoryService;
 import com.example.mutualrisk.asset.service.AssetService;
+import com.example.mutualrisk.common.client.MutualRiskClient;
 import com.example.mutualrisk.common.constants.BenchMark;
 import com.example.mutualrisk.common.dto.CommonResponse.*;
 import com.example.mutualrisk.common.enums.Market;
@@ -50,7 +51,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -79,6 +79,9 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     // 메일발송을 위한 서비스
     private final EmailService emailService;
+
+    // WebClient Component
+    private final MutualRiskClient mutualRiskClient;
 
 
     @Override
@@ -983,7 +986,7 @@ public class PortfolioServiceImpl implements PortfolioService{
     /**
      * 유저의 포트폴리오 제작시 요청 정보(initInfo)를 받아서, hadoop api에 날릴 requeset를 만드는 함수
      */
-    private Map<String, Object> getRecommendBody(List<Integer> assetIds,List<Double> lowerBounds,List<Double> upperBounds, int minCovarianceSectorId) {
+    private HadoopRecommendAssetRequestDto getHadoopRequestBody(List<Integer> assetIds, List<Double> lowerBounds, List<Double> upperBounds, List<Double> exactProportions, int minCovarianceSectorId) {
         // hadoop에 보낼 JSON 요청 본문을 만든다
         Map<String, Object> recommendBody = new HashMap<>();
 
@@ -992,14 +995,13 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         List<Integer> newAssetIds = assetsNotInList.stream().map(Asset::getId).toList();
 
-        Collections.sort(newAssetIds);
-
-        recommendBody.put("existing_assets", assetIds);
-        recommendBody.put("new_assets", newAssetIds);
-        recommendBody.put("lower_bounds",lowerBounds);
-        recommendBody.put("upper_bounds",upperBounds);
-
-        return recommendBody;
+        return HadoopRecommendAssetRequestDto.builder()
+            .existingAssets(assetIds)
+            .newAssets(newAssetIds)
+            .lowerBounds(lowerBounds)
+            .upperBounds(upperBounds)
+            .exactProportion(exactProportions)
+            .build();
     }
 
     private PortfolioAnalysis getPortfolioAnalysis(PortfolioInitDto initInfo, Map<String, Object> responseBody, PortfolioRequestDto portfolioRequestDto) {
@@ -1449,82 +1451,107 @@ public class PortfolioServiceImpl implements PortfolioService{
      * @return
      */
     @Override
-    public ResponseWithData<PortfolioAnalysis> getRecommendedAssets(RecommendAssetRequestDto recommendAssetRequestDto) {
+    public ResponseWithData<List<RecommendAssetResponseResultDto>> getRecommendedAssets(RecommendAssetRequestDto recommendAssetRequestDto) {
 
-        log.warn("lowerBounds : {}",recommendAssetRequestDto.lowerBounds());
-        log.warn("upperBounds : {}",recommendAssetRequestDto.upperBounds());
+        // 0. 계산에 필요한 변수 초기화
+        Double totalCash = recommendAssetRequestDto.totalCash();
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
         //1. 자산들의 ids를 가지고온다
+        // id 순으로 정렬
         List<Integer> assetIds = recommendAssetRequestDto.newPortfolioAssetInfoList().stream()
-            .map(RecommendAssetInfo::assetId).toList();
+            .map(RecommendAssetInfo::assetId)
+            .sorted()
+            .toList();
 
-        //2. 자산을 가지고온다
+        // 2. 자산을 가지고온다
+        // 기본적으로 id 순으로 정렬
         List<Asset> assetList = assetRepository.findAllById(assetIds);
 
-        // 3. assetList를 assetIds의 순서대로 정렬한다
-        Map<Integer, Asset> assetMap = assetList.stream()
-            .collect(Collectors.toMap(Asset::getId, asset -> asset));
-
-        // 4. assetIds의 순서대로 assetMap에서 Asset을 가져온다
-		List<Asset> sortedAssetList = assetIds.stream()
-			.map(assetMap::get)
-			.toList();
-
-		// 5. fictionalWeights를 뽑아낸다
+		// 3. id순으로 정렬된 각 자산의 weight를 얻는다
 		List<Double> weight = recommendAssetRequestDto.newPortfolioAssetInfoList().stream()
+            .sorted(Comparator.comparingInt(RecommendAssetInfo::assetId))
 			.map(RecommendAssetInfo::weight)
 			.toList();
 
-		Map<String, Double> fictionalWeights = new HashMap<>();
-		for (int idx = 0; idx < weight.size(); idx++) {
-			fictionalWeights.put(String.valueOf(idx), weight.get(idx));
-		}
-
-		// 6. 일별 가격변화를 구한다
-		List<Double> dailyPriceChangeRateHistory = getDailyPriceChangeRateHistory(assetList, fictionalWeights);
-
+        // 4. sector 중, 현재 포트폴리오와 가장 공분산이 적은 섹터를 구한다
+        // 섹터의 대표 포트폴리오로 iShares U.S 섹터별 ETF를 활용
 		int minCovarianceSectorId = -1;
 		Double minCovariance = Double.MAX_VALUE;
 		for (int idx = 0; idx < SECTOR_BENCHMARK_LIST.length; idx++) {
 			BenchMark benchMark = SECTOR_BENCHMARK_LIST[idx];
-			List<Double> dailyPriceChangeRateHistoryOfBenchMark = assetHistoryRepository.getDailyChangeRate(
-				benchMark.getAssetId(), LocalDateTime.now().minusYears(1), LocalDateTime.now());
-			double covariance = calculateCovariance(dailyPriceChangeRateHistory, dailyPriceChangeRateHistoryOfBenchMark);
+
+			double covariance = calculateCovariance(assetList, weight, benchMark.getAssetId());
             if (covariance < minCovariance) {
                 minCovariance = covariance;
                 minCovarianceSectorId = benchMark.getSectorId();
             }
         }
 
-        log.warn("minCovarianceSectorId: {}", minCovarianceSectorId);
-        log.warn("minCovariance: {}", minCovariance);
+        // 5. Hadoop API 호출
+        // 5-1. Hadoop API RequestBody 제작
+        HadoopRecommendAssetRequestDto requestBody = getHadoopRequestBody(assetIds,recommendAssetRequestDto.lowerBounds(),recommendAssetRequestDto.upperBounds(), recommendAssetRequestDto.exactProportion(), minCovarianceSectorId);
+//        System.out.println("requestBody = " + requestBody);
+        // 5-2. Hadoop API를 날리고 요청 받아오기
+        HadoopRecommendAssetResultDto responseBody = mutualRiskClient.post("http://j11a607a.p.ssafy.io:8000/optimize", requestBody)
+            .bodyToMono(HadoopRecommendAssetResultDto.class)
+            .block();
 
-        // 첫부분에 바로 추천종목을 가져오기 위해 요청을 보내기 위한 body를 가지고온다
-        Map<String, Object> recommendBody = getRecommendBody(assetIds,recommendAssetRequestDto.lowerBounds(),recommendAssetRequestDto.upperBounds(), minCovarianceSectorId);
+        // 6. 받은 응답을 가지고 유저가 실제로 투자했을 때의 성과 지표 계산
+        List<RecommendAssetResponseResultDto> realResponse = new ArrayList<>(); // 현재 api가 반환할 data
 
-        for(Entry<String,Object> entry : recommendBody.entrySet()){
-            System.out.println("entry.getKey() = " + entry.getKey());
-            System.out.println("entry.getValue() = " + entry.getValue());
+        for (HadoopRecommendAssetInfo hadoopRecommendAssetInfo: responseBody.top5Assets()) {
+            Integer newAssetId = hadoopRecommendAssetInfo.newAssetId();
+
+            Asset newAsset = assetRepository.findById(newAssetId)
+                .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
+
+            ArrayList<Asset> copiedAssetList = new ArrayList<>(assetList);
+            copiedAssetList.add(newAsset);
+
+            List<Double> weights = hadoopRecommendAssetInfo.weights();
+
+            // 유저가 가지고 있는 돈(totalCash)을 고려하여, 실제 투자했을 때 몇 주씩 투자하게 될지를 계산
+            // 계산 방식 : 반올림
+            List<Integer> purchaseNumList = IntStream.range(0, weights.size())
+                .map(i -> Math.toIntExact(Math.round(totalCash * weights.get(i) / copiedAssetList.get(i).getRecentPrice(recentExchangeRate))))
+                .boxed()
+                .toList();
+
+            List<Double> priceList = copiedAssetList.stream()
+                .map(asset -> asset.getRecentPrice(recentExchangeRate))
+                .toList();
+
+            // 실제 투자 비중을 계산
+            List<Double> realWeights = calculateWeights(priceList, purchaseNumList);
+
+            // 성과 지표 계산 : expectedReturn, volatility, sharpeRatio
+            Double expectedReturn = IntStream.range(0, realWeights.size())
+                .mapToDouble(i -> copiedAssetList.get(i).getExpectedReturn() * realWeights.get(i))
+                .sum();
+
+            List<AssetCovariance> assetCovarianceList = assetCovarianceRepository.findAllCovarianceIn(copiedAssetList);
+            Double volatility = calculatePortfolioVariance(realWeights, assetCovarianceList, copiedAssetList);
+
+            Double sharpeRatio = expectedReturn / volatility;
+
+            realResponse.add(RecommendAssetResponseResultDto.of(newAsset, expectedReturn, volatility, sharpeRatio));
         }
 
-        // 3. requestBody를 fastapi 호출해서, 결과를 받아온다
-        Map<String, Object> responseBody;
-        try {
-            // FastApiService를 사용하여 요청을 보낸다
-            responseBody = fastApiService.getRecommendData(recommendBody);
-        } catch (RuntimeException e) {
-            // 예외 처리
-            log.error("Spark 서버와의 통신 중 오류가 발생했습니다.", e);
-            throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
-        }
+        // sharpeRatio가 큰 순으로 정렬
+        realResponse.sort(Comparator.comparingDouble(RecommendAssetResponseResultDto::sharpeRatio).reversed());
 
-        for(Entry<String,Object> entry : responseBody.entrySet()){
-            System.out.println("entry.getKey() = " + entry.getKey());
-            System.out.println("entry.getValue() = " + entry.getValue());
-        }
+        return new ResponseWithData<>(HttpStatus.OK.value(), "하둡 api 추천 결과 정상 반환", realResponse);
+    }
 
+    // assetList에 weights의 비중으로 투자한 포트폴리오와, assetId에 해당하는 자산 사이의 수익률의 공분산을 계산한다
+    // 이미 저장되어 있는 asset_covariance table 활용
+    private double calculateCovariance(List<Asset> assetList, List<Double> weights, Integer assetId) {
+        List<AssetCovariance> assetCovarianceList = assetCovarianceRepository.findAllCovarianceByAssetsAndAssetId(assetList, assetId);
 
-        return null;
+        return IntStream.range(0, assetList.size())
+            .mapToDouble(i -> assetCovarianceList.get(i).getCovariance() * weights.get(i))
+            .sum();
     }
 
     // fastapi에서 준 결과를 가지고, 새로운 포트폴리오를 만든다
