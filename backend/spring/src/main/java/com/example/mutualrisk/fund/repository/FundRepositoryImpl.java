@@ -133,9 +133,22 @@ public class FundRepositoryImpl implements FundRepository {
 	}
 
 	@Override
+	public List<Fund> getAllPeriodsByCompany(String company) {
+
+		Query query = new Query();
+
+		// 회사명이 company 인 것을 찾는다
+		query.addCriteria(Criteria.where("company").is(company));
+
+		return mongoTemplate.find(query,Fund.class);
+	}
+
+	@Override
 	public Fund save(Fund fund) {
 		return mongoTemplate.save(fund);
 	}
+
+
 
 	@Override
 	public void delete(Fund fund) {

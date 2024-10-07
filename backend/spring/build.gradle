@@ -138,7 +138,7 @@ dependencies {
     // mongoDB 추가
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 //     쿼리 파라미터 로그 남기기
-    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
+//    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
 
     // 이메일 발송을 위한 의존성
     implementation 'org.springframework.boot:spring-boot-starter-mail'

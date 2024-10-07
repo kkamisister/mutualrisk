@@ -1,5 +1,7 @@
 package com.example.mutualrisk.common.config;
 
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,3 +44,21 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
 		return new MongoTemplate(new SimpleMongoClientDatabaseFactory(mongoClient(), getDatabaseName()));
 	}
 }
+
+
+// 펀드 데이터의 수익률 with sp500 을 새롭게 계산할 경우, 이것으로 대체
+// @Override
+// public MongoClient mongoClient(){
+// 	ConnectionString connectionString = new ConnectionString(uri);
+//
+// 	MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
+// 		.applyConnectionString(connectionString)
+// 		.applyToSocketSettings(builder ->
+// 			builder.connectTimeout(0, TimeUnit.MILLISECONDS)  // 연결 타임아웃 무제한
+// 				.readTimeout(0, TimeUnit.MILLISECONDS))   // 소켓 타임아웃 무제한
+// 		.applyToClusterSettings(builder ->
+// 			builder.serverSelectionTimeout(0, TimeUnit.MILLISECONDS))  // 서버 선택 타임아웃 무제한
+// 		.build();
+//
+// 	return MongoClients.create(mongoClientSettings);
+// }

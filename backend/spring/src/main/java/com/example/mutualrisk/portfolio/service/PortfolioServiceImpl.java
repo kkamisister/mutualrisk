@@ -973,6 +973,8 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         List<Integer> newAssetIds = assetsNotInList.stream().map(Asset::getId).toList();
 
+        Collections.sort(newAssetIds);
+
         recommendBody.put("existing_assets", assetIds);
         recommendBody.put("new_assets", newAssetIds);
         recommendBody.put("lower_bounds",lowerBounds);

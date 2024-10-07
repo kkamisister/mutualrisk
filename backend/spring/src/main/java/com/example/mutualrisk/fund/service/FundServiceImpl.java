@@ -1,6 +1,7 @@
 package com.example.mutualrisk.fund.service;
 
 import static com.example.mutualrisk.fund.dto.FundResponse.*;
+import static java.util.function.UnaryOperator.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,7 +26,9 @@ import com.example.mutualrisk.asset.entity.InterestAsset;
 import com.example.mutualrisk.asset.repository.AssetHistoryRepository;
 import com.example.mutualrisk.asset.repository.AssetRepository;
 import com.example.mutualrisk.asset.repository.InterestAssetRepository;
+import com.example.mutualrisk.common.dto.CommonResponse;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
+import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
@@ -36,7 +39,9 @@ import com.example.mutualrisk.fund.dto.FundResponse.FundSummaryInfo;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
 import com.example.mutualrisk.fund.entity.Fund;
 import com.example.mutualrisk.fund.entity.FundAsset;
+import com.example.mutualrisk.fund.entity.FundReturns;
 import com.example.mutualrisk.fund.repository.FundRepository;
+import com.example.mutualrisk.fund.repository.FundReturnsRepository;
 import com.example.mutualrisk.sector.entity.Sector;
 import com.example.mutualrisk.user.entity.User;
 import com.example.mutualrisk.user.repository.UserRepository;
@@ -54,6 +59,8 @@ public class FundServiceImpl implements FundService {
 	private final UserRepository userRepository;
 	private final AssetRepository assetRepository;
 	private final InterestAssetRepository interestAssetRepository;
+
+	private final FundReturnsRepository fundReturnsRepository;
 
 	/**
 	 * 전체 펀드 목록을 조회하는 메서드
@@ -278,29 +285,88 @@ public class FundServiceImpl implements FundService {
 	@Override
 	public ResponseWithData<List<FundReturnDto>> getHistory(Integer userId, String company, Integer period) {
 
+		log.warn("company : {}",company);
+		log.warn("period : {}",period);
+
+		List<FundReturns> fundReturns = fundReturnsRepository.findByCompanyAndPeriod(company, period);
+
+		List<FundReturnDto> fundReturnDtoList = fundReturns.stream()
+			.map(FundReturns -> FundReturnDto.builder()
+				.submissionDate(YearQuarter.of(FundReturns.getSubmissionDate()))
+				.fundReturns(FundReturns.getFundReturn())
+				.sp500Returns(FundReturns.getSp500Return())
+				.build())
+			.toList();
+
+
+		// // S&P 500 자산을 가지고온다
+		// Asset sp500 = assetRepository.findById(3621)
+		// 	.orElseThrow(() -> new MutualRiskException(ErrorCode.SP_NOT_FOUND));
+		//
+		// // 입력받은 펀드의 현재시점으로부터 period 전의 펀드 데이터를 구한다
+		// List<Fund> fundsByPeriod = fundRepository.getFundsByPeriod(company, period);
+		//
+		// List<FundReturnDto> fundReturnDtoList = IntStream.range(0, fundsByPeriod.size())
+		// 	.mapToObj(i -> {
+		// 		var fund = fundsByPeriod.get(i);
+		// 		Double fundReturn = getFundReturn(fund, 3);
+		// 		Double sp500Return = getAssetReturn(sp500, fund.getSubmissionDate().withHour(0), 3);
+		// 		return FundReturnDto.builder()
+		// 			.submissionDate(YearQuarter.of(fund.getSubmissionDate()))
+		// 			.fundReturns(fundReturn)
+		// 			.sp500Returns(sp500Return)
+		// 			.build();
+		// 	})
+		// 	.toList();
+
+		return new ResponseWithData<>(HttpStatus.OK.value(), "데이터 정상 반환", fundReturnDtoList);
+	}
+
+	/**
+	 * 모든 펀드의 전 분기 대비 수익률 및 동기간 내 sp500의 수익률을 계산하여 DB에 업데이트 하기 위한 메서드
+	 * @return
+	 */
+	@Override
+	public ResponseWithMessage buildReturns() {
 		// S&P 500 자산을 가지고온다
 		Asset sp500 = assetRepository.findById(3621)
 			.orElseThrow(() -> new MutualRiskException(ErrorCode.SP_NOT_FOUND));
 
 		// 입력받은 펀드의 현재시점으로부터 period 전의 펀드 데이터를 구한다
-		List<Fund> fundsByPeriod = fundRepository.getFundsByPeriod(company, period);
+		List<Fund> funds = fundRepository.getAllFunds();
 
-		List<FundReturnDto> fundReturnDtoList = IntStream.range(0, fundsByPeriod.size())
-			.mapToObj(i -> {
-				var fund = fundsByPeriod.get(i);
-				Double fundReturn = getFundReturn(fund, 3);
-				Double sp500Return = getAssetReturn(sp500, fund.getSubmissionDate().withHour(0), 3);
-				return FundReturnDto.builder()
-					.submissionDate(YearQuarter.of(fund.getSubmissionDate()))
-					.fundReturns(fundReturn)
-					.sp500Returns(sp500Return)
-					.build();
-			})
-			.toList();
+		// 각 펀드를 그룹핑한다
+		Map<String, Fund> groupedFund = funds.stream()
+			.collect(Collectors.toMap(
+				Fund::getCompany,
+				identity()
+			));
+		
+		// 각 펀드의 전 기간 데이터를 가지고온다
+		for(Entry<String,Fund> entry : groupedFund.entrySet()) {
+			// 회사이름
+			String company = entry.getKey();
+			// 그 회사의 전 기간 보고서
+			List<Fund> periods = fundRepository.getAllPeriodsByCompany(company);
 
-		return new ResponseWithData<>(HttpStatus.OK.value(), "데이터 정상 반환", fundReturnDtoList);
+			// 이제 현재 보고서와 이전 보고서를 비교하여 returns를 계산해야한다
+			for(int idx=periods.size()-1;idx>=0;idx--){
+
+				Fund cur = periods.get(idx);
+				Double fundReturn = getFundReturn(cur,3);
+				Double sp500Return = getAssetReturn(sp500,cur.getSubmissionDate().withHour(0),3);
+
+				// cur 펀드에 대한 정보에 새로운 정보를 추가하여 mongoDB에 넣는다
+				FundReturns fundReturns = FundReturns.of(cur,fundReturn,sp500Return);
+
+				// mongoDB에 저장한다
+				fundReturnsRepository.save(fundReturns);
+
+			}
+			log.warn("company 저장 완료 : {}",company);
+		}
+		return new ResponseWithMessage(HttpStatus.OK.value(),"분기별 수익률 저장 완료");
 	}
-
 
 	private Double getAssetReturn(Asset asset, LocalDateTime startTime, int dMonth) {
 		Double assetPrice = assetHistoryService.getAssetPrice(asset, startTime);
