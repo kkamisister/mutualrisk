@@ -49,7 +49,6 @@ const PortfolioDetailPage = () => {
 					version: latestPortfolio.version,
 					createdAt: latestPortfolio.createdAt,
 				});
-				localStorage.setItem('latestPortfolioId', latestPortfolio.id);
 			}
 		}
 	}, [data, navigate, selectedPortfolio]);
