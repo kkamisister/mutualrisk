@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, Box, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import TitleDivider from 'components/title/TitleDivider';
 import PortfolioPieChart from 'pages/portfolio/rebalance/main/piechart/PortfolioPieChart';
 import PortfolioAssetList from 'pages/portfolio/rebalance/main/piechart/PortfolioAssetList';
-import PortfolioSummary from 'pages/portfolio/rebalance/main/summary/PortfolioSummary';
 import WidgetContainer from 'components/container/WidgetConatiner';
 import CustomButton from 'components/button/BasicButton';
 import Title from 'components/title/Title';
+import PortfolioSummary from 'pages/portfolio/rebalance/main/summary/PortfolioSummary';
 import {
 	fetchPortfolioList,
 	fetchPortfolioByPorfolioId,
@@ -19,26 +19,64 @@ const RebalanceMainPage = () => {
 	const navigate = useNavigate();
 	const [hoveredIndex, setHoveredIndex] = useState(null);
 
-	const { data: portfolioListData } = useQuery({
+	// 캐싱된 최신 포트폴리오 정보
+	const queryClient = useQueryClient();
+	let latestPortfolio = queryClient.getQueryData('latestPortfolio');
+	const latestPortfolioId = latestPortfolio?.portfolioId;
+	const version = latestPortfolio?.version;
+
+	// 만약 캐싱된 데이터가 없을 경우 새로 요청
+	const { data: portfolioListData, isLoading: isListLoading } = useQuery({
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
+		enabled: !latestPortfolio, // 캐싱된 데이터가 없을 때만 실행
+		onSuccess: data => {
+			// 최신 포트폴리오 캐싱
+			if (!latestPortfolio) {
+				const latest = data.portfolioList?.[0];
+				queryClient.setQueryData('latestPortfolio', {
+					portfolioId: latest.id,
+					version: latest.version,
+				});
+				latestPortfolio = latest; // 새로 요청한 데이터를 설정
+			}
+		},
+	});
+
+	// 새로 캐싱된 latestPortfolio 값을 사용하도록 함
+	const finalPortfolioId =
+		latestPortfolio?.portfolioId || portfolioListData?.portfolioList?.[0]?.id;
+	const finalVersion =
+		latestPortfolio?.version ||
+		portfolioListData?.portfolioList?.[0]?.version;
+
+	// portfolioId로 API 호출을 통해 데이터를 가져옴
+	const {
+		data: portfolioData,
+		isLoading,
+		isError,
+	} = useQuery({
+		queryKey: ['portfolio', finalPortfolioId],
+		queryFn: () => fetchPortfolioByPorfolioId(finalPortfolioId),
+		enabled: !!finalPortfolioId, // portfolioId가 있을 때만 호출
 		staleTime: 300000,
 		refetchOnWindowFocus: false,
 	});
 
-	const portfolioList = portfolioListData?.portfolioList || [];
-	const latestPortfolioId = portfolioList?.[0]?.id;
-
-	const { data } = useQuery({
-		queryKey: ['portfolio', latestPortfolioId],
-		queryFn: () => fetchPortfolioByPorfolioId(latestPortfolioId),
-		enabled: !!latestPortfolioId,
-		staleTime: 300000,
-		refetchOnWindowFocus: false,
-	});
-
-	const portfolio = data?.portfolio;
+	const portfolio = portfolioData?.portfolio;
 	const assets = portfolio?.assets || [];
+
+	useEffect(() => {
+		console.log('Portfolio version:', finalVersion);
+	}, [finalVersion]);
+
+	if (isLoading || isListLoading) {
+		return <div>Loading...</div>;
+	}
+
+	if (isError) {
+		return <div>Error loading portfolio data.</div>;
+	}
 
 	return (
 		<Stack
@@ -115,7 +153,13 @@ const RebalanceMainPage = () => {
 							/>
 						</Box>
 					</WidgetContainer>
-					<PortfolioSummary />
+
+					{/* PortfolioSummary는 version 값이 있을 때만 렌더링 */}
+					{finalVersion ? (
+						<PortfolioSummary version={finalVersion} />
+					) : (
+						<div>Loading version...</div>
+					)}
 				</Stack>
 			</Stack>
 			<Stack
