@@ -74,6 +74,18 @@ export const fetchBackTestByPortfolioId = async (
 };
 
 /**
+ * 유저 포트폴리오 섹터조회
+ * @param {String} portfolioId - portfolioId
+ * @returns {Object} - Response 내 data 객체, API 문서 참조
+ */
+export const fetchSectorByPorfolioId = async portfolioId => {
+	const response = await axiosInstance.get(
+		`/portfolio/sector?portfolioId=${portfolioId}`
+	);
+	return response.data.data;
+};
+
+/**
  * 실제 자산 평가액 증감 조회
  * @typedef {String} timeInterval -
  * @typedef {String} measure -
