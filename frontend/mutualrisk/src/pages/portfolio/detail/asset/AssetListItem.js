@@ -25,7 +25,7 @@ const AssetListItem = ({ asset, highlight }) => {
 				code={asset.code}
 				name={asset.name}
 				market={asset.market}
-				image={asset.imagePath}
+				image={`https://j11a607.p.ssafy.io/stockImage/${asset.code}.png`}
 				sx={{
 					backgroundColor: highlight
 						? colors.background.box
