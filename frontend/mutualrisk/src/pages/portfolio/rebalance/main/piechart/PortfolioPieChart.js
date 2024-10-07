@@ -53,8 +53,7 @@ const PortfolioPieChart = ({ assets, onHover }) => {
 					textAnchor="middle"
 					dominantBaseline="middle"
 					fill={fill}
-					fontSize="22px"
-					fontWeight="bold">
+					fontSize="22px">
 					{payload.value.toFixed(1)}%
 				</text>
 			</g>
