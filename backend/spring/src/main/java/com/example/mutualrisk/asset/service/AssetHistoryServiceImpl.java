@@ -50,15 +50,32 @@ public class AssetHistoryServiceImpl implements AssetHistoryService {
 
     @Override
     public List<AssetHistory> getAssetHistoryList(List<Asset> assetList, LocalDateTime targetDate) {
-        LocalDateTime validDate = getValidDate(assetList.get(0), targetDate, 1).get(0);
-        return assetHistoryRepository.findHistoryOfAssets(assetList, validDate);
+
+        List<AssetHistory> assetHistories = new ArrayList<>();
+        for (Asset asset : assetList) {
+            List<LocalDateTime> validDateList = getValidDate(asset, targetDate, 1);
+            if (validDateList.isEmpty()) {
+                assetHistories.add(AssetHistory.builder()
+                    .asset(asset)
+                    .price(asset.getOldestPrice())
+                    .date(targetDate)
+                    .build());
+            }
+            else {
+                LocalDateTime dateTime = validDateList.get(0);
+                AssetHistory assetHistory = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime)
+                    .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
+                assetHistories.add(assetHistory);
+            }
+        }
+
+        return assetHistories;
     }
 
     @Override
     // targetDate와 가장 가까운 영업일 날짜 n개를 반환하는 함수
     public List<LocalDateTime> getValidDate(Asset asset, LocalDateTime targetDate, int num) {
         LocalDateTime startDate = targetDate.minusDays(10 * num);
-
         log.warn("startDate : {}",startDate);
         log.warn("endDate : {}",targetDate);
 
@@ -67,7 +84,7 @@ public class AssetHistoryServiceImpl implements AssetHistoryService {
 
         log.warn("recentHistoriesBetweenDates : {}",recentHistoriesBetweenDates);
 
-        if (recentHistoriesBetweenDates.size() < num) throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
+        if (recentHistoriesBetweenDates.size() < num) return new ArrayList<>();
 
         List<LocalDateTime> validDates = new ArrayList<>();
         for (int i = 0; i < num; i++) {

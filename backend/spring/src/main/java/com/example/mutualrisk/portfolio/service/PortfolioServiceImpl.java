@@ -653,9 +653,8 @@ public class PortfolioServiceImpl implements PortfolioService{
      * @return
      */
     @Override
-    // @Transactional
+    @Transactional
     public ResponseWithData<CalculatedPortfolio> initPortfolio(Integer userId, PortfolioInitDto initInfo) {
-
         List<Asset> findAssets = assetRepository.findAllById(initInfo.assetIds())
             .stream()
             .sorted(Comparator.comparing(asset -> initInfo.assetIds().indexOf(asset.getId())))
@@ -664,7 +663,6 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 1. 유저가 입력한 dto를 받아서, api에 던질 dto 형식으로 고친다
         // PortfolioInitDto -> PortfolioRequestDto로 변환
         PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(findAssets, initInfo);
-        // log.warn("portfolioRequestDto : {}",portfolioRequestDto);
 
         // 2. PortfolioRequestDto를 받아서, Map<String, Object> 형식으로 고친다
         Map<String, Object> requestBody = getRequestBodyFromPortfolioRequestDto(portfolioRequestDto);
@@ -681,6 +679,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         }
 
         // 4. 반환할 데이터 만들기
+
         // 4-1. 새롭게 추천해주는 포트폴리오에 대한 정보
         PortfolioAnalysis original = getPortfolioAnalysis(initInfo, responseBody, portfolioRequestDto);
 
@@ -691,6 +690,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             Portfolio latestPortfolio = myPortfolioList.get(0);
             oldPortfolioAssetInfoList = getRecommendAssetInfoFrom(latestPortfolio);
         }
+
         // 4-3. newPortfolioAssetInfoList 구하기
         List<RecommendAssetInfo> newPortfolioAssetInfoList = original.assets();
 
@@ -704,11 +704,14 @@ public class PortfolioServiceImpl implements PortfolioService{
             changeAssetInfoList = getChangeassetInfoList(newPortfolioAssetInfoList);
         }
 
+
+
         CalculatedPortfolio calculatedPortfolio = CalculatedPortfolio.builder()
             .original(original)
             .oldPortfolioAssetInfoList(oldPortfolioAssetInfoList)
             .newPortfolioAssetInfoList(newPortfolioAssetInfoList)
             .changeAssetInfoList(changeAssetInfoList)
+            //나중에 추천종목 생기면 여기에 추가해서 리턴하기
             .build();
 
         // 6. 프론트에 던진다
@@ -1335,29 +1338,30 @@ public class PortfolioServiceImpl implements PortfolioService{
             .collect(Collectors.toMap(Asset::getId, asset -> asset));
 
         // 4. assetIds의 순서대로 assetMap에서 Asset을 가져온다
-        List<Asset> sortedAssetList = assetIds.stream()
-            .map(assetMap::get)
-            .toList();
+		List<Asset> sortedAssetList = assetIds.stream()
+			.map(assetMap::get)
+			.toList();
 
-        // 5. fictionalWeights를 뽑아낸다
-        List<Double> weight = recommendAssetRequestDto.newPortfolioAssetInfoList().stream()
-            .map(RecommendAssetInfo::weight)
-            .toList();
+		// 5. fictionalWeights를 뽑아낸다
+		List<Double> weight = recommendAssetRequestDto.newPortfolioAssetInfoList().stream()
+			.map(RecommendAssetInfo::weight)
+			.toList();
 
-        Map<String,Double> fictionalWeights = new HashMap<>();
-        for(int idx = 0;idx < weight.size();idx++){
-            fictionalWeights.put(String.valueOf(idx),weight.get(idx));
-        }
+		Map<String, Double> fictionalWeights = new HashMap<>();
+		for (int idx = 0; idx < weight.size(); idx++) {
+			fictionalWeights.put(String.valueOf(idx), weight.get(idx));
+		}
 
-        // 6. 일별 가격변화를 구한다
-        List<Double> dailyPriceChangeRateHistory = getDailyPriceChangeRateHistory(assetList, fictionalWeights);
+		// 6. 일별 가격변화를 구한다
+		List<Double> dailyPriceChangeRateHistory = getDailyPriceChangeRateHistory(assetList, fictionalWeights);
 
-        int minCovarianceSectorId = -1;
-        Double minCovariance = Double.MAX_VALUE;
-        for (int idx=0; idx<SECTOR_BENCHMARK_LIST.length; idx++) {
-            BenchMark benchMark = SECTOR_BENCHMARK_LIST[idx];
-            List<Double> dailyPriceChangeRateHistoryOfBenchMark = assetHistoryRepository.getDailyChangeRate(benchMark.getAssetId(), LocalDateTime.now().minusYears(1), LocalDateTime.now());
-            double covariance = calculateCovariance(dailyPriceChangeRateHistory, dailyPriceChangeRateHistoryOfBenchMark);
+		int minCovarianceSectorId = -1;
+		Double minCovariance = Double.MAX_VALUE;
+		for (int idx = 0; idx < SECTOR_BENCHMARK_LIST.length; idx++) {
+			BenchMark benchMark = SECTOR_BENCHMARK_LIST[idx];
+			List<Double> dailyPriceChangeRateHistoryOfBenchMark = assetHistoryRepository.getDailyChangeRate(
+				benchMark.getAssetId(), LocalDateTime.now().minusYears(1), LocalDateTime.now());
+			double covariance = calculateCovariance(dailyPriceChangeRateHistory, dailyPriceChangeRateHistoryOfBenchMark);
             if (covariance < minCovariance) {
                 minCovariance = covariance;
                 minCovarianceSectorId = benchMark.getSectorId();
@@ -1369,12 +1373,12 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 첫부분에 바로 추천종목을 가져오기 위해 요청을 보내기 위한 body를 가지고온다
         Map<String, Object> recommendBody = getRecommendBody(assetIds,recommendAssetRequestDto.lowerBounds(),recommendAssetRequestDto.upperBounds(), minCovarianceSectorId);
-        
+
         for(Entry<String,Object> entry : recommendBody.entrySet()){
             System.out.println("entry.getKey() = " + entry.getKey());
             System.out.println("entry.getValue() = " + entry.getValue());
         }
-        
+
         // 3. requestBody를 fastapi 호출해서, 결과를 받아온다
         Map<String, Object> responseBody;
         try {
@@ -1385,7 +1389,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             log.error("Spark 서버와의 통신 중 오류가 발생했습니다.", e);
             throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
         }
-        
+
         for(Entry<String,Object> entry : responseBody.entrySet()){
             System.out.println("entry.getKey() = " + entry.getKey());
             System.out.println("entry.getValue() = " + entry.getValue());
