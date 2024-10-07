@@ -191,6 +191,21 @@ public record PortfolioResponse() {
         Integer newPurchaseNum
     ) {
 
+        public static ChangeAssetInfo of(RecommendAssetInfo newAssetInfo,int oldPurchaseNum){
+            return ChangeAssetInfo.builder()
+                .assetId(newAssetInfo.assetId())
+                .name(newAssetInfo.name())
+                .code(newAssetInfo.code())
+                .imagePath(newAssetInfo.imagePath())
+                .imageName(newAssetInfo.imageName())
+                .market(newAssetInfo.market())
+                .price(newAssetInfo.price())
+                .region(newAssetInfo.region())
+                .oldPurchaseNum(oldPurchaseNum)
+                .newPurchaseNum(newAssetInfo.purchaseNum())
+                .build();
+        }
+
     }
 
     @Builder

@@ -20,6 +20,8 @@ public interface FundRepository {
 
 	Optional<Fund> getBeforeQuarterTopHoldAndBuyAmount(Fund fund);
 
+	List<Fund> getAllPeriodsByCompany(String company);
+
 	Fund save(Fund fund);
 
 	void delete(Fund fund);
