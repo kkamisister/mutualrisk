@@ -11,82 +11,178 @@ import {
 	Legend,
 	ResponsiveContainer,
 } from 'recharts';
+import { Stack } from '@mui/material';
+import StockMenuButton from 'pages/stock/detail/StockMenuButton';
+import { colors } from 'constants/colors';
+import { fetchBackTestByPortfolioId } from 'utils/apis/analyze';
 
 const BackTesting = ({
 	portfolioId,
-	timeInterval = 'month',
+	timeInterval = 'day',
 	measure = 'profit',
-	inflationAdjusted = false,
 }) => {
-	const [data, setData] = useState([]);
+	const [mergedData, setMergedData] = useState([]);
+	const [tabMenu, setTabMenu] = useState(timeInterval);
+	const [error, setError] = useState(null);
+	const latestPortfolioId = localStorage.getItem('latestPortfolioId');
 
 	useEffect(() => {
-		// 백엔드 API 호출 부분을 주석 처리
-		// async function fetchData() {
-		//   try {
-		//     const response = await axios.get(`/api/v1/portfolio/backtest`, {
-		//       params: {
-		//         portfolioId,
-		//         timeInterval,
-		//         measure,
-		//         inflationAdjusted`
-		//       }
-		//     });
-		//     const responseData = response.data.data.performances.map(item => ({
-		//       time: new Date(item.time).toISOString().split('T')[0], // 날짜 형식 변환
-		//       valuation: item.valuation
-		//     }));
-		//     setData(responseData);
-		//   } catch (error) {
-		//     console.error("Error fetching backtesting data:", error);
-		//   }
-		// }
+		const fetchData = async () => {
+			try {
+				const selectedResponse = await fetchBackTestByPortfolioId(
+					portfolioId,
+					tabMenu,
+					measure
+				);
+				let selectedPortfolioPerformances =
+					selectedResponse.performances.map(item => ({
+						time: new Date(item.time).toISOString().split('T')[0],
+						selectedValuation: item.valuation,
+					}));
 
-		// 더미 데이터 추가
-		const dummyData = [
-			{ time: '2012-01', portfolioValuation: 10000, benchmark: 10000 },
-			{ time: '2013-01', portfolioValuation: 11000, benchmark: 11500 },
-			{ time: '2014-01', portfolioValuation: 12000, benchmark: 12500 },
-			{ time: '2015-01', portfolioValuation: 13000, benchmark: 13500 },
-			{ time: '2016-01', portfolioValuation: 14000, benchmark: 14000 },
-			{ time: '2017-01', portfolioValuation: 16000, benchmark: 17000 },
-			{ time: '2018-01', portfolioValuation: 18000, benchmark: 19000 },
-			{ time: '2019-01', portfolioValuation: 20000, benchmark: 21000 },
-			{ time: '2020-01', portfolioValuation: 22000, benchmark: 23000 },
-			{ time: '2021-01', portfolioValuation: 25000, benchmark: 26000 },
-			{ time: '2022-01', portfolioValuation: 28000, benchmark: 29000 },
-			{ time: '2023-01', portfolioValuation: 32000, benchmark: 33000 },
-		];
+				let latestPortfolioPerformances = [];
 
-		setData(dummyData);
-	}, [portfolioId, timeInterval, measure, inflationAdjusted]);
+				if (latestPortfolioId && latestPortfolioId !== portfolioId) {
+					const latestResponse = await fetchBackTestByPortfolioId(
+						latestPortfolioId,
+						tabMenu,
+						measure
+					);
+					latestPortfolioPerformances = latestResponse.performances.map(
+						item => ({
+							time: new Date(item.time).toISOString().split('T')[0],
+							latestValuation: item.valuation,
+						})
+					);
+				}
+
+				if (tabMenu === 'year') {
+					selectedPortfolioPerformances =
+						selectedPortfolioPerformances.slice(-10);
+					latestPortfolioPerformances =
+						latestPortfolioPerformances.slice(-10);
+				}
+
+				const merged = selectedPortfolioPerformances.reduce(
+					(acc, selectedItem) => {
+						const matchingLatestItem = latestPortfolioPerformances.find(
+							latestItem => latestItem.time === selectedItem.time
+						);
+						acc.push({
+							time: selectedItem.time,
+							selectedValuation: selectedItem.selectedValuation,
+							latestValuation: matchingLatestItem
+								? matchingLatestItem.latestValuation
+								: null,
+						});
+						return acc;
+					},
+					[]
+				);
+
+				setMergedData(merged);
+			} catch (error) {
+				console.error('Error fetching backtesting data:', error);
+				setError('데이터를 가져오는 중 오류가 발생했습니다.');
+			}
+		};
+
+		if (portfolioId) {
+			fetchData();
+		}
+	}, [portfolioId, tabMenu, measure, latestPortfolioId]);
+
+	if (error) {
+		return <div>{error}</div>;
+	}
+
+	const minValue = Math.min(
+		...mergedData.map(item => item.selectedValuation),
+		...mergedData.map(item => item.latestValuation || Infinity)
+	);
+	const maxValue = Math.max(
+		...mergedData.map(item => item.selectedValuation),
+		...mergedData.map(item => item.latestValuation || -Infinity)
+	);
+
+	const formatNumber = value =>
+		value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+	const formatCurrency = value => `${formatNumber(Math.floor(value))} 원`;
 
 	return (
 		<WidgetContainer>
-			<Title text={'백테스팅'} />
+			<Title text="백테스팅" />
+			<Stack
+				direction="row"
+				spacing={1}
+				sx={{
+					backgroundColor: colors.background.primary,
+					width: 'fit-content',
+					borderRadius: '100px',
+					border: `1px solid ${colors.point.stroke}`,
+				}}>
+				<StockMenuButton
+					label="일"
+					value="day"
+					onChange={() => setTabMenu('day')}
+					selected={tabMenu === 'day'}
+				/>
+				<StockMenuButton
+					label="주"
+					value="week"
+					onChange={() => setTabMenu('week')}
+					selected={tabMenu === 'week'}
+				/>
+				<StockMenuButton
+					label="월"
+					value="month"
+					onChange={() => setTabMenu('month')}
+					selected={tabMenu === 'month'}
+				/>
+				<StockMenuButton
+					label="년"
+					value="year"
+					onChange={() => setTabMenu('year')}
+					selected={tabMenu === 'year'}
+				/>
+			</Stack>
+
 			<ResponsiveContainer width="100%" height={400}>
 				<LineChart
-					data={data}
+					data={mergedData}
 					margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
 					<CartesianGrid strokeDasharray="3 3" />
 					<XAxis dataKey="time" />
-					<YAxis />
-					<Tooltip />
+					<YAxis
+						domain={[minValue * 0.9, maxValue * 1.1]}
+						tickCount={6}
+						tickFormatter={formatNumber}
+					/>
+					<Tooltip formatter={value => `${formatCurrency(value)}`} />
 					<Legend />
-					{/* 두 개의 포트폴리오 성과 */}
-					<Line
-						type="monotone"
-						dataKey="portfolioValuation"
-						name="Portfolio Valuation"
-						stroke="#8884d8"
-					/>
-					{/* 예시: SP500과 비교하는 경우 */}
-					<Line
-						type="monotone"
-						dataKey="benchmark"
-						name="SP500 Benchmark"
-						stroke="#82ca9d"
-					/>
+					{latestPortfolioId === portfolioId ? (
+						<Line
+							type="monotone"
+							dataKey="selectedValuation"
+							name="현재 포트폴리오 평가 가치"
+							stroke="#82ca9d"
+						/>
+					) : (
+						<>
+							<Line
+								type="monotone"
+								dataKey="selectedValuation"
+								name="과거 포트폴리오 평가 가치"
+								stroke="#8884d8"
+							/>
+							<Line
+								type="monotone"
+								dataKey="latestValuation"
+								name="현재 포트폴리오 평가 가치"
+								stroke="#82ca9d"
+							/>
+						</>
+					)}
 				</LineChart>
 			</ResponsiveContainer>
 		</WidgetContainer>
