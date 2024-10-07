@@ -16,4 +16,7 @@ public class Constants {
         new BenchMark(4688, 9),
         new BenchMark(4728, 10)
     };
+
+    public static final int SP500_ASSET_ID = 3621;
+    public static final int KOSPI_ASSET_ID = 648;
 }

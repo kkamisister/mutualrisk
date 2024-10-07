@@ -1,5 +1,6 @@
 package com.example.mutualrisk.fund.service;
 
+import static com.example.mutualrisk.common.constants.Constants.*;
 import static com.example.mutualrisk.fund.dto.FundResponse.*;
 import static java.util.function.UnaryOperator.*;
 
@@ -329,8 +330,12 @@ public class FundServiceImpl implements FundService {
 	@Override
 	public ResponseWithMessage buildReturns() {
 		// S&P 500 자산을 가지고온다
-		Asset sp500 = assetRepository.findById(3621)
+		Asset sp500 = assetRepository.findById(SP500_ASSET_ID)
 			.orElseThrow(() -> new MutualRiskException(ErrorCode.SP_NOT_FOUND));
+
+		// kospi 자산을 가지고 온다
+		Asset kospi = assetRepository.findById(KOSPI_ASSET_ID)
+			.orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
 
 		// 입력받은 펀드의 현재시점으로부터 period 전의 펀드 데이터를 구한다
 		List<Fund> funds = fundRepository.getAllFunds();
@@ -355,9 +360,10 @@ public class FundServiceImpl implements FundService {
 				Fund cur = periods.get(idx);
 				Double fundReturn = getFundReturn(cur,3);
 				Double sp500Return = getAssetReturn(sp500,cur.getSubmissionDate().withHour(0),3);
+				Double kospiReturn = getAssetReturn(kospi,cur.getSubmissionDate().withHour(0),3);
 
 				// cur 펀드에 대한 정보에 새로운 정보를 추가하여 mongoDB에 넣는다
-				FundReturns fundReturns = FundReturns.of(cur,fundReturn,sp500Return);
+				FundReturns fundReturns = FundReturns.of(cur,fundReturn,sp500Return,kospiReturn);
 
 				// mongoDB에 저장한다
 				fundReturnsRepository.save(fundReturns);

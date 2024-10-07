@@ -49,14 +49,15 @@ public class FundReturns {
 	private LocalDateTime submissionDate;
 	private Double fundReturn; // 바로 직전 분기의 펀드에 비해서 수익률이 얼마나 올랐는지 계산한다
 	private Double sp500Return; // 바로 직전 분기의 sp500지수에 비해 수익률이 얼마나 올랐는지 계산한다
+	private Double kospiReturn; // 바로 직전 분기의 kospi지수에 비해 수익률이 얼마나 올랐는지 계산한다
 
-
-	public static FundReturns of(Fund fund,Double fundReturn,Double sp500Return){
+	public static FundReturns of(Fund fund,Double fundReturn,Double sp500Return,Double kospiReturn){
 
 		return FundReturns.builder()
 			.id(fund.getId())
 			.fundReturn(fundReturn)
 			.sp500Return(sp500Return)
+			.kospiReturn(kospiReturn)
 			.valueOfHoldings(fund.getValueOfHoldings())
 			.ceo(fund.getCeo())
 			.image(fund.getImage())
