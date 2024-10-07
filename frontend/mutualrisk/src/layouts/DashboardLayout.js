@@ -13,7 +13,7 @@ const DashboardLayout = () => {
 		<Stack
 			direction="row"
 			sx={{
-				width: '100vw',
+				width: '100%',
 				height: '100%',
 				backgroundColor: colors.background.primary,
 			}}>
