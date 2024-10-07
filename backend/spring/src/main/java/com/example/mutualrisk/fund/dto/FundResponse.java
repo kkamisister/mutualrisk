@@ -109,6 +109,7 @@ public record FundResponse() {
 		Boolean interest,
 		Long valueOfHolding,
 		Double valueOfHoldingRatio,
+		Long changeValueOfHolding,
 		Double currentValue
 	){
 		public static FundAssetInfo of(FundAsset item, Asset asset,Integer rank,Boolean interest,Double valueOfHoldingRatio){
@@ -122,6 +123,7 @@ public record FundResponse() {
 				.interest(interest)
 				.currentValue(asset.getRecentPrice())
 				.valueOfHoldingRatio(valueOfHoldingRatio)
+				.changeValueOfHolding(item.getChangeValueOfHolding())
 				.valueOfHolding(item.getValueOfHolding())
 				.build();
 		}
