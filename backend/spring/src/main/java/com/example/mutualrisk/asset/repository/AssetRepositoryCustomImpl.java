@@ -1,11 +1,7 @@
 package com.example.mutualrisk.asset.repository;
 
 import com.example.mutualrisk.asset.entity.Asset;
-import com.example.mutualrisk.common.enums.Market;
-import com.example.mutualrisk.common.enums.Region;
 import com.example.mutualrisk.common.repository.Querydsl4RepositorySupport;
-import com.example.mutualrisk.industry.entity.QIndustry;
-import com.example.mutualrisk.sector.entity.QSector;
 import com.querydsl.core.types.dsl.CaseBuilder;
 
 import static com.example.mutualrisk.asset.entity.QAsset.asset;
@@ -45,9 +41,12 @@ public class AssetRepositoryCustomImpl extends Querydsl4RepositorySupport implem
     }
 
     @Override
-    public List<Asset> findAssetsNotInList(List<Integer> ids) {
+    public List<Asset> findAssetsNotInList(List<Integer> ids, int sectorId) {
         return selectFrom(asset)
-            .where(asset.id.notIn(ids))
+            .innerJoin(asset.industry, industry).fetchJoin()
+            .innerJoin(industry.sector, sector).fetchJoin()
+            .where(sector.id.eq(sectorId)
+                .and(asset.id.notIn(ids)))
             .fetch();
     }
 }

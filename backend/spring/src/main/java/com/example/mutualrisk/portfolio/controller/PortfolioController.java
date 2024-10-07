@@ -11,6 +11,7 @@ import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
 import com.example.mutualrisk.portfolio.dto.PortfolioRequest;
 import com.example.mutualrisk.portfolio.dto.PortfolioRequest.PortfolioInitDto;
+import com.example.mutualrisk.portfolio.dto.PortfolioRequest.RecommendAssetRequestDto;
 import com.example.mutualrisk.portfolio.service.PortfolioService;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -53,6 +54,7 @@ public class PortfolioController {
             .body(portfolioSummary);
     }
 
+
     @Operation(summary = "유저 포트폴리오 제작 미리보기", description = "포트폴리오 제작 버튼을 누르면 예상 비중을 반환한다")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "포트폴리오 미리보기 성공")
@@ -67,6 +69,17 @@ public class PortfolioController {
 		return ResponseEntity.status(portfolioInfo.status())
 			.body(portfolioInfo);
 	}
+
+    @PostMapping("/recommend")
+    public ResponseEntity<ResponseWithData<PortfolioAnalysis>> recommendPortfolioAssets(@RequestBody
+        RecommendAssetRequestDto recommendAssetRequestDto){
+
+        ResponseWithData<PortfolioAnalysis> recommendedAssets = portfolioService.getRecommendedAssets(
+            recommendAssetRequestDto);
+
+        return ResponseEntity.status(recommendedAssets.status())
+            .body(recommendedAssets);
+    }
 
     /**
      * 유저가 포트폴리오 확정 버튼을 눌렀을 때 동작하는 api

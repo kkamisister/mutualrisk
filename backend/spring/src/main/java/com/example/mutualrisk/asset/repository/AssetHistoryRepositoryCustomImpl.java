@@ -78,4 +78,13 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
             // .groupBy(assetHistory.asset)
             .fetch();
     }
+
+    @Override
+    public List<Double> getDailyChangeRate(Integer assetId, LocalDateTime startTime, LocalDateTime endTime) {
+        return select(assetHistory.dailyPriceChangeRate)
+            .from(assetHistory)
+            .where(assetHistory.asset.id.eq(assetId)
+                .and(assetHistory.date.between(startTime, endTime)))
+            .fetch();
+    }
 }

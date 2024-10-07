@@ -23,7 +23,6 @@ public class OauthLoginService {
 
 	private final UserRepository userRepository;
 	private final RedisHashRepository redisHashRepository;
-	// private final AuthTokenGenerator authTokenGenerator;
 	private final TokenProvider tokenProvider;
 	private final RequestOauthInfoService requestOAuthInfoService;
 	private final AuthCodeRequestUrlProviderComposite authCodeRequestUrlProviderComposite;
