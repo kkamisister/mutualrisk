@@ -57,8 +57,8 @@ export const fetchEfficientFrontierByPorfolioId = async portfolioId => {
  */
 export const fetchBackTestByPortfolioId = async (
 	portfolioId,
-	timeInterval = 'day', // 기본값 제공
-	measure = 'profit' // 기본값 제공
+	timeInterval = 'day',
+	measure = 'profit'
 ) => {
 	const params = {
 		portfolioId,
@@ -67,6 +67,41 @@ export const fetchBackTestByPortfolioId = async (
 	};
 
 	const response = await axiosInstance.get(`/portfolio/backtest`, {
+		params,
+	});
+
+	return response.data.data;
+};
+
+/**
+ * 유저 포트폴리오 섹터조회
+ * @param {String} portfolioId - portfolioId
+ * @returns {Object} - Response 내 data 객체, API 문서 참조
+ */
+export const fetchSectorByPorfolioId = async portfolioId => {
+	const response = await axiosInstance.get(
+		`/portfolio/sector?portfolioId=${portfolioId}`
+	);
+	return response.data.data;
+};
+
+/**
+ * 포트폴리오 monthly return 조회
+ * @typedef {String} measure -
+ * @typedef {String} portfolioId
+ * @param {{}} portfolioId - assetId
+ * @returns {Object} - Response 내 data 객체, API 문서 참조
+ */
+export const fetchMonthlyReturnByPortfolioId = async (
+	portfolioId,
+	measure = 'profit'
+) => {
+	const params = {
+		portfolioId,
+		measure,
+	};
+
+	const response = await axiosInstance.get(`/portfolio/monthly-return`, {
 		params,
 	});
 
