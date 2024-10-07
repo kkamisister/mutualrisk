@@ -1447,11 +1447,13 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     /**
      * 유저에게 받은 정보를 바탕으로 추천 종목을 계산하여 반환하는 메서드
+     *
+     * @param userId
      * @param recommendAssetRequestDto
      * @return
      */
     @Override
-    public ResponseWithData<List<RecommendAssetResponseResultDto>> getRecommendedAssets(RecommendAssetRequestDto recommendAssetRequestDto) {
+    public ResponseWithData<List<RecommendAssetResponseResultDto>> getRecommendedAssets(Integer userId, RecommendAssetRequestDto recommendAssetRequestDto) {
 
         // 0. 계산에 필요한 변수 초기화
         Double totalCash = recommendAssetRequestDto.totalCash();
@@ -1540,6 +1542,9 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // sharpeRatio가 큰 순으로 정렬
         realResponse.sort(Comparator.comparingDouble(RecommendAssetResponseResultDto::sharpeRatio).reversed());
+
+        // redis에 저장
+        redisHashRepository.saveHashData("recommend", String.valueOf(userId), realResponse, 60);
 
         return new ResponseWithData<>(HttpStatus.OK.value(), "하둡 api 추천 결과 정상 반환", realResponse);
     }

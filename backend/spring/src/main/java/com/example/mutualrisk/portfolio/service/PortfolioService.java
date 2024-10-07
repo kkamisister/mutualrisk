@@ -37,5 +37,5 @@ public interface PortfolioService {
 
     ResponseWithData<PortfolioBackTestDto> getBackTestOfCreatedPortfolio(Integer userId, List<RecommendAssetInfo> recommendAssetInfoList, TimeInterval timeInterval, PerformanceMeasure measure);
 
-    ResponseWithData<List<RecommendAssetResponseResultDto>> getRecommendedAssets(RecommendAssetRequestDto recommendAssetRequestDto);
+    ResponseWithData<List<RecommendAssetResponseResultDto>> getRecommendedAssets(Integer userId, RecommendAssetRequestDto recommendAssetRequestDto);
 }
