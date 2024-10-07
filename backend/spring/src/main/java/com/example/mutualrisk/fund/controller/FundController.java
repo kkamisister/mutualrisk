@@ -40,7 +40,7 @@ public class FundController {
 		@ApiResponse(responseCode = "200", description = "펀드 조회 성공"),
 	})
 	@GetMapping("")
-	public ResponseEntity<ResponseWithData> getAllfunds(HttpServletRequest request){
+	public ResponseEntity<ResponseWithData<FundSummaryResultDto>> getAllfunds(HttpServletRequest request){
 
 		Integer userId = (Integer)request.getAttribute("userId");
 
@@ -55,7 +55,7 @@ public class FundController {
 		@ApiResponse(responseCode = "200", description = "펀드 조회 성공"),
 	})
 	@GetMapping("/{fundId}")
-	public ResponseEntity<ResponseWithData> getFund(@PathVariable("fundId") String fundId,HttpServletRequest request){
+	public ResponseEntity<ResponseWithData<FundResultDto>> getFund(@PathVariable("fundId") String fundId,HttpServletRequest request){
 
 		Integer userId = (Integer)request.getAttribute("userId");
 		// log.info("user Id : {}",userId);
