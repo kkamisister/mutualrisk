@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import WidgetContainer from 'components/container/WidgetConatiner';
 import Title from 'components/title/Title';
 import Table from '@mui/material/Table';
@@ -8,23 +9,32 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { fetchMonthlyReturnByPortfolioId } from 'utils/apis/analyze';
 
-const MonthlyReturns = () => {
-	// 더미 데이터 설정
-	const [data] = useState([
-		{ date: '2024-09-01T13:01:12.2434903', portfolioReturns: 6.01 },
-		{ date: '2024-08-01T13:01:12.2434903', portfolioReturns: -2.94 },
-		{ date: '2024-07-01T13:01:12.2434903', portfolioReturns: -5.42 },
-		{ date: '2024-06-01T13:01:12.2434903', portfolioReturns: 9.06 },
-		{ date: '2024-05-01T13:01:12.2434903', portfolioReturns: 7.1 },
-		{ date: '2024-04-01T13:01:12.2434903', portfolioReturns: -1.49 },
-		{ date: '2024-03-01T13:01:12.2434903', portfolioReturns: 4.85 },
-		{ date: '2024-02-01T13:01:12.2434903', portfolioReturns: 3.57 },
-		{ date: '2024-01-01T13:01:12.2434903', portfolioReturns: -6.26 },
-		{ date: '2023-12-01T13:01:12.2434903', portfolioReturns: 6.51 },
-		{ date: '2023-11-01T13:01:12.2434903', portfolioReturns: 9.66 },
-		{ date: '2023-10-01T13:01:12.2434903', portfolioReturns: -7.05 },
-	]);
+const formatPercentage = value => `${value.toFixed(2)}%`;
+const formatDate = dateString => {
+	const date = new Date(dateString);
+	return {
+		year: date.getFullYear(),
+		month: date.getMonth() + 1,
+	};
+};
+
+const MonthlyReturns = ({ portfolioId }) => {
+	const { data, isLoading, isError } = useQuery({
+		queryKey: ['monthlyReturns', portfolioId],
+		queryFn: () => fetchMonthlyReturnByPortfolioId(portfolioId),
+		staleTime: 300000,
+		refetchOnWindowFocus: false,
+	});
+
+	if (isLoading) {
+		return <div>Loading...</div>;
+	}
+
+	if (isError) {
+		return <div>Error fetching monthly returns data.</div>;
+	}
 
 	return (
 		<WidgetContainer>
@@ -40,10 +50,8 @@ const MonthlyReturns = () => {
 					</TableHead>
 					<TableBody>
 						{data.map((item, index) => {
-							const date = new Date(item.date);
-							const year = date.getFullYear();
-							const month = date.getMonth() + 1; // 월은 0부터 시작하므로 1을 더해줌
-							const returnRate = item.portfolioReturns.toFixed(2) + '%'; // 소수점 2자리까지 표시
+							const { year, month } = formatDate(item.date);
+							const returnRate = formatPercentage(item.portfolioReturns);
 
 							return (
 								<TableRow key={index}>

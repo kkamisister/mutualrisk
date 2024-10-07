@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import WidgetContainer from 'components/container/WidgetConatiner';
 import Title from 'components/title/Title';
 import {
@@ -9,37 +10,34 @@ import {
 	Legend,
 	ResponsiveContainer,
 } from 'recharts';
-// import axios from 'axios';
+import { fetchSectorByPorfolioId } from 'utils/apis/analyze';
+import { colors } from 'constants/colors'; // colors import
 
-// 색상 배열 (섹터별 색상 구분을 위해 사용)
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF'];
+// 퍼센티지 형식으로 값을 변환하는 함수
+const formatPercentage = value => `${value.toFixed(1)}%`;
 
-const EquitySectors = () => {
-	const [sectorData, setSectorData] = useState([]);
+const EquitySectors = ({ portfolioId }) => {
+	// React Query를 사용해 API 요청
+	const {
+		data: sectorData,
+		isLoading,
+		isError,
+	} = useQuery({
+		queryKey: ['sectorData', portfolioId],
+		queryFn: () => fetchSectorByPorfolioId(portfolioId),
+		staleTime: 300000, // 데이터가 5분 동안 신선하게 유지됨
+		refetchOnWindowFocus: false,
+	});
 
-	useEffect(() => {
-		// API
-		/*
-		const fetchData = async () => {
-			try {
-				const response = await axios.get('/api/v1/portfolio/sector');
-				setSectorData(response.data.data);
-			} catch (error) {
-				console.error("Error fetching sector data:", error);
-			}
-		};
+	// 로딩 상태 처리
+	if (isLoading) {
+		return <div>Loading...</div>;
+	}
 
-		fetchData();
-		*/
-
-		// 더미 데이터 (API 연결 전에 UI 확인용)
-		const dummySectorData = [
-			{ sectorId: 5, name: 'Technology', weight: 30.91 },
-			{ sectorId: 4, name: 'Consumer Discretionary', weight: 69.09 },
-		];
-
-		setSectorData(dummySectorData);
-	}, []);
+	// 에러 처리
+	if (isError) {
+		return <div>섹터 데이터를 가져오는 중 오류가 발생했습니다.</div>;
+	}
 
 	return (
 		<WidgetContainer>
@@ -54,15 +52,21 @@ const EquitySectors = () => {
 						cy="50%"
 						outerRadius={150}
 						fill="#8884d8"
-						label>
+						label={
+							({ name, percent }) =>
+								`${name}: ${formatPercentage(
+									percent * 100
+								)}` /* 소수점 1자리 퍼센트 표시 */
+						}>
 						{sectorData.map((entry, index) => (
 							<Cell
 								key={`cell-${entry.sectorId}`}
-								fill={COLORS[index % COLORS.length]}
+								fill={colors.piechart[index % colors.piechart.length]} // colors.piechart 배열에서 색상 사용
 							/>
 						))}
 					</Pie>
-					<Tooltip />
+					<Tooltip formatter={value => formatPercentage(value)} />{' '}
+					{/* 툴팁에서도 퍼센티지 표시 */}
 					<Legend />
 				</PieChart>
 			</ResponsiveContainer>

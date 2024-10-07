@@ -9,6 +9,8 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
 import { addBookmark, removeBookmark } from 'utils/apis/interest';
+import { enqueueSnackbar } from 'notistack';
+
 const FundStockListItem = ({
 	assetId,
 	code,
@@ -30,7 +32,7 @@ const FundStockListItem = ({
 		onSuccess: () => {
 			// 북마크 추가 후에 북마크 리스트를 다시 가져오기
 			queryClient.invalidateQueries('fundList');
-			// setOpenSuccessSnackbar(true);
+			enqueueSnackbar('북마크에서 제거했어요', { variant: 'error' });
 		},
 		// Optimistic 처리를 위해 onMutate 사용
 		onMutate: assetId => {
@@ -49,7 +51,7 @@ const FundStockListItem = ({
 		onSuccess: () => {
 			// 북마크 추가 후에 북마크 리스트를 다시 가져오기
 			queryClient.invalidateQueries('fundList');
-			// setOpenSuccessSnackbar(true);
+			enqueueSnackbar('북마크에 추가했어요', { variant: 'success' });
 		},
 		// Optimistic 처리를 위해 onMutate 사용
 		onMutate: assetId => {
