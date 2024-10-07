@@ -1,132 +1,180 @@
 import { useState } from 'react';
-import { Box, Input, Tooltip, Stack } from '@mui/material';
+import { Box, Input, Tooltip, Stack, Typography, Button } from '@mui/material';
 import BasicButton from 'components/button/BasicButton';
 import BasicChip from 'components/chip/BasicChip';
 import { colors } from 'constants/colors';
-import AssetInputModal from 'pages/portfolio/create/AssetInputModal';
-import { createPortfolio } from 'utils/apis/portfolio';
+import { fetchPortfolioList } from 'utils/apis/analyze';
+import useAssetStore from 'stores/useAssetStore';
+import useConstraintStore from 'stores/useConstraintStore';
+import { useQuery } from '@tanstack/react-query';
+import EditIcon from '@mui/icons-material/Edit';
 
 const AssetConstraintList = ({ assets }) => {
-	const [openInputModal, setOpenInputModal] = useState(false);
-	const [lowerBounds, setLowerBounds] = useState(Array(assets.length).fill(0));
-	const [upperBounds, setUpperBounds] = useState(Array(assets.length).fill(1));
-	const [exactProportion, setExactProportion] = useState(
-		Array(assets.length).fill(null)
-	);
+	const [hasPortfolio, setHasPortfolio] = useState(false);
+	const totalCash = useAssetStore(state => state.totalCash);
+	const {
+		lowerBounds,
+		upperBounds,
+		exactProportion,
+		isLowerBoundExceeded,
+		isUpperBoundUnderLimit,
+		setLowerBound,
+		setUpperBound,
+		setExactProportion,
+	} = useConstraintStore();
 
-	const handleLowerChange = (index, value) => {
-		const updated = [...lowerBounds];
-		updated[index] = value !== '' ? parseFloat(value) / 100 : 0;
-		setLowerBounds(updated);
-	};
+	useQuery({
+		queryKey: ['portfolioList'],
+		queryFn: fetchPortfolioList,
+		onSuccess: data => {
+			setHasPortfolio(data.hasPortfolio);
+		},
+	});
 
-	const handleUpperChange = (index, value) => {
-		const updated = [...upperBounds];
-		updated[index] = value !== '' ? parseFloat(value) / 100 : 1;
-		setUpperBounds(updated);
-	};
-
-	const handleExactChange = (index, value) => {
-		const updated = [...exactProportion];
-		updated[index] = value !== '' ? parseFloat(value) / 100 : null;
-		setExactProportion(updated);
-	};
-
-	const handleSubmit = () => {
-		setOpenInputModal(true);
-	};
+	const handleSubmit = () => {};
 
 	return (
 		<Box sx={{ height: '100%', position: 'relative' }}>
-			<Box
-				sx={{
-					display: 'flex',
-					justifyContent: 'space-between',
-					gap: 2,
-				}}>
+			<Stack direction="row" spacing={2}>
 				<BasicChip label="종목 이름" />
 				<BasicChip label="최솟값 (%)" />
 				<BasicChip label="최댓값 (%)" />
 				<BasicChip label="지정 비율 (%)" />
-			</Box>
+			</Stack>
 
-			{/* 스크롤 가능한 영역 */}
 			<Box
 				sx={{
 					pt: 2,
-					height: 'calc(100% - 100px)',
+					height: 'calc(100% - 120px)',
 					overflowY: 'auto',
-					'&::-webkit-scrollbar': { display: 'none' }, // 스크롤바 숨기기
-					msOverflowStyle: 'none', // IE 및 Edge에서 스크롤바 숨기기
-					scrollbarWidth: 'none', // Firefox에서 스크롤바 숨기기
+					'&::-webkit-scrollbar': { display: 'none' },
+					msOverflowStyle: 'none',
+					scrollbarWidth: 'none',
 				}}>
 				<Stack spacing={2}>
-					{assets.map((asset, index) => (
-						<Box
-							key={asset.assetId}
-							sx={{
-								display: 'flex',
-								justifyContent: 'space-between',
-								flexWrap: 'nowrap',
-							}}>
-							<Stack
-								sx={{
-									flex: 1,
-									alignItems: 'center',
-									justifyContent: 'center',
-									bgcolor: colors.background.box,
-									borderRadius: '8px',
-									fontSize: '12px',
-									fontWeight: 'bold',
-								}}>
-								{asset.region === 'KR' ? (
-									asset.name
-								) : (
-									<Tooltip title={asset.name}>
-										<span>{asset.code}</span>
-									</Tooltip>
-								)}
+					{assets.map((asset, index) => {
+						const isPriceOverTotalCash = asset.price > totalCash;
+						const lowerBoundTooltip = isLowerBoundExceeded
+							? '최소 비율 합이 100%를 초과했습니다.'
+							: '';
+						const upperBoundTooltip = isUpperBoundUnderLimit
+							? '최대 비율 합이 100%미만입니다.'
+							: '';
+						const priceTooltip = isPriceOverTotalCash
+							? '종목 가격이 총 자산보다 높습니다'
+							: '';
+
+						return (
+							<Stack direction="row" key={asset.assetId} spacing={2}>
+								<Stack
+									sx={{
+										flex: 1,
+										alignItems: 'center',
+										justifyContent: 'center',
+										bgcolor: colors.background.box,
+										borderRadius: '8px',
+										fontSize: '12px',
+										fontWeight: 'bold',
+									}}>
+									{asset.region === 'KR' ? (
+										asset.name
+									) : (
+										<Tooltip title={asset.name}>
+											<span>{asset.code}</span>
+										</Tooltip>
+									)}
+								</Stack>
+
+								<Tooltip title={lowerBoundTooltip || priceTooltip}>
+									<Input
+										type="number"
+										defaultValue={0}
+										onChange={e =>
+											setLowerBound(index, e.target.value)
+										}
+										sx={{
+											flex: 1,
+											backgroundColor:
+												isLowerBoundExceeded || isPriceOverTotalCash
+													? colors.background.red
+													: 'inherit',
+											borderRadius: '8px',
+										}}
+										inputProps={{
+											style: {
+												textAlign: 'center',
+											},
+										}}
+									/>
+								</Tooltip>
+
+								<Tooltip title={upperBoundTooltip || priceTooltip}>
+									<Input
+										type="number"
+										defaultValue={100}
+										onChange={e =>
+											setUpperBound(index, e.target.value)
+										}
+										sx={{
+											flex: 1,
+											backgroundColor:
+												isUpperBoundUnderLimit ||
+												isPriceOverTotalCash
+													? colors.background.red
+													: 'inherit',
+											borderRadius: '8px',
+										}}
+										inputProps={{
+											style: {
+												textAlign: 'center',
+											},
+										}}
+									/>
+								</Tooltip>
+
+								<Tooltip title={priceTooltip}>
+									<Input
+										type="number"
+										defaultValue=""
+										onChange={e =>
+											setExactProportion(index, e.target.value)
+										}
+										sx={{
+											flex: 1,
+											backgroundColor: isPriceOverTotalCash
+												? colors.background.red
+												: 'inherit',
+											borderRadius: '8px',
+										}}
+										inputProps={{
+											style: {
+												textAlign: 'center',
+											},
+										}}
+									/>
+								</Tooltip>
 							</Stack>
-
-							<Box sx={{ flex: 1, mx: 1 }}>
-								{/* 최솟값 */}
-								<Input
-									fullWidth
-									type="number"
-									defaultValue={0}
-									onChange={e =>
-										handleLowerChange(index, e.target.value)
-									}
-								/>
-							</Box>
-
-							<Box sx={{ flex: 1, mx: 1 }}>
-								{/* 최댓값 */}
-								<Input
-									type="number"
-									defaultValue={100}
-									onChange={e =>
-										handleUpperChange(index, e.target.value)
-									}
-								/>
-							</Box>
-
-							<Box sx={{ flex: 1, mx: 1 }}>
-								{/* 지정비율 */}
-								<Input
-									type="number"
-									defaultValue=""
-									onChange={e =>
-										handleExactChange(index, e.target.value)
-									}
-								/>
-							</Box>
-						</Box>
-					))}
+						);
+					})}
 				</Stack>
 			</Box>
 
-			{/* 하단 버튼 */}
+			<Stack direction="row" sx={{ alignItems: 'center' }}>
+				<Tooltip
+					title={
+						hasPortfolio
+							? '현재 포트폴리오의 자산 가치를 기반으로 산정된 금액입니다.'
+							: ''
+					}>
+					총자산:{' '}
+					<Input sx={{ fontWeight: 'bold' }} defaultValue={totalCash} /> 원
+				</Tooltip>
+				<Button>만원</Button>
+				<Button>십만원</Button>
+				<Button>백만원</Button>
+				<Button>천만원</Button>
+			</Stack>
+
 			<Box
 				sx={{
 					position: 'absolute',
@@ -136,13 +184,6 @@ const AssetConstraintList = ({ assets }) => {
 				}}>
 				<BasicButton text="포트폴리오 제작하기" onClick={handleSubmit} />
 			</Box>
-
-			{openInputModal && (
-				<AssetInputModal
-					open={openInputModal}
-					onClose={() => setOpenInputModal(false)}
-				/>
-			)}
 		</Box>
 	);
 };

@@ -1,45 +1,61 @@
-import { Modal, Box, Button, TextField, Stack } from '@mui/material';
+import { Modal, Button, TextField, Stack, Typography } from '@mui/material';
 import { useState } from 'react';
 import useAssetStore from 'stores/useAssetStore';
+import CloseIcon from '@mui/icons-material/Close';
+import { colors } from 'constants/colors';
+import { useQuery } from '@tanstack/react-query';
+import { fetchPortfolioList } from 'utils/apis/analyze';
 
-const AssetInputModal = ({ open, handleClose }) => {
+const AssetInputModal = ({ open, handleClose, child }) => {
 	const addTotalCash = useAssetStore(state => state.addTotalCash);
-	const [assetValue, setAssetValue] = useState(''); // 자산 입력 상태 관리
-	const [error, setError] = useState(false); // 오류 상태 관리
+	const [assetValue, setAssetValue] = useState('');
+	const [displayValue, setDisplayValue] = useState(''); // 화면에 표시할 값
+	const [error, setError] = useState(false);
 
-	// 자산 입력 핸들러 (쉼표 추가)
+	useQuery({
+		queryKey: ['portfolioList'],
+		queryFn: fetchPortfolioList,
+		onSuccess: data => {
+			const initialValue = data.recentValuation.toLocaleString();
+			setAssetValue(initialValue);
+			setDisplayValue(initialValue);
+		},
+	});
+
 	const handleChange = e => {
-		let value = e.target.value.replace(/,/g, ''); // 쉼표 제거 후 숫자 변환
-		if (!isNaN(value) && value >= 0) {
-			setAssetValue(Number(Math.floor(value)).toLocaleString()); // 숫자로 변환 후 쉼표 추가
-			if (error) setError(false); // 오류 해제
+		const value = e.target.value.replace(/,/g, ''); // 쉼표 제거한 값
+		setDisplayValue(e.target.value); // 입력한 그대로 표시
+
+		// 숫자만 포함하고 0 이상인 경우에만 assetValue 업데이트
+		if (/^\d*$/.test(value) && Number(value) >= 0) {
+			setAssetValue(value === '' ? '' : Number(value).toLocaleString());
+			setError(false);
 		} else {
-			setError(true); // 숫자가 아니거나 음수일 경우 오류
+			setError(true); // 유효하지 않은 입력은 에러 표시
 		}
 	};
 
-	// 금액 버튼 클릭 시 자산에 해당 금액 더하기
 	const handleAmountClick = amount => {
-		let currentValue = assetValue.replace(/,/g, '') || 0; // 현재 자산 값에서 쉼표 제거
-		let newValue = Number(currentValue) + amount;
-		setAssetValue(newValue.toLocaleString()); // 금액 더한 후 쉼표 추가
+		const currentValue = parseInt(assetValue.replace(/,/g, ''), 10) || 0;
+		const newValue = currentValue + amount;
+		const newValueStr = newValue.toLocaleString();
+
+		setAssetValue(newValueStr);
+		setDisplayValue(newValueStr);
 	};
 
-	// 확인 버튼 클릭 핸들러
 	const handleConfirm = () => {
-		let value = parseFloat(assetValue.replace(/,/g, '')); // 쉼표 제거 후 숫자로 변환
+		const value = parseInt(assetValue.replace(/,/g, ''), 10);
+
 		if (!value || isNaN(value) || value <= 0) {
-			setError(true); // 자산 값이 없거나 잘못된 값이면 오류
+			setError(true);
 			return;
 		}
 
-		// Zustand에 자산 값 저장
-		addTotalCash({
-			value: value, // 숫자로 변환 후 저장
-		});
-
-		// 상태 초기화 및 모달 닫기
+		addTotalCash(assetValue);
 		setAssetValue('');
+		setDisplayValue('');
+
 		handleClose();
 	};
 
@@ -47,34 +63,46 @@ const AssetInputModal = ({ open, handleClose }) => {
 		<Modal
 			open={open}
 			onClose={() => {
-				if (!assetValue || error) return; // 자산 입력이 없으면 닫히지 않음
 				handleClose();
 			}}
 			aria-labelledby="asset-input-modal"
 			aria-describedby="modal-to-input-asset-value">
-			<Box
+			<Stack
+				spacing={1}
 				sx={{
 					position: 'absolute',
 					top: '50%',
 					left: '50%',
 					transform: 'translate(-50%, -50%)',
 					p: 3,
-					backgroundColor: 'white',
 					borderRadius: 2,
 					minWidth: 300,
+					bgcolor: colors.background.white,
 				}}>
-				<h2>자산 입력</h2>
+				<Stack direction="row" justifyContent="space-between">
+					<Typography sx={{ fontWeight: 'bold' }}>자산 입력</Typography>
+					<CloseIcon
+						onClick={handleClose}
+						sx={{
+							fontSize: '16px',
+							color: colors.text.sub2,
+							'&:hover': {
+								color: colors.text.main,
+							},
+						}}
+					/>
+				</Stack>
 				<TextField
 					label="자산 (원)"
 					type="text"
-					value={assetValue}
+					value={displayValue} // 입력한 그대로 표시
 					onChange={handleChange}
 					fullWidth
 					error={error}
 					helperText={error ? '유효한 자산 금액을 입력하세요' : ''}
 				/>
 				{/* 금액 버튼 추가 */}
-				<Stack direction="row" spacing={1} mt={2}>
+				<Stack direction="row" spacing={1}>
 					<Button
 						variant="outlined"
 						onClick={() => handleAmountClick(10000)}>
@@ -96,6 +124,7 @@ const AssetInputModal = ({ open, handleClose }) => {
 						1000만 원
 					</Button>
 				</Stack>
+				{child}
 				<Button
 					variant="contained"
 					onClick={handleConfirm}
@@ -103,7 +132,7 @@ const AssetInputModal = ({ open, handleClose }) => {
 					fullWidth>
 					확인
 				</Button>
-			</Box>
+			</Stack>
 		</Modal>
 	);
 };
