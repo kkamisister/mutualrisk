@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.mutualrisk.common.dto.CommonResponse;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
+import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
 import com.example.mutualrisk.fund.dto.FundResponse.FundReturnDto;
 import com.example.mutualrisk.fund.dto.FundResponse.FundResultDto;
 import com.example.mutualrisk.fund.dto.FundResponse.FundSummaryResultDto;
@@ -80,4 +82,18 @@ public class FundController {
 		return ResponseEntity.status(fundHistory.status())
 			.body(fundHistory);
 	}
+
+	/**
+	 * 현존하는 펀드의 이전 직전분기 대비 수익률 및 동기간 sp500의 수익률을 계산하는 메서드
+	 * @return
+	 */
+	@GetMapping("/build/returns")
+	private ResponseEntity<?> buildReturns(){
+		ResponseWithMessage responseWithMessage = fundService.buildReturns();
+
+		return ResponseEntity.status(responseWithMessage.status())
+			.body(responseWithMessage);
+	}
+
+
 }
