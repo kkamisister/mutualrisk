@@ -14,67 +14,100 @@ import {
 import { Stack } from '@mui/material';
 import StockMenuButton from 'pages/stock/detail/StockMenuButton';
 import { colors } from 'constants/colors';
-import { fetchStockDetailByAssetId } from 'utils/apis/analyze';
+import { fetchBackTestByPortfolioId } from 'utils/apis/analyze';
 
 const BackTesting = ({
 	portfolioId,
 	timeInterval = 'day',
 	measure = 'profit',
-	inflationAdjusted = false,
 }) => {
-	const [data, setData] = useState([]);
+	const [mergedData, setMergedData] = useState([]);
 	const [tabMenu, setTabMenu] = useState(timeInterval);
-	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const latestPortfolioId = localStorage.getItem('latestPortfolioId');
 
 	useEffect(() => {
-		async function fetchData() {
+		const fetchData = async () => {
 			try {
-				setLoading(true);
-				const response = await fetchStockDetailByAssetId(
+				const selectedResponse = await fetchBackTestByPortfolioId(
 					portfolioId,
 					tabMenu,
 					measure
 				);
-				let responseData = response.performances.map(item => ({
-					time: new Date(item.time).toISOString().split('T')[0],
-					valuation: item.valuation,
-				}));
+				let selectedPortfolioPerformances =
+					selectedResponse.performances.map(item => ({
+						time: new Date(item.time).toISOString().split('T')[0],
+						selectedValuation: item.valuation,
+					}));
 
-				if (tabMenu === 'year') {
-					responseData = responseData.slice(-10);
+				let latestPortfolioPerformances = [];
+
+				if (latestPortfolioId && latestPortfolioId !== portfolioId) {
+					const latestResponse = await fetchBackTestByPortfolioId(
+						latestPortfolioId,
+						tabMenu,
+						measure
+					);
+					latestPortfolioPerformances = latestResponse.performances.map(
+						item => ({
+							time: new Date(item.time).toISOString().split('T')[0],
+							latestValuation: item.valuation,
+						})
+					);
 				}
 
-				setData(responseData);
+				if (tabMenu === 'year') {
+					selectedPortfolioPerformances =
+						selectedPortfolioPerformances.slice(-10);
+					latestPortfolioPerformances =
+						latestPortfolioPerformances.slice(-10);
+				}
+
+				const merged = selectedPortfolioPerformances.reduce(
+					(acc, selectedItem) => {
+						const matchingLatestItem = latestPortfolioPerformances.find(
+							latestItem => latestItem.time === selectedItem.time
+						);
+						acc.push({
+							time: selectedItem.time,
+							selectedValuation: selectedItem.selectedValuation,
+							latestValuation: matchingLatestItem
+								? matchingLatestItem.latestValuation
+								: null,
+						});
+						return acc;
+					},
+					[]
+				);
+
+				setMergedData(merged);
 			} catch (error) {
 				console.error('Error fetching backtesting data:', error);
 				setError('데이터를 가져오는 중 오류가 발생했습니다.');
-			} finally {
-				setLoading(false);
 			}
-		}
+		};
 
 		if (portfolioId) {
 			fetchData();
 		}
-	}, [portfolioId, tabMenu, measure]);
+	}, [portfolioId, tabMenu, measure, latestPortfolioId]);
 
 	if (error) {
 		return <div>{error}</div>;
 	}
 
-	const minValue = Math.min(...data.map(item => item.valuation));
-	const maxValue = Math.max(...data.map(item => item.valuation));
+	const minValue = Math.min(
+		...mergedData.map(item => item.selectedValuation),
+		...mergedData.map(item => item.latestValuation || Infinity)
+	);
+	const maxValue = Math.max(
+		...mergedData.map(item => item.selectedValuation),
+		...mergedData.map(item => item.latestValuation || -Infinity)
+	);
 
-	const formatNumber = value => {
-		return Math.floor(value)
-			.toString()
-			.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-	};
-
-	const formatCurrency = value => {
-		return `${formatNumber(value)} 원`;
-	};
+	const formatNumber = value =>
+		value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+	const formatCurrency = value => `${formatNumber(Math.floor(value))} 원`;
 
 	return (
 		<WidgetContainer>
@@ -114,12 +147,9 @@ const BackTesting = ({
 				/>
 			</Stack>
 
-			<ResponsiveContainer
-				width="100%"
-				height={400}
-				style={{ opacity: loading ? 0.5 : 1 }}>
+			<ResponsiveContainer width="100%" height={400}>
 				<LineChart
-					data={data}
+					data={mergedData}
 					margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
 					<CartesianGrid strokeDasharray="3 3" />
 					<XAxis dataKey="time" />
@@ -130,12 +160,29 @@ const BackTesting = ({
 					/>
 					<Tooltip formatter={value => `${formatCurrency(value)}`} />
 					<Legend />
-					<Line
-						type="monotone"
-						dataKey="valuation"
-						name="포트폴리오 평가 가치"
-						stroke="#8884d8"
-					/>
+					{latestPortfolioId === portfolioId ? (
+						<Line
+							type="monotone"
+							dataKey="selectedValuation"
+							name="현재 포트폴리오 평가 가치"
+							stroke="#82ca9d"
+						/>
+					) : (
+						<>
+							<Line
+								type="monotone"
+								dataKey="selectedValuation"
+								name="과거 포트폴리오 평가 가치"
+								stroke="#8884d8"
+							/>
+							<Line
+								type="monotone"
+								dataKey="latestValuation"
+								name="현재 포트폴리오 평가 가치"
+								stroke="#82ca9d"
+							/>
+						</>
+					)}
 				</LineChart>
 			</ResponsiveContainer>
 		</WidgetContainer>
