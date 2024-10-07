@@ -5,12 +5,11 @@ import Select from 'react-select';
 import StockSearchModal from './StockSearchModal';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import StockBookmarkListItem from './StockBookmarkListItem';
-import SuccessSnackbar from 'components/snackbar/SuccessSnackbar';
 import StockSkeletonCard from 'components/card/StockSkeletonCard';
 import { removeBookmark } from 'utils/apis/interest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import AddStockButton from './AddBookmarkButton';
-
+import { enqueueSnackbar } from 'notistack';
 const options = [
 	{ value: 'NAME', label: '이름' },
 	{ value: 'RETURN', label: '수익률' },
@@ -22,32 +21,15 @@ const StockBookmarkList = ({ isLoading, assetList }) => {
 	const [openSearchModal, setOpenSearchModal] = useState(false);
 	const [bookmarkListEdit, setBookmarkListEdit] = useState(false);
 
-	const [openAddSnackbar, setOpenAddSnackbar] = useState(false); // 성공했을 경우 열리는 Snackbar 상태
-	const [openRemoveSnackbar, setOpenRemoveSnackbar] = useState(false); // 성공했을 경우 열리는 Snackbar 상태
-
-	const handleAddSnackbarClose = (event, reason) => {
-		if (reason === 'clickaway') {
-			return;
-		}
-		setOpenAddSnackbar(false);
-	};
-
-	const handleRemoveSnackbarClose = (event, reason) => {
-		if (reason === 'clickaway') {
-			return;
-		}
-		setOpenRemoveSnackbar(false);
-	};
-
 	const queryClient = useQueryClient();
 
-	// 북마크 추가를 처리하는 Mutation
+	// 북마크 제거를 처리하는 Mutation
 	const removeMutation = useMutation({
 		mutationFn: removeBookmark,
 		onSuccess: () => {
 			// 북마크 추가 후에 북마크 리스트를 다시 가져오기
 			queryClient.invalidateQueries('bookmark');
-			setOpenAddSnackbar(true);
+			enqueueSnackbar('북마크에서 제거했어요', { variant: 'error' });
 		},
 		// Optimistic 처리를 위해 onMutate 사용
 		onMutate: assetId => {
@@ -178,21 +160,7 @@ const StockBookmarkList = ({ isLoading, assetList }) => {
 				handleClose={() => {
 					setOpenSearchModal(false);
 				}}
-				setOpenAddSnackbar={setOpenAddSnackbar}
-				setOpenRemoveSnackbar={setOpenRemoveSnackbar}
 				assetList={assetList}
-			/>
-			<SuccessSnackbar
-				message="북마크에 추가하였습니다"
-				openSnackbar={openAddSnackbar}
-				// openSnackbar={true}
-				handleSnackbarClose={handleAddSnackbarClose}
-			/>
-			<SuccessSnackbar
-				message="북마크에서 제거하였습니다"
-				openSnackbar={openRemoveSnackbar}
-				// openSnackbar={true}
-				handleSnackbarClose={handleRemoveSnackbarClose}
 			/>
 		</Stack>
 	);

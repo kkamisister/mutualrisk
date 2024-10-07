@@ -4,22 +4,17 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
 import StarIcon from '@mui/icons-material/Star';
 import { addBookmark, removeBookmark } from 'utils/apis/interest';
+import { enqueueSnackbar } from 'notistack';
 
-const StockSearchListItem = ({
-	data,
-	isAdded,
-	setOpenSuccessSnackbar,
-	setFailedSuccessSnackbar,
-}) => {
+const StockSearchListItem = ({ data, isAdded }) => {
 	const queryClient = useQueryClient();
-
 	// 북마크 추가를 처리하는 Mutation
 	const removeMutation = useMutation({
 		mutationFn: removeBookmark,
 		onSuccess: () => {
 			// 북마크 추가 후에 북마크 리스트를 다시 가져오기
 			queryClient.invalidateQueries('bookmark');
-			setOpenSuccessSnackbar(true);
+			enqueueSnackbar('북마크에서 제거했어요', { variant: 'error' });
 		},
 		// Optimistic 처리를 위해 onMutate 사용
 		onMutate: assetId => {
@@ -38,7 +33,7 @@ const StockSearchListItem = ({
 		onSuccess: () => {
 			// 북마크 추가 후에 북마크 리스트를 다시 가져오기
 			queryClient.invalidateQueries('bookmark');
-			setOpenSuccessSnackbar(true);
+			enqueueSnackbar('북마크에 추가했어요', { variant: 'success' });
 		},
 		// Optimistic 처리를 위해 onMutate 사용
 		onMutate: assetId => {

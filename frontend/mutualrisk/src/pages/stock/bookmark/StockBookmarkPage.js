@@ -5,7 +5,7 @@ import StockBookmarkList from './StockBookmarkList';
 import StockNewsList from './StockNewsList';
 import { useQuery } from '@tanstack/react-query';
 import { fetchBookmarks } from 'utils/apis/interest';
-
+import { enqueueSnackbar } from 'notistack';
 const StockBookmarkPage = () => {
 	const { data, isLoading, isError } = useQuery({
 		queryKey: ['bookmark'], // 새롭게 자산이 추가되면 추가되는 자산 트래킹
