@@ -1,72 +1,27 @@
-import React, { useState } from 'react';
-import { Box, IconButton, Stack, Typography } from '@mui/material';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import React from 'react';
+import { Box, Stack } from '@mui/material';
 import PortfolioAssetListItem from 'pages/portfolio/rebalance/main/piechart/PortfolioAssetListItem';
 
 const PortfolioAssetList = ({ assets, hoveredIndex }) => {
-	const [currentPage, setCurrentPage] = useState(0);
-	const itemsPerPage = 5;
-
-	const totalPages = Math.ceil(assets.length / itemsPerPage);
-	const startIndex = currentPage * itemsPerPage;
-	const currentAssets = assets.slice(startIndex, startIndex + itemsPerPage);
-
-	const handleNextPage = () => {
-		if (currentPage + 1 < totalPages) {
-			setCurrentPage(prev => prev + 1);
-		}
-	};
-
-	const handlePrevPage = () => {
-		if (currentPage > 0) {
-			setCurrentPage(prev => prev - 1);
-		}
-	};
-
 	return (
-		<Stack sx={{ height: '410px', position: 'relative' }}>
+		<Stack sx={{ height: '330px', position: 'relative' }}>
 			<Box
 				sx={{
 					flex: 1,
 					display: 'flex',
 					flexDirection: 'column',
 					justifyContent: 'space-between',
+					overflowY: 'auto',
+					padding: '20px 0',
 				}}>
-				<Box sx={{ marginTop: '20px', minWidth: 0, flex: 1 }}>
-					<Box sx={{ flex: 1 }}>
-						{currentAssets.map((asset, index) => (
-							<PortfolioAssetListItem
-								key={index}
-								asset={asset}
-								highlight={hoveredIndex === index + startIndex}
-							/>
-						))}
-					</Box>
-				</Box>
-				<Box
-					sx={{
-						display: 'flex',
-						justifyContent: 'center',
-						alignItems: 'center',
-					}}>
-					<IconButton
-						onClick={handlePrevPage}
-						disabled={currentPage === 0}
-						sx={{ color: currentPage === 0 ? 'grey' : 'black' }}>
-						<ChevronLeftIcon fontSize="large" />
-					</IconButton>
-					<Typography variant="body1" sx={{ mx: 2 }}>
-						{currentPage + 1} / {totalPages}
-					</Typography>
-					<IconButton
-						onClick={handleNextPage}
-						disabled={currentPage + 1 >= totalPages}
-						sx={{
-							color: currentPage + 1 >= totalPages ? 'grey' : 'black',
-						}}>
-						<ChevronRightIcon fontSize="large" />
-					</IconButton>
+				<Box sx={{ flex: 1 }}>
+					{assets.map((asset, index) => (
+						<PortfolioAssetListItem
+							key={index}
+							asset={asset}
+							highlight={hoveredIndex === index}
+						/>
+					))}
 				</Box>
 			</Box>
 		</Stack>
