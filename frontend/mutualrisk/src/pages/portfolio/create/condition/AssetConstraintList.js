@@ -1,18 +1,41 @@
-import { useState } from 'react';
-import { Box, Input, Tooltip, Stack } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Input, Tooltip, Stack, Typography } from '@mui/material';
 import BasicButton from 'components/button/BasicButton';
 import BasicChip from 'components/chip/BasicChip';
 import { colors } from 'constants/colors';
-import AssetInputModal from 'pages/portfolio/create/AssetInputModal';
+import { fetchPortfolioList } from 'utils/apis/analyze';
 import { createPortfolio } from 'utils/apis/portfolio';
+import useAssetStore from 'stores/useAssetStore';
+import { useQuery } from '@tanstack/react-query';
+import EditIcon from '@mui/icons-material/Edit';
+import { exportAs } from '@mui/x-data-grid/internals';
 
 const AssetConstraintList = ({ assets }) => {
+	const [hasPortfolio, setHasPortfolio] = useState(false);
+	const totalCash = useAssetStore(state => state.totalCash);
 	const [openInputModal, setOpenInputModal] = useState(false);
 	const [lowerBounds, setLowerBounds] = useState(Array(assets.length).fill(0));
 	const [upperBounds, setUpperBounds] = useState(Array(assets.length).fill(1));
 	const [exactProportion, setExactProportion] = useState(
 		Array(assets.length).fill(null)
 	);
+	const [isOverLimit, setIsOverLimit] = useState(
+		Array(assets.length).fill(false)
+	); // 초과 여부 상태 추가
+
+	useQuery({
+		queryKey: ['portfolioList'],
+		queryFn: fetchPortfolioList,
+		onSuccess: data => {
+			setHasPortfolio(data.hasPortfolio);
+		},
+	});
+
+	// totalCash가 변경될 때마다 초과 여부를 업데이트
+	useEffect(() => {
+		const updatedOverLimit = assets.map(asset => asset.price > totalCash);
+		setIsOverLimit(updatedOverLimit);
+	}, [totalCash, assets]);
 
 	const handleLowerChange = (index, value) => {
 		const updated = [...lowerBounds];
@@ -38,37 +61,25 @@ const AssetConstraintList = ({ assets }) => {
 
 	return (
 		<Box sx={{ height: '100%', position: 'relative' }}>
-			<Box
-				sx={{
-					display: 'flex',
-					justifyContent: 'space-between',
-					gap: 2,
-				}}>
+			<Stack direction="row" spacing={2}>
 				<BasicChip label="종목 이름" />
 				<BasicChip label="최솟값 (%)" />
 				<BasicChip label="최댓값 (%)" />
 				<BasicChip label="지정 비율 (%)" />
-			</Box>
+			</Stack>
 
-			{/* 스크롤 가능한 영역 */}
 			<Box
 				sx={{
 					pt: 2,
-					height: 'calc(100% - 100px)',
+					height: 'calc(100% - 200px)',
 					overflowY: 'auto',
-					'&::-webkit-scrollbar': { display: 'none' }, // 스크롤바 숨기기
-					msOverflowStyle: 'none', // IE 및 Edge에서 스크롤바 숨기기
-					scrollbarWidth: 'none', // Firefox에서 스크롤바 숨기기
+					'&::-webkit-scrollbar': { display: 'none' },
+					msOverflowStyle: 'none',
+					scrollbarWidth: 'none',
 				}}>
 				<Stack spacing={2}>
 					{assets.map((asset, index) => (
-						<Box
-							key={asset.assetId}
-							sx={{
-								display: 'flex',
-								justifyContent: 'space-between',
-								flexWrap: 'nowrap',
-							}}>
+						<Stack direction="row" key={asset.assetId} spacing={2}>
 							<Stack
 								sx={{
 									flex: 1,
@@ -88,45 +99,69 @@ const AssetConstraintList = ({ assets }) => {
 								)}
 							</Stack>
 
-							<Box sx={{ flex: 1, mx: 1 }}>
-								{/* 최솟값 */}
-								<Input
-									fullWidth
-									type="number"
-									defaultValue={0}
-									onChange={e =>
-										handleLowerChange(index, e.target.value)
-									}
-								/>
-							</Box>
+							<Input
+								type="number"
+								defaultValue={0}
+								onChange={e => handleLowerChange(index, e.target.value)}
+								sx={{
+									flex: 1,
+									backgroundColor: isOverLimit[index]
+										? colors.background.red
+										: 'inherit',
+									borderRadius: '8px',
+									textAlign: 'center',
+								}}
+								inputProps={{
+									style: {
+										textAlign: 'center',
+									},
+								}}
+							/>
 
-							<Box sx={{ flex: 1, mx: 1 }}>
-								{/* 최댓값 */}
-								<Input
-									type="number"
-									defaultValue={100}
-									onChange={e =>
-										handleUpperChange(index, e.target.value)
-									}
-								/>
-							</Box>
+							<Input
+								borderRadius="8px"
+								type="number"
+								defaultValue={100}
+								onChange={e => handleUpperChange(index, e.target.value)}
+								sx={{
+									flex: 1,
+									backgroundColor:
+										exactProportion < 0 || exactProportion > 100
+											? colors.background.red
+											: 'inherit',
+								}}
+							/>
 
-							<Box sx={{ flex: 1, mx: 1 }}>
-								{/* 지정비율 */}
-								<Input
-									type="number"
-									defaultValue=""
-									onChange={e =>
-										handleExactChange(index, e.target.value)
-									}
-								/>
-							</Box>
-						</Box>
+							<Input
+								fullWidth
+								type="number"
+								defaultValue=""
+								onChange={e => handleExactChange(index, e.target.value)}
+								sx={{
+									flex: 1,
+									backgroundColor:
+										exactProportion < 0 || exactProportion > 100
+											? colors.background.red
+											: 'inherit',
+								}}
+							/>
+						</Stack>
 					))}
 				</Stack>
 			</Box>
-
-			{/* 하단 버튼 */}
+			<Stack direction="row" sx={{ alignItems: 'center' }}>
+				<Tooltip
+					title={
+						hasPortfolio
+							? '현재 포트폴리오의 자산 가치를 기반으로 산정된 금액입니다.'
+							: ''
+					}>
+					<Typography sx={{ fontWeight: 'bold' }}>
+						총자산 : {totalCash}원
+					</Typography>
+				</Tooltip>
+				<EditIcon sx={{ fontSize: '12px', color: colors.text.sub1 }} />
+			</Stack>
 			<Box
 				sx={{
 					position: 'absolute',
@@ -136,13 +171,6 @@ const AssetConstraintList = ({ assets }) => {
 				}}>
 				<BasicButton text="포트폴리오 제작하기" onClick={handleSubmit} />
 			</Box>
-
-			{openInputModal && (
-				<AssetInputModal
-					open={openInputModal}
-					onClose={() => setOpenInputModal(false)}
-				/>
-			)}
 		</Box>
 	);
 };
