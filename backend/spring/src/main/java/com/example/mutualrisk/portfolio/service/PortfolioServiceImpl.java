@@ -646,7 +646,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
 
     /**
-     * 유저의 포트폴리오 제작 요청을 받아서 포트폴리오의 퍼포먼스,비중 및 추천 자산을 반환하는 메서드
+     * 유저의 포트폴리오 제작 요청을 받아서 포트폴리오의 퍼포먼스,비중을 반환하는 메서드
      *
      * @param userId
      * @param initInfo
@@ -664,7 +664,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 1. 유저가 입력한 dto를 받아서, api에 던질 dto 형식으로 고친다
         // PortfolioInitDto -> PortfolioRequestDto로 변환
         PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(findAssets, initInfo);
-        log.warn("portfolioRequestDto : {}",portfolioRequestDto);
+        // log.warn("portfolioRequestDto : {}",portfolioRequestDto);
 
         // 2. PortfolioRequestDto를 받아서, Map<String, Object> 형식으로 고친다
         Map<String, Object> requestBody = getRequestBodyFromPortfolioRequestDto(portfolioRequestDto);
@@ -679,49 +679,6 @@ public class PortfolioServiceImpl implements PortfolioService{
             log.error("FastAPI 서버와의 통신 중 오류가 발생했습니다.", e);
             throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
         }
-
-        log.warn("아직 안끝났는데 시작함3");
-
-        // 4. hadoop api 실행
-        List<Asset> assetList = portfolioRequestDto.findAssets();
-        Map<String, Double> fictionalWeights = (Map<String, Double>) responseBody.get("weights");
-
-        List<Double> dailyPriceChangeRateHistory = getDailyPriceChangeRateHistory(assetList, fictionalWeights);
-
-        int minCovarianceSectorId = -1;
-        Double minCovariance = Double.MAX_VALUE;
-        for (int idx=0; idx<SECTOR_BENCHMARK_LIST.length; idx++) {
-            BenchMark benchMark = SECTOR_BENCHMARK_LIST[idx];
-            List<Double> dailyPriceChangeRateHistoryOfBenchMark = assetHistoryRepository.getDailyChangeRate(benchMark.getAssetId(), LocalDateTime.now().minusYears(1), LocalDateTime.now());
-            double covariance = calculateCovariance(dailyPriceChangeRateHistory, dailyPriceChangeRateHistoryOfBenchMark);
-            if (covariance < minCovariance) {
-                minCovariance = covariance;
-                minCovarianceSectorId = idx;
-            }
-        }
-
-        log.warn("minCovarianceSectorId: {}", minCovarianceSectorId);
-        log.warn("minCovariance: {}", minCovariance);
-
-        // 첫부분에 바로 추천종목을 가져오기 위해 요청을 보내기 위한 body를 가지고온다
-        Map<String, Object> recommendBody = getRecommendBody(initInfo, minCovarianceSectorId);
-
-        // 비동기 요청을 보낸다
-        CompletableFuture<Map<String, Object>> future = fastApiService.getRecommendData(recommendBody);
-
-        // 비동기 작업 완료 후 결과 처리
-        future.thenAccept(res -> {
-            for (Map.Entry<String, Object> entry : res.entrySet()) {
-                System.out.println("entry = " + entry.getKey());
-                System.out.println("entry = " + entry.getValue());
-            }
-        }).exceptionally(e -> {
-            // 예외 처리
-            log.error("spark 서버와의 통신 중 오류가 발생했습니다.", e);
-            throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
-        });
-
-        log.warn("아직 안끝났는데 시작함1");
 
         // 4. 반환할 데이터 만들기
         // 4-1. 새롭게 추천해주는 포트폴리오에 대한 정보
@@ -752,7 +709,6 @@ public class PortfolioServiceImpl implements PortfolioService{
             .oldPortfolioAssetInfoList(oldPortfolioAssetInfoList)
             .newPortfolioAssetInfoList(newPortfolioAssetInfoList)
             .changeAssetInfoList(changeAssetInfoList)
-            //나중에 추천종목 생기면 여기에 추가해서 리턴하기
             .build();
 
         // 6. 프론트에 던진다
@@ -1005,19 +961,19 @@ public class PortfolioServiceImpl implements PortfolioService{
     /**
      * 유저의 포트폴리오 제작시 요청 정보(initInfo)를 받아서, hadoop api에 날릴 requeset를 만드는 함수
      */
-    private Map<String, Object> getRecommendBody(PortfolioInitDto initInfo, int minCovarianceSectorId) {
+    private Map<String, Object> getRecommendBody(List<Integer> assetIds,List<Double> lowerBounds,List<Double> upperBounds, int minCovarianceSectorId) {
         // hadoop에 보낼 JSON 요청 본문을 만든다
         Map<String, Object> recommendBody = new HashMap<>();
 
         // 새로운 자산 id들을 가지고온다
-        List<Asset> assetsNotInList = assetRepository.findAssetsNotInList(initInfo.assetIds(), minCovarianceSectorId);
+        List<Asset> assetsNotInList = assetRepository.findAssetsNotInList(assetIds, minCovarianceSectorId);
 
         List<Integer> newAssetIds = assetsNotInList.stream().map(Asset::getId).toList();
 
-        recommendBody.put("existing_assets", initInfo.assetIds());
+        recommendBody.put("existing_assets", assetIds);
         recommendBody.put("new_assets", newAssetIds);
-        recommendBody.put("lower_bounds",initInfo.lowerBounds());
-        recommendBody.put("upper_bounds",initInfo.upperBounds());
+        recommendBody.put("lower_bounds",lowerBounds);
+        recommendBody.put("upper_bounds",upperBounds);
 
         return recommendBody;
     }
@@ -1356,7 +1312,88 @@ public class PortfolioServiceImpl implements PortfolioService{
         return new ResponseWithData<>(HttpStatus.OK.value(), "백테스팅 결과 조회 성공", portfolioBackTestDto);
     }
 
+    /**
+     * 유저에게 받은 정보를 바탕으로 추천 종목을 계산하여 반환하는 메서드
+     * @param recommendAssetRequestDto
+     * @return
+     */
+    @Override
+    public ResponseWithData<PortfolioAnalysis> getRecommendedAssets(RecommendAssetRequestDto recommendAssetRequestDto) {
 
+        log.warn("lowerBounds : {}",recommendAssetRequestDto.lowerBounds());
+        log.warn("upperBounds : {}",recommendAssetRequestDto.upperBounds());
+
+        //1. 자산들의 ids를 가지고온다
+        List<Integer> assetIds = recommendAssetRequestDto.newPortfolioAssetInfoList().stream()
+            .map(RecommendAssetInfo::assetId).toList();
+
+        //2. 자산을 가지고온다
+        List<Asset> assetList = assetRepository.findAllById(assetIds);
+
+        // 3. assetList를 assetIds의 순서대로 정렬한다
+        Map<Integer, Asset> assetMap = assetList.stream()
+            .collect(Collectors.toMap(Asset::getId, asset -> asset));
+
+        // 4. assetIds의 순서대로 assetMap에서 Asset을 가져온다
+        List<Asset> sortedAssetList = assetIds.stream()
+            .map(assetMap::get)
+            .toList();
+
+        // 5. fictionalWeights를 뽑아낸다
+        List<Double> weight = recommendAssetRequestDto.newPortfolioAssetInfoList().stream()
+            .map(RecommendAssetInfo::weight)
+            .toList();
+
+        Map<String,Double> fictionalWeights = new HashMap<>();
+        for(int idx = 0;idx < weight.size();idx++){
+            fictionalWeights.put(String.valueOf(idx),weight.get(idx));
+        }
+
+        // 6. 일별 가격변화를 구한다
+        List<Double> dailyPriceChangeRateHistory = getDailyPriceChangeRateHistory(assetList, fictionalWeights);
+
+        int minCovarianceSectorId = -1;
+        Double minCovariance = Double.MAX_VALUE;
+        for (int idx=0; idx<SECTOR_BENCHMARK_LIST.length; idx++) {
+            BenchMark benchMark = SECTOR_BENCHMARK_LIST[idx];
+            List<Double> dailyPriceChangeRateHistoryOfBenchMark = assetHistoryRepository.getDailyChangeRate(benchMark.getAssetId(), LocalDateTime.now().minusYears(1), LocalDateTime.now());
+            double covariance = calculateCovariance(dailyPriceChangeRateHistory, dailyPriceChangeRateHistoryOfBenchMark);
+            if (covariance < minCovariance) {
+                minCovariance = covariance;
+                minCovarianceSectorId = benchMark.getSectorId();
+            }
+        }
+
+        log.warn("minCovarianceSectorId: {}", minCovarianceSectorId);
+        log.warn("minCovariance: {}", minCovariance);
+
+        // 첫부분에 바로 추천종목을 가져오기 위해 요청을 보내기 위한 body를 가지고온다
+        Map<String, Object> recommendBody = getRecommendBody(assetIds,recommendAssetRequestDto.lowerBounds(),recommendAssetRequestDto.upperBounds(), minCovarianceSectorId);
+        
+        for(Entry<String,Object> entry : recommendBody.entrySet()){
+            System.out.println("entry.getKey() = " + entry.getKey());
+            System.out.println("entry.getValue() = " + entry.getValue());
+        }
+        
+        // 3. requestBody를 fastapi 호출해서, 결과를 받아온다
+        Map<String, Object> responseBody;
+        try {
+            // FastApiService를 사용하여 요청을 보낸다
+            responseBody = fastApiService.getRecommendData(recommendBody);
+        } catch (RuntimeException e) {
+            // 예외 처리
+            log.error("Spark 서버와의 통신 중 오류가 발생했습니다.", e);
+            throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
+        }
+        
+        for(Entry<String,Object> entry : responseBody.entrySet()){
+            System.out.println("entry.getKey() = " + entry.getKey());
+            System.out.println("entry.getValue() = " + entry.getValue());
+        }
+
+
+        return null;
+    }
 
     // fastapi에서 준 결과를 가지고, 새로운 포트폴리오를 만든다
     // 기존 유저의 포트폴리오가 있는 경우를 가정하고 만듬

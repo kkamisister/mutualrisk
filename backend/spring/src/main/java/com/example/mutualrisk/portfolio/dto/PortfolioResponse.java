@@ -158,7 +158,7 @@ public record PortfolioResponse() {
     @Schema(name = "포트폴리오 제작시 보여 주는 데이터")
     public record CalculatedPortfolio(
         PortfolioAnalysis original,    // 새롭게 추천해 주는 포트폴리오에 대한 정보
-        PortfolioAnalysis recommendation,    // 추천 종목을 추가하였을 때, 포트폴리오에 대한 정보
+        // PortfolioAnalysis recommendation,    // 추천 종목을 추가하였을 때, 포트폴리오에 대한 정보
         List<RecommendAssetInfo> oldPortfolioAssetInfoList,    // 기존 포트폴리오 종목에 대한 정보
         List<RecommendAssetInfo> newPortfolioAssetInfoList,    // 새롭게 추천해 주는 포트폴리오에 대한 정보
         List<ChangeAssetInfo> changeAssetInfoList    // 종목별 보유량 변화 정보

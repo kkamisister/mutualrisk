@@ -9,7 +9,10 @@ import org.springframework.web.client.RestClientException;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class FastApiService {
 
 	private final RestTemplate restTemplate;
@@ -37,8 +40,7 @@ public class FastApiService {
 		}
 	}
 
-	@Async
-	public CompletableFuture<Map<String, Object>> getRecommendData(Map<String, Object> requestBody) {
+	public Map<String, Object> getRecommendData(Map<String, Object> requestBody) {
 
 		String url = "http://j11a607a.p.ssafy.io:8000/optimize";
 
@@ -47,7 +49,7 @@ public class FastApiService {
 
 			if (response.getStatusCode().is2xxSuccessful()) {
 				Map<String, Object> responseBody = response.getBody();
-				return CompletableFuture.completedFuture(responseBody);
+				return responseBody;
 			} else {
 				// 에러 응답 처리
 				throw new RuntimeException("FastAPI 서버에서 오류 응답을 받았습니다. 상태 코드: " + response.getStatusCode());

@@ -3,6 +3,7 @@ package com.example.mutualrisk.portfolio.dto;
 import java.util.List;
 
 import com.example.mutualrisk.asset.entity.Asset;
+import com.example.mutualrisk.portfolio.dto.PortfolioResponse.RecommendAssetInfo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -66,6 +67,18 @@ public record PortfolioRequest() {
 		List<Asset> findAssets,
 		List<Double> exactProportion
 		) {
+
+	}
+
+	@Builder
+	@Schema(name = "계산된 비중을 기반으로 새로운 자산추천을 요청하는 DTO")
+	public record RecommendAssetRequestDto(
+		@JsonProperty("lower_bounds")
+		List<Double> lowerBounds,
+		@JsonProperty("upper_bounds")
+		List<Double> upperBounds,
+		List<RecommendAssetInfo> newPortfolioAssetInfoList
+	){
 
 	}
 
