@@ -9,29 +9,33 @@ import PortfolioSummary from 'pages/portfolio/rebalance/main/summary/PortfolioSu
 import WidgetContainer from 'components/container/WidgetConatiner';
 import CustomButton from 'components/button/BasicButton';
 import Title from 'components/title/Title';
-import { fetchPortfolioByPorfolioId } from 'utils/apis/analyze';
+import {
+	fetchPortfolioList,
+	fetchPortfolioByPorfolioId,
+} from 'utils/apis/analyze';
 import { colors } from 'constants/colors';
 
 const RebalanceMainPage = () => {
 	const navigate = useNavigate();
 	const [hoveredIndex, setHoveredIndex] = useState(null);
 
-	const latestPortfolioId = localStorage.getItem('latestPortfolioId');
-
-	const { data, isLoading, isError } = useQuery({
-		queryKey: ['portfolio', latestPortfolioId],
-		queryFn: () => fetchPortfolioByPorfolioId(latestPortfolioId),
+	const { data: portfolioListData } = useQuery({
+		queryKey: ['portfolioList'],
+		queryFn: fetchPortfolioList,
 		staleTime: 300000,
 		refetchOnWindowFocus: false,
 	});
 
-	if (isLoading) {
-		return <div>Loading...</div>;
-	}
+	const portfolioList = portfolioListData?.portfolioList || [];
+	const latestPortfolioId = portfolioList?.[0]?.id;
 
-	if (isError) {
-		return <div>Error fetching portfolio data.</div>;
-	}
+	const { data } = useQuery({
+		queryKey: ['portfolio', latestPortfolioId],
+		queryFn: () => fetchPortfolioByPorfolioId(latestPortfolioId),
+		enabled: !!latestPortfolioId,
+		staleTime: 300000,
+		refetchOnWindowFocus: false,
+	});
 
 	const portfolio = data?.portfolio;
 	const assets = portfolio?.assets || [];
