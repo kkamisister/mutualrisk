@@ -26,4 +26,12 @@ public class AssetCovarianceRepositoryCustomImpl extends Querydsl4RepositorySupp
 				.and(assetCovariance.asset2.in(assetList)))
 			.fetch();
 	}
+
+	@Override
+	public List<AssetCovariance> findAllCovarianceByAssetsAndAssetId(List<Asset> assetList, Integer assetId) {
+		return selectFrom(assetCovariance)
+			.where(assetCovariance.asset1.in(assetList)
+				.and(assetCovariance.asset2.id.eq(assetId)))
+			.fetch();
+	}
 }
