@@ -63,7 +63,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 		// 개발 편의를 위한 임시 로직
 		// Bearer token에 "dummyAccessToken"을 입력하면, dummy user 정보로 인증된 후 넘어감
 		if (accessToken.equals("dummyAccessToken")) {
-			request.setAttribute("userId",1);
+			request.setAttribute("userId","1");
 			filterChain.doFilter(request, response);
 		}
 		else {
