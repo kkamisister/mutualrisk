@@ -33,6 +33,7 @@ import com.example.mutualrisk.sector.entity.Sector;
 import com.example.mutualrisk.user.entity.User;
 import com.example.mutualrisk.user.repository.UserRepository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -1184,7 +1185,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         } catch (RuntimeException e) {
             // 예외 처리
             log.error("FastAPI 서버와의 통신 중 오류가 발생했습니다.", e);
-            throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
+            throw new MutualRiskException(ErrorCode.EFFICIENT_PORTFOLIO_API_ERROR);
         }
 
         // 2. 유저의 가장 최신 포트폴리오 받아오기
@@ -1210,13 +1211,30 @@ public class PortfolioServiceImpl implements PortfolioService{
             portfolio = getNewPortfolioFrom(responseBody, initInfo, userId, recentPortfolio.getVersion()+1, findAssets, recentPortfolio);
         }
 
+        List<RecommendAsset> recommendAssets;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        // Redis에서 JSON 문자열을 가져옴
+        String json = (String) redisHashRepository.getHashData("recommend", String.valueOf(userId));
+
+        try {
+            // JSON 배열을 List<RecommendAssetResponseResultDto>로 변환
+            List<RecommendAssetResponseResultDto> realResponse = objectMapper.readValue(json, new TypeReference<>() {});
+            recommendAssets = realResponse.stream()
+                .map(RecommendAsset::from)
+                .toList();
+
+        } catch (JsonProcessingException e) {
+            throw new MutualRiskException(ErrorCode.REDIS_PARSE_ERROR);
+        }
+
+        portfolio.setRecommendAssets(recommendAssets);
+
         // 4. 저장한다
         portfolioRepository.savePortfolio(portfolio);
 
-
         // 5. 프론트에 결과를 반환한다
         return new ResponseWithData<>(HttpStatus.OK.value(), "포트폴리오 확정 성공!!", "포트폴리오 확정 성공!!");
-
     }
 
     /**
@@ -1493,11 +1511,13 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 5. Hadoop API 호출
         // 5-1. Hadoop API RequestBody 제작
         HadoopRecommendAssetRequestDto requestBody = getHadoopRequestBody(assetIds,recommendAssetRequestDto.lowerBounds(),recommendAssetRequestDto.upperBounds(), recommendAssetRequestDto.exactProportion(), minCovarianceSectorId);
-//        System.out.println("requestBody = " + requestBody);
+        System.out.println("requestBody = " + requestBody);
         // 5-2. Hadoop API를 날리고 요청 받아오기
         HadoopRecommendAssetResultDto responseBody = mutualRiskClient.post("http://j11a607a.p.ssafy.io:8000/optimize", requestBody)
             .bodyToMono(HadoopRecommendAssetResultDto.class)
             .block();
+
+        System.out.println("responseBody = " + responseBody);
 
         // 6. 받은 응답을 가지고 유저가 실제로 투자했을 때의 성과 지표 계산
         List<RecommendAssetResponseResultDto> realResponse = new ArrayList<>(); // 현재 api가 반환할 data
@@ -1542,7 +1562,6 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // sharpeRatio가 큰 순으로 정렬
         realResponse.sort(Comparator.comparingDouble(RecommendAssetResponseResultDto::sharpeRatio).reversed());
-
         // redis에 저장
         redisHashRepository.saveHashData("recommend", String.valueOf(userId), realResponse, 60);
 
