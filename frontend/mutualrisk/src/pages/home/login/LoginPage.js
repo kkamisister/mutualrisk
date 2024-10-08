@@ -57,7 +57,8 @@ const LoginPage = () => {
 				</Typography>
 				<button
 					onClick={() => {
-						console.log('카카오 로그인 버튼 클릭');
+						window.location.href =
+							'https://j11a607.p.ssafy.io/api/v1/oauth/kakao';
 					}}
 					style={{
 						width: '100%',
