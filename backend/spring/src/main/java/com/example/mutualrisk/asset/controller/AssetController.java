@@ -88,7 +88,8 @@ public class AssetController {
         @RequestParam(value = "sortOrder", required = false, defaultValue = "ASC") String orderString,
         HttpServletRequest request){
 
-        Integer userId = (Integer)request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         OrderCondition orderCondition;
         Order order;
@@ -114,8 +115,8 @@ public class AssetController {
     public ResponseEntity<ResponseWithMessage> addInterestAsset(@RequestBody InterestAssetInfo asset,
         HttpServletRequest request){
 
-        Integer userId = (Integer)request.getAttribute("userId");
-        log.info("user Id : {}",userId);
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         ResponseWithMessage responseWithMessage = assetService.addInterestAsset(userId, asset);
 
@@ -132,8 +133,8 @@ public class AssetController {
     public ResponseEntity<ResponseWithMessage> deleteInterestAsset(@RequestParam("assetId") @Parameter(description = "자산ID", required = true) Integer assetId,
         HttpServletRequest request){
 
-        Integer userId = (Integer)request.getAttribute("userId");
-        log.info("user Id : {}",userId);
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         ResponseWithMessage responseWithMessage = assetService.deleteInterestAsset(userId, assetId);
 
@@ -151,7 +152,6 @@ public class AssetController {
 
         ResponseWithData<StockTrendWithDetail> stockTrendWithDetail = assetService.getStockTrendWithDetail(assetId);
 
-        log.warn("주식 세부사항 : {}",stockTrendWithDetail);
         return ResponseEntity.status(stockTrendWithDetail.status())
             .body(stockTrendWithDetail);
     }

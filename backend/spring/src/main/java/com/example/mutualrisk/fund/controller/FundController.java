@@ -42,7 +42,8 @@ public class FundController {
 	@GetMapping("")
 	public ResponseEntity<ResponseWithData<FundSummaryResultDto>> getAllfunds(HttpServletRequest request){
 
-		Integer userId = (Integer)request.getAttribute("userId");
+		String id = (String)request.getAttribute("userId");
+		Integer userId = Integer.valueOf(id);
 
 		ResponseWithData<FundSummaryResultDto> allfunds = fundService.getAllFunds(userId);
 
@@ -57,8 +58,8 @@ public class FundController {
 	@GetMapping("/{fundId}")
 	public ResponseEntity<ResponseWithData<FundResultDto>> getFund(@PathVariable("fundId") String fundId,HttpServletRequest request){
 
-		Integer userId = (Integer)request.getAttribute("userId");
-		// log.info("user Id : {}",userId);
+		String id = (String)request.getAttribute("userId");
+		Integer userId = Integer.valueOf(id);
 
 		ResponseWithData<FundResultDto> fund = fundService.getFund(userId,fundId);
 
@@ -74,8 +75,8 @@ public class FundController {
 	public ResponseEntity<ResponseWithData<List<FundReturnDto>>> getHistory(@RequestParam("period") Integer period,
                                                                             @RequestParam("company") @Parameter(description = "회사명", required = true) String company,
                                                                             HttpServletRequest request){
-		Integer userId = (Integer)request.getAttribute("userId");
-		// log.info("user Id : {}",userId);
+		String id = (String)request.getAttribute("userId");
+		Integer userId = Integer.valueOf(id);
 
 		ResponseWithData<List<FundReturnDto>> fundHistory = fundService.getHistory(userId, company, period);
 
