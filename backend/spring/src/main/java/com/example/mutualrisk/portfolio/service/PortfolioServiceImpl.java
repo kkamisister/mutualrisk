@@ -784,15 +784,8 @@ public class PortfolioServiceImpl implements PortfolioService{
         Map<String, Object> requestBody = getRequestBodyFromPortfolioRequestDto(portfolioRequestDto);
 
         // 3. requestBody를 fastapi 호출해서, 결과를 받아온다
-        Map<String, Object> responseBody;
-        try {
-            // FastApiService를 사용하여 요청을 보낸다
-            responseBody = fastApiService.sendPortfolioData(requestBody);
-        } catch (RuntimeException e) {
-            // 예외 처리
-            log.error("FastAPI 서버와의 통신 중 오류가 발생했습니다.", e);
-            throw new MutualRiskException(ErrorCode.EFFICIENT_PORTFOLIO_API_ERROR);
-        }
+        // 1-3. requestBody를 fastapi 호출해서, 결과를 받아온다
+        Map<String, Object> responseBody = fastApiService.sendPortfolioData(requestBody);
 
         // 4. 반환할 데이터 만들기
 
@@ -1233,15 +1226,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         Map<String, Object> requestBody = getRequestBodyFromPortfolioRequestDto(portfolioRequestDto);
 
         // 1-3. requestBody를 fastapi 호출해서, 결과를 받아온다
-        Map<String, Object> responseBody;
-        try {
-            // FastApiService를 사용하여 요청을 보낸다
-            responseBody = fastApiService.sendPortfolioData(requestBody);
-        } catch (RuntimeException e) {
-            // 예외 처리
-            log.error("FastAPI 서버와의 통신 중 오류가 발생했습니다.", e);
-            throw new MutualRiskException(ErrorCode.EFFICIENT_PORTFOLIO_API_ERROR);
-        }
+        Map<String, Object> responseBody = fastApiService.sendPortfolioData(requestBody);
 
         // 2. 유저의 가장 최신 포트폴리오 받아오기
         // 2-1. 유저의 포트폴리오 리스트 받아오기
@@ -1568,9 +1553,16 @@ public class PortfolioServiceImpl implements PortfolioService{
         HadoopRecommendAssetRequestDto requestBody = getHadoopRequestBody(assetIds,recommendAssetRequestDto.lowerBounds(),recommendAssetRequestDto.upperBounds(), recommendAssetRequestDto.exactProportion(), minCovarianceSectorId);
         System.out.println("requestBody = " + requestBody);
         // 5-2. Hadoop API를 날리고 요청 받아오기
-        HadoopRecommendAssetResultDto responseBody = mutualRiskClient.post("http://j11a607a.p.ssafy.io:8000/optimize", requestBody)
-            .bodyToMono(HadoopRecommendAssetResultDto.class)
-            .block();
+        HadoopRecommendAssetResultDto responseBody;
+        try {
+            responseBody = mutualRiskClient.post("http://j11a607a.p.ssafy.io:8000/optimize", requestBody)
+                .bodyToMono(HadoopRecommendAssetResultDto.class)
+                .block();
+        } catch (Exception e) {
+            log.warn("hadoop 종목 추천 api 호출시 에러 발생 - 에러 메시지: {}", e.getMessage());
+            throw new MutualRiskException(ErrorCode.HADOOP_RECOMMEND_ASSET_API_ERROR);
+        }
+
 
         System.out.println("responseBody = " + responseBody);
 

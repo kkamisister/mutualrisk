@@ -40,6 +40,7 @@ public enum ErrorCode {
     // 포트폴리오관련 에러
     PORTFOLIO_NOT_FOUND(HttpStatus.BAD_REQUEST,"포트폴리오가 존재하지 않습니다"),
     EFFICIENT_PORTFOLIO_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "최적 포트폴리오 계산 fastAPI 호출 중 예외가 발생하였습니다"), // fastAPI 관련 에러
+    HADOOP_RECOMMEND_ASSET_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "하둡 종목 추천 api 호출 중 예외가 발생하였습니다"),
 
     // redis 파싱 관련 에러
     REDIS_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "redis 데이터를 파싱하는 도중 에러가 발생하였습니다");
