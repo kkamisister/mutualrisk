@@ -29,20 +29,17 @@ const BackTesting = ({
 	const [tabMenu, setTabMenu] = useState(timeInterval);
 	const [error, setError] = useState(null);
 
-	// Use react-query to fetch portfolio list and cache it
 	const { data: portfolioListData } = useQuery({
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
-		staleTime: 300000, // Cache for 5 minutes
+		staleTime: 300000,
 	});
 
-	// Find the latest portfolioId from cached portfolio list
 	const latestPortfolioId = portfolioListData?.portfolioList?.[0]?.id;
 
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				// Fetch data for selected portfolio
 				const selectedResponse = await fetchBackTestByPortfolioId(
 					portfolioId,
 					tabMenu,
@@ -56,7 +53,6 @@ const BackTesting = ({
 
 				let latestPortfolioPerformances = [];
 
-				// Fetch data for latest portfolio if it's different from selected
 				if (latestPortfolioId && latestPortfolioId !== portfolioId) {
 					const latestResponse = await fetchBackTestByPortfolioId(
 						latestPortfolioId,
@@ -71,7 +67,6 @@ const BackTesting = ({
 					);
 				}
 
-				// Slice for yearly data if needed
 				if (tabMenu === 'year') {
 					selectedPortfolioPerformances =
 						selectedPortfolioPerformances.slice(-10);
@@ -79,7 +74,6 @@ const BackTesting = ({
 						latestPortfolioPerformances.slice(-10);
 				}
 
-				// Merge data based on time
 				const merged = selectedPortfolioPerformances.reduce(
 					(acc, selectedItem) => {
 						const matchingLatestItem = latestPortfolioPerformances.find(
