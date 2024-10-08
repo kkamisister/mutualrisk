@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { Box, Input, Tooltip, Stack, Typography, Button } from '@mui/material';
+import {
+	Box,
+	Input,
+	Tooltip,
+	Stack,
+	Button,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogActions,
+} from '@mui/material';
 import BasicButton from 'components/button/BasicButton';
 import BasicChip from 'components/chip/BasicChip';
 import { colors } from 'constants/colors';
@@ -9,8 +19,15 @@ import useConstraintStore from 'stores/useConstraintStore';
 import { useQuery } from '@tanstack/react-query';
 
 const AssetConstraintList = ({ assets }) => {
+	const [openDialog, setOpenDialog] = useState(false);
 	const [hasPortfolio, setHasPortfolio] = useState(false);
-	const totalCash = useAssetStore(state => state.totalCash);
+	const { totalCash, addTotalCash, updateTotalCash } = useAssetStore(
+		state => ({
+			totalCash: state.totalCash,
+			addTotalCash: state.addTotalCash,
+			updateTotalCash: state.updateTotalCash,
+		})
+	);
 	const {
 		lowerBounds,
 		upperBounds,
@@ -30,10 +47,41 @@ const AssetConstraintList = ({ assets }) => {
 		},
 	});
 
+	const handleUnlock = () => {
+		setHasPortfolio(false);
+		setOpenDialog(false);
+	};
+
+	const handleDialogClose = () => setOpenDialog(false);
+
+	const handleInputClick = () => {
+		if (hasPortfolio) {
+			console.log('hasPortfolio', hasPortfolio);
+			setOpenDialog(true);
+			console.log('opendialog', openDialog);
+		}
+	};
+
 	const handleSubmit = () => {};
 
 	return (
 		<Box sx={{ height: '100%', position: 'relative' }}>
+			<Dialog open={openDialog} onClose={handleDialogClose}>
+				<DialogTitle>주의</DialogTitle>
+				<DialogContent>
+					제약 조건을 변경하면 최적 비율이 보장되지 않습니다. 그래도
+					진행하시겠습니까?
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleDialogClose}>취소</Button>
+					<Button
+						onClick={handleUnlock}
+						backgroundColor={colors.background.red}>
+						확인
+					</Button>
+				</DialogActions>
+			</Dialog>
+
 			<Stack direction="row" spacing={2}>
 				<BasicChip label="종목 이름" />
 				<BasicChip label="최솟값(%)" />
@@ -87,6 +135,7 @@ const AssetConstraintList = ({ assets }) => {
 								<Tooltip title={lowerBoundTooltip || priceTooltip}>
 									<Input
 										type="number"
+										onClick={handleInputClick}
 										disabled={hasPortfolio}
 										defaultValue={0}
 										onChange={e =>
@@ -113,6 +162,7 @@ const AssetConstraintList = ({ assets }) => {
 								<Tooltip title={upperBoundTooltip || priceTooltip}>
 									<Input
 										type="number"
+										onClick={handleInputClick}
 										disabled={hasPortfolio}
 										defaultValue={100}
 										onChange={e =>
@@ -140,6 +190,7 @@ const AssetConstraintList = ({ assets }) => {
 								<Tooltip title={priceTooltip}>
 									<Input
 										type="number"
+										onClick={handleInputClick}
 										disabled={hasPortfolio}
 										defaultValue=""
 										onChange={e =>
@@ -186,15 +237,17 @@ const AssetConstraintList = ({ assets }) => {
 							총자산:{' '}
 							<Input
 								sx={{ fontWeight: 'bold' }}
-								defaultValue={totalCash}
+								value={totalCash}
+								onChange={e => updateTotalCash(Number(e.target.value))}
+								type="number"
 							/>{' '}
 							원
 						</Box>
 					</Tooltip>
-					<Button flex={1}>만원</Button>
-					<Button flex={1}>십만원</Button>
-					<Button flex={1}>백만원</Button>
-					<Button flex={1}>천만원</Button>
+					<Button onClick={() => addTotalCash(10000)}>만원</Button>
+					<Button onClick={() => addTotalCash(100000)}>십만원</Button>
+					<Button onClick={() => addTotalCash(1000000)}>백만원</Button>
+					<Button onClick={() => addTotalCash(10000000)}>천만원</Button>
 				</Stack>
 				<BasicButton
 					text="포트폴리오 제작하기"
