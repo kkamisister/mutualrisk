@@ -76,7 +76,8 @@ public class PortfolioController {
     @PostMapping("/rebalance/init")
     public ResponseEntity<ResponseWithData<CalculatedPortfolio>> initUserPortfolioRebalance(@RequestBody RebalancePortfolioInitDto rebalancePortfolioInitDto, HttpServletRequest request) {
 
-        Integer userId = (Integer) request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         ResponseWithData<CalculatedPortfolio> portfolioInfo = portfolioService.initPortfolioRebalance(userId, rebalancePortfolioInitDto);
 
