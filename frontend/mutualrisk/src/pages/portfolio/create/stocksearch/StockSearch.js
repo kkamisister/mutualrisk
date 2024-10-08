@@ -8,6 +8,7 @@ import Title from 'components/title/Title';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import useStockSearch from 'hooks/useStockSearch';
+import useAssetStore from 'stores/useAssetStore';
 
 const SearchStatusBox = ({ Icon, text }) => {
 	return (
@@ -31,27 +32,13 @@ const SearchStatusBox = ({ Icon, text }) => {
 	);
 };
 
-const StockSearch = ({ onConfirm, selectedStocks, onStockSelect, sx }) => {
-	const [tempStocks, setTempStocks] = useState([]);
+const StockSearch = ({ sx }) => {
 	const { keyword, setKeyword, isLoading, searchResult } = useStockSearch();
+	const { tempAssets, addAssetList } = useAssetStore(state => ({
+		tempAssets: state.tempAssets,
+		addAssetList: state.addAssetList,
+	}));
 
-	const handleTempStocks = stock => {
-		if (tempStocks.find(selected => selected.assetId === stock.assetId)) {
-			setTempStocks(
-				tempStocks.filter(selected => selected.assetId !== stock.assetId)
-			);
-		} else {
-			setTempStocks([...tempStocks, stock]);
-		}
-	};
-
-	const confirmSelectedStocks = () => {
-		const newStocks = tempStocks.filter(
-			stock =>
-				!selectedStocks.some(selected => selected.assetId === stock.assetId)
-		);
-		onConfirm([...selectedStocks, ...newStocks]);
-	};
 	return (
 		<Stack
 			spacing={1}
@@ -82,14 +69,13 @@ const StockSearch = ({ onConfirm, selectedStocks, onStockSelect, sx }) => {
 
 			{!isLoading && searchResult.length > 0 && (
 				<>
-					<StockList
-						assets={searchResult}
-						selectedStocks={tempStocks}
-						onStockSelect={handleTempStocks}
-					/>
+					<StockList assets={searchResult} />
 
 					<Box sx={{ display: 'flex', justifyContent: 'center' }}>
-						<BasicButton text="추가" onClick={confirmSelectedStocks} />
+						<BasicButton
+							text="추가"
+							onClick={() => addAssetList(tempAssets)}
+						/>
 					</Box>
 				</>
 			)}

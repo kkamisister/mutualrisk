@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
 	Box,
 	Input,
@@ -22,18 +22,16 @@ import { createPortfolio } from 'utils/apis/portfolio';
 const AssetConstraintList = ({ assets }) => {
 	const [openDialog, setOpenDialog] = useState(false);
 	const [hasPortfolio, setHasPortfolio] = useState(false);
-	const {
-		totalCash,
-		assets: assetIds,
-		addTotalCash,
-		updateTotalCash,
-	} = useAssetStore(state => ({
-		totalCash: state.totalCash,
-		addTotalCash: state.addTotalCash,
-		updateTotalCash: state.updateTotalCash,
-	}));
+	const { totalCash, addTotalCash, updateTotalCash } = useAssetStore(
+		state => ({
+			totalCash: state.totalCash,
+			addTotalCash: state.addTotalCash,
+			updateTotalCash: state.updateTotalCash,
+		})
+	);
 
 	const {
+		initialization,
 		lowerBounds,
 		upperBounds,
 		exactProportion,
@@ -42,7 +40,21 @@ const AssetConstraintList = ({ assets }) => {
 		setLowerBound,
 		setUpperBound,
 		setExactProportion,
-	} = useConstraintStore();
+	} = useConstraintStore(state => ({
+		initialization: state.initialization,
+		lowerBounds: state.lowerBounds,
+		upperBounds: state.upperBounds,
+		exactProportion: state.exactProportion,
+		isLowerBoundExceeded: state.isLowerBoundExceeded,
+		isUpperBoundUnderLimit: state.isUpperBoundUnderLimit,
+		setLowerBound: state.setLowerBound,
+		setUpperBound: state.upperBounds,
+		setExactProportion: state.setExactProportion,
+	}));
+
+	useEffect(() => {
+		initialization(assets.length);
+	}, []);
 
 	useQuery({
 		queryKey: ['portfolioList'],
@@ -64,8 +76,11 @@ const AssetConstraintList = ({ assets }) => {
 
 	const handleCreatePortfolio = () => {
 		console.log('totalCash', totalCash);
-		console.log('assetids', assetIds);
 		console.log('lowerBounds', lowerBounds);
+		const assetIds = assets.map(asset => asset.assetId);
+		console.log('assetIds', assetIds);
+		console.log('lowerBoudns', lowerBounds);
+		console.log('비율', exactProportion);
 		mutation.mutate({
 			totalCash,
 			assetIds,

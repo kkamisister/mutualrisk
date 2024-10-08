@@ -5,7 +5,7 @@ import BasicButton from 'components/button/BasicButton';
 import SelectedListItem from 'pages/portfolio/create/selectedstock/SelectedListItem';
 import WidgetContainer from 'components/container/WidgetConatiner';
 
-const SelectedList = ({ assets, onItemsConfirm, onStockSelect, sx }) => {
+const SelectedList = ({ assets, onItemsConfirm, sx }) => {
 	return (
 		assets.length > 0 && (
 			<WidgetContainer
@@ -27,14 +27,7 @@ const SelectedList = ({ assets, onItemsConfirm, onStockSelect, sx }) => {
 					}}
 					spacing={1}>
 					{assets.map(asset => (
-						<SelectedListItem
-							key={asset.assetId}
-							asset={asset}
-							clicked={assets.some(
-								selected => selected.assetId === asset.assetId
-							)}
-							onClick={() => onStockSelect(asset)}
-						/>
+						<SelectedListItem key={asset.assetId} asset={asset} />
 					))}
 				</Stack>
 

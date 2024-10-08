@@ -7,11 +7,11 @@ import axiosInstance from './axiosInstance';
 /**
  * 포트폴리오 제작
  * @typedef {{
- *      totalCash : Number,
+ *      totalCash: Number,
  *      assetIds : Array(Number),
  *      lowerBounds: Array(Number),
  *      upperBounds: Array(Number),
- *      exactProportion: Array(Number)
+ *      exactProportion: Array(Number||null)
  *  }} portfolioPreConfig
  *
  * @param {portfolioPreConfig}

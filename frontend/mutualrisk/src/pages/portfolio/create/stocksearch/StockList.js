@@ -1,10 +1,15 @@
 import { Box, List } from '@mui/material';
 import { colors } from 'constants/colors';
 import StockListItem from 'pages/portfolio/create/stocksearch/StockListItem';
-import { useState, useRef, useCallback } from 'react';
 import HorizontalScrollContainer from 'components/scroll/HorizontalScrollContainer';
+import useAssetStore from 'stores/useAssetStore';
 
-const StockList = ({ assets, selectedStocks, onStockSelect }) => {
+const StockList = ({ assets }) => {
+	const { tempAssets, toggleTempAsset } = useAssetStore(state => ({
+		tempAssets: state.tempAssets,
+		toggleTempAsset: state.toggleTempAsset,
+	}));
+
 	return (
 		<HorizontalScrollContainer>
 			<List
@@ -21,10 +26,10 @@ const StockList = ({ assets, selectedStocks, onStockSelect }) => {
 							name={asset.name}
 							imagePath={asset.imagePath}
 							imageName={asset.imageName}
-							clicked={selectedStocks.some(
+							clicked={tempAssets.some(
 								selected => selected.assetId === asset.assetId
 							)}
-							onClick={() => onStockSelect(asset)}
+							onClick={() => toggleTempAsset(asset)}
 						/>
 					))}
 			</List>
