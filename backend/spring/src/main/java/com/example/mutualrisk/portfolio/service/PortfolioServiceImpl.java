@@ -791,7 +791,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         } catch (RuntimeException e) {
             // 예외 처리
             log.error("FastAPI 서버와의 통신 중 오류가 발생했습니다.", e);
-            throw new MutualRiskException(ErrorCode.SOME_ERROR_RESPONSE);
+            throw new MutualRiskException(ErrorCode.EFFICIENT_PORTFOLIO_API_ERROR);
         }
 
         // 4. 반환할 데이터 만들기
@@ -1076,7 +1076,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 각 자산의 가중치를 가지고온다
         Map<String, Double> fictionalWeights = (Map<String, Double>) responseBody.get("weights");
-        int totalCash = initInfo.totalCash();
+        double totalCash = initInfo.totalCash();
 
         // 환율을 가지고온다
         Double exchangeRate = exchangeRatesRepository.getRecentExchangeRate();
@@ -1127,9 +1127,8 @@ public class PortfolioServiceImpl implements PortfolioService{
             .toList();
 
         // 기존 포트폴리오로 측정한 퍼포먼스와 추천자산 비중을 반환한다
-        PortfolioAnalysis original = PortfolioAnalysis.of(fictionalPerformance, portfolioPerformance, recommendAssetInfos);
 
-        return original;
+        return PortfolioAnalysis.of(initInfo, fictionalPerformance, portfolioPerformance, recommendAssetInfos);
     }
 
     // asset + weights의 리스트를 받아서, 포트폴리오의 expected_return과 volatility를 계산
@@ -1624,6 +1623,75 @@ public class PortfolioServiceImpl implements PortfolioService{
         return new ResponseWithData<>(HttpStatus.OK.value(), "하둡 api 추천 결과 정상 반환", realResponse);
     }
 
+    /**
+     * 리밸런싱 포트폴리오 제작을 수행하는 api
+     */
+    @Override
+    @Transactional
+    public ResponseWithData<CalculatedPortfolio> initPortfolioRebalance(Integer userId, RebalancePortfolioInitDto initInfo) {
+//        // 1-1. 새롭게 추천해주는 포트폴리오에 대한 정보
+//        PortfolioAnalysis original = getPortfolioAnalysis(initInfo, responseBody, portfolioRequestDto);
+
+        // 1. 유저의 과거 포트폴리오를 가져와, 가장 최신 포트폴리오 데이터를 가져온다
+        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
+        if (myPortfolioList.isEmpty()) throw new MutualRiskException(ErrorCode.PORTFOLIO_NOT_FOUND);
+        Portfolio latestPortfolio = myPortfolioList.get(0); // 가장 최신 포트폴리오 데이터
+
+        // 2. PortfolioInitDto 형식으로 고치기
+        // 2-1. totalCash(현재 포트폴리오의 valuation) 구하기
+        Double totalCash = getCurrentValuation(latestPortfolio) + initInfo.extraCash();
+
+        // 2-2. assetIds 구하기
+        List<Integer> assetIds = new ArrayList<>(latestPortfolio.getAsset()
+            .stream()
+            .map(PortfolioAsset::getAssetId)
+            .sorted()
+            .toList());
+
+        // 2-3. 제약 조건 구하기
+        List<Double> lowerBound = latestPortfolio.getLowerBound();
+        List<Double> upperBound = latestPortfolio.getUpperBound();
+        List<Double> exactProportion = latestPortfolio.getExactProportion();
+
+        // 2-4. extraAssetId가 있다면 assetIds와 제약 조건 변경
+        Integer extraAssetId = initInfo.extraAssetId();
+        if (extraAssetId != null) {
+            assetIds.add(extraAssetId);
+            lowerBound.add((double) 0);
+            upperBound.add((double) 1);
+            exactProportion.add(null);
+        }
+
+        PortfolioInitDto portfolioInitDto = PortfolioInitDto.builder()
+            .totalCash(totalCash)
+            .name(initInfo.name())
+            .assetIds(assetIds)
+            .lowerBounds(lowerBound)
+            .upperBounds(upperBound)
+            .exactProportion(exactProportion)
+            .build();
+
+
+        return initPortfolio(userId, portfolioInitDto);
+    }
+
+    /**
+     * 포트폴리오의 현재 기준 평가액을 반환하는 함수
+     */
+    private Double getCurrentValuation(Portfolio portfolio) {
+        double valuation = 0;
+        List<PortfolioAsset> portfolioAssets = portfolio.getAsset();
+        List<Integer> assetIds = portfolioAssets.stream()
+            .map(PortfolioAsset::getAssetId)
+            .toList();
+        List<Asset> assets = assetRepository.findAllById(assetIds);
+        Double exchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+        return IntStream.range(0, portfolioAssets.size())
+            .mapToDouble(i -> portfolioAssets.get(i).getTotalPurchaseQuantity() * assets.get(i).getRecentPrice(exchangeRate))
+            .sum();
+    }
+
     // assetList에 weights의 비중으로 투자한 포트폴리오와, assetId에 해당하는 자산 사이의 수익률의 공분산을 계산한다
     // 이미 저장되어 있는 asset_covariance table 활용
     private double calculateCovariance(List<Asset> assetList, List<Double> weights, Integer assetId) {
@@ -1656,7 +1724,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<Map<String, Object>> frontierPointsMap = (List<Map<String, Object>>) responseBody.get("frontierPoints");
         List<FrontierPoint> frontierPoints = objectMapper.convertValue(frontierPointsMap, new TypeReference<List<FrontierPoint>>() {});
 
-        Integer totalCash = initInfo.totalCash();
+        Double totalCash = initInfo.totalCash();
         List<PortfolioAsset> portfolioAssetList = new ArrayList<>();
         List<Double> weights = new ArrayList<>();
 
@@ -1726,7 +1794,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<Map<String, Object>> frontierPointsMap = (List<Map<String, Object>>) responseBody.get("frontierPoints");
         List<FrontierPoint> frontierPoints = objectMapper.convertValue(frontierPointsMap, new TypeReference<List<FrontierPoint>>() {});
 
-        Integer totalCash = initInfo.totalCash();
+        Double totalCash = initInfo.totalCash();
         List<PortfolioAsset> portfolioAssetList = new ArrayList<>();
         List<Double> weights = new ArrayList<>();
 
@@ -2229,9 +2297,15 @@ public class PortfolioServiceImpl implements PortfolioService{
             .build();
     }
 
+    /**
+     * userId와 portfolioId를 이용해서 mongoDB에서 해당하는 포트폴리오를 찾아서 반환
+     * 없을 경우 null을 반환
+     * portfolioId에 해당하는 포트폴리오가 현재 유저의 포트폴리오인지 검증하는 로직 포함
+     */
     private Portfolio getMyPortfolioById(Integer userId, String portfolioId) {
         Portfolio portfolio = portfolioRepository.getPortfolioById(portfolioId);
-        if (portfolio == null || !portfolio.getUserId().equals(userId)) throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
+        if (portfolio == null) return null;
+        if (!portfolio.getUserId().equals(userId)) throw new MutualRiskException(ErrorCode.PARAMETER_INVALID);
         return portfolio;
     }
 }
