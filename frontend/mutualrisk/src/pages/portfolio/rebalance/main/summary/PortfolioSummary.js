@@ -63,7 +63,8 @@ const PortfolioSummary = ({ version }) => {
 	});
 
 	if (isLoading) return <div>Loading...</div>;
-	if (isError || !data) return <div>Error loading portfolio summary.</div>;
+	// if (isError || !data) return <div>Error loading portfolio summary.</div>;
+	if (isError || !data) return <div></div>;
 
 	const {
 		curValuation,

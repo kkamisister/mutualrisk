@@ -69,7 +69,8 @@ const RebalanceMainPage = () => {
 	}
 
 	if (isError) {
-		return <div>Error loading portfolio data.</div>;
+		// return <div>Error loading portfolio data.</div>;
+		return <div></div>;
 	}
 
 	return (

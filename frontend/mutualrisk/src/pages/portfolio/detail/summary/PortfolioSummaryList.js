@@ -81,7 +81,8 @@ const PortfolioSummaryList = ({ ver }) => {
 	}, [data]);
 
 	if (isError || !data) {
-		return <div>Error loading portfolio summary.</div>;
+		// return <div>Error loading portfolio summary.</div>;
+		return <div></div>;
 	}
 
 	const {

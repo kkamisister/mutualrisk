@@ -25,7 +25,8 @@ const AssetRatio = ({ portfolioId }) => {
 
 	// 에러가 발생했을 때 표시
 	if (isError) {
-		return <Typography>Error loading portfolio data.</Typography>;
+		// return <Typography>Error loading portfolio data.</Typography>;
+		return <Typography></Typography>;
 	}
 
 	// 데이터가 없을 경우 처리
