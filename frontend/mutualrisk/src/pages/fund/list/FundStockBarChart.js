@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 import {
 	BarChart,
@@ -12,15 +12,16 @@ import {
 import { colors } from 'constants/colors';
 
 const FundStockBarChart = ({ data, dataName, dataKey }) => {
-	console.log(data);
-	const normalizedData = data.map(asset => {
-		asset.valueOfHolding = Math.round(asset.valueOfHolding / 10000000);
-		return asset;
-	});
+	console.log({ data, dataName, dataKey });
 	return (
 		<Box sx={{ fontSize: '12px' }} height="270px" width="100%">
 			<ResponsiveContainer>
-				<BarChart data={normalizedData}>
+				<BarChart
+					data={data.map(asset => {
+						const normalized = { ...asset };
+						normalized[dataKey] = normalized[dataKey] / 100000;
+						return normalized;
+					})}>
 					<CartesianGrid strokeDasharray="3 3" />
 					<XAxis dataKey="code" />
 					<YAxis />
