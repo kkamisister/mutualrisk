@@ -48,6 +48,7 @@ public class Fund {
 			", company='" + company + '\'' +
 			", type='" + type + '\'' +
 			", id='" + id + '\'' +
+			", asset='" + asset + '\'' +
 			'}';
 	}
 

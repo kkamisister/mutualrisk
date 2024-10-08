@@ -238,20 +238,26 @@ public class FundServiceImpl implements FundService {
 		// 이전 분기의 펀드를 가지고온다
 		Optional<Fund> beforeQuarter = fundRepository.getBeforeQuarter(fund);
 
+		log.warn("beforeQuarter : {}",beforeQuarter);
+
 		// 유저의 관심자산 목록을 가지고온다
 		List<InterestAsset> userInterestAssets = interestAssetRepository.findUserInterestAssets(user);
 
+		log.warn("userInterestAsstes : {}",userInterestAssets);
 		// 필요한 정보 : assetId,code,name,rank,interest,valueOfHolding,전체중에 차지하는 비중,현재 가격
 		List<FundAssetInfo> fundAssetInfos = fundAssets.stream()
 			// 1. 펀드자산에 있는 자산 정보를 가지고 온다
 			.filter(fundAsset -> !ObjectUtils.isEmpty(fundAsset.getAssetId())) // 기타인 경우 스킵
 			.map(fundAsset -> {
 				Asset asset = assetIdMap.get(fundAsset.getAssetId());
+				log.warn("asset : {}",asset);
 
 				// 2. rank를 구한다
 				Integer rank = beforeQuarter
 					.map(f -> calculateRank(fund, f, asset.getId()))
 					.orElse(null); // null인경우는 새롭게 추가된 자산임
+
+				log.warn("rank : {}",rank);
 
 				// 3. interest를 구한다
 				Boolean interest = userInterestAssets.stream()
@@ -521,6 +527,9 @@ public class FundServiceImpl implements FundService {
 	 * @return
 	 */
 	private static Integer calculateRank(Fund curFund,Fund beforeFund,Integer assetId) {
+
+		log.warn("curFund : {}",curFund);
+		log.warn("beforeFund : {}",beforeFund);
 
 		// beforeFund에서 asset의 인덱스를 찾음
 		List<FundAsset> beforeAssets = beforeFund.getAsset();

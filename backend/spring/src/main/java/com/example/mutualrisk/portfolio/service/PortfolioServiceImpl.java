@@ -267,6 +267,9 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 3. 포트폴리오 백테스팅 결과 저장
         LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
 
+        // 이제 자산별로 해당 날짜에 해당하는 valuation을 누적해야한다
+        Map<LocalDateTime,Double> valuationPerDate = new HashMap<>();
+
         List<Performance> performances = new ArrayList<>();
         for(int idx = 0;idx < assetList.size();idx++){
             Asset asset = assetList.get(idx);
@@ -300,10 +303,12 @@ public class PortfolioServiceImpl implements PortfolioService{
                     // 자산의 valuation을 계산한다
                     double valuation = assetHistory.getPrice() * purchaseQuantityList.get(idx);
 
-                    performances.add(Performance.builder()
-                        .time(targetDate)
-                        .valuation(valuation)
-                        .build());
+                    if(!valuationPerDate.containsKey(targetDate)){
+                        valuationPerDate.put(targetDate,valuation);
+                    }
+                    else{
+                        valuationPerDate.merge(targetDate,valuation,Double::sum);
+                    }
                 }
 
                 // redis 캐싱에 추가
@@ -320,24 +325,41 @@ public class PortfolioServiceImpl implements PortfolioService{
                     LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
                     LocalDateTime dateTime = cachedValidDates.get(30 - dDate); // 캐시된 유효 날짜 가져오기
 
+                    AssetHistory assetHistory;
                     if(ObjectUtils.isEmpty(dateTime)) { // dateTime이 null인 경우 -> 가장 오래된 값 반환
-                        performances.add(Performance.builder()
-                            .time(targetDate)
-                            .valuation(asset.getOldestPrice())
-                            .build());
+                        assetHistory = AssetHistory.builder()
+                            .asset(asset)
+                            .price(asset.getOldestPrice())
+                            .date(targetDate)
+                            .build();
                     }else{
-                        AssetHistory assetHistory = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime)
+                        assetHistory = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime)
                             .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
 
+                        // 자산의 valuation을 계산한다
                         double valuation = assetHistory.getPrice() * purchaseQuantityList.get(idx);
-                        performances.add(Performance.builder()
-                            .time(targetDate)
-                            .valuation(valuation)
-                            .build());
+
+                        if(!valuationPerDate.containsKey(targetDate)){
+                            valuationPerDate.put(targetDate,valuation);
+                        }
+                        else{
+                            valuationPerDate.merge(targetDate,valuation,Double::sum);
+                        }
                     }
                 }
             }
         }
+        // 이제 map을 돌면서 performance 객체를 만들어서 리스트에 넣는다
+        valuationPerDate.entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())  // LocalDateTime 기준으로 오름차순 정렬
+            .forEach(entry -> {
+                LocalDateTime targetDate = entry.getKey();
+                Double valuation = entry.getValue();
+                performances.add(Performance.builder()
+                    .time(targetDate)
+                    .valuation(valuation)
+                    .build());
+            });
         PortfolioValuationDto data = PortfolioValuationDto.builder()
             .portfolioId(portfolio.getId())
             .timeInterval(timeInterval)
