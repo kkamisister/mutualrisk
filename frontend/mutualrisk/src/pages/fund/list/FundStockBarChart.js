@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import { colors } from 'constants/colors';
 
-const FundStockBarChart = ({ data }) => {
+const FundStockBarChart = ({ data, dataName, dataKey }) => {
 	console.log(data);
 	const normalizedData = data.map(asset => {
 		asset.valueOfHolding = Math.round(asset.valueOfHolding / 10000000);
@@ -26,8 +26,8 @@ const FundStockBarChart = ({ data }) => {
 					<YAxis />
 					<Tooltip />
 					<Bar
-						name="보유비율"
-						dataKey="valueOfHolding"
+						name={dataName}
+						dataKey={dataKey}
 						fill={colors.main.primary300}
 					/>
 				</BarChart>
