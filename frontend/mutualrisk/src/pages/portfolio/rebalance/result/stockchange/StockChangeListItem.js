@@ -18,7 +18,7 @@ const StockChangeListItem = ({ stock }) => {
 	return (
 		<Stack
 			direction={'row'}
-			spacing={1}
+			spacing={3}
 			sx={{
 				display: 'flex',
 				justifyContent: 'space-between',
@@ -26,14 +26,17 @@ const StockChangeListItem = ({ stock }) => {
 				marginBottom: '15px',
 			}}>
 			{/* 좌측 주식 정보 */}
-			<Stack>
-				<StockItemCard
-					code={stockInfoSample.symbol}
-					name={stockInfoSample.title}
-					market={stockInfoSample.market}
-					image={stockInfoSample.imageURL}
-				/>
-			</Stack>
+
+			<StockItemCard
+				code={stockInfoSample.symbol}
+				name={stockInfoSample.title}
+				market={stockInfoSample.market}
+				image={stockInfoSample.imageURL}
+				sx={{
+					height: '60px',
+					maxWidth: '300px',
+				}}
+			/>
 
 			{/* 기존 주식 가격 및 수량 */}
 			<Stack
@@ -41,22 +44,24 @@ const StockChangeListItem = ({ stock }) => {
 				alignItems="start"
 				sx={{
 					flex: 1,
+					height: '60px',
+					minWidth: '150px',
 					justifyContent: 'center',
 					backgroundColor: colors.background.box,
-					borderRadius: '20px',
+					borderRadius: '10px',
 					padding: '10px',
 				}}>
 				<Typography fontSize={10}>기존 주 수</Typography>
-				<Stack direction="row" alignItems="center">
+				<Stack direction="row" alignItems="center" justifyContent="center">
 					<Typography
 						sx={{
 							fontSize: '16px',
-							color: colors.text.sub1,
+							color: colors.text.main,
 							marginRight: '5px',
 						}}>
 						{stock.currentPrice}원
 					</Typography>
-					<Typography sx={{ fontSize: '16px', fontWeight: 'bold' }}>
+					<Typography sx={{ fontSize: '20px', fontWeight: 'bold' }}>
 						{stock.currentShares}주
 					</Typography>
 				</Stack>
@@ -68,22 +73,24 @@ const StockChangeListItem = ({ stock }) => {
 				alignItems="start"
 				sx={{
 					// flex: 1,
+					height: '60px',
+					minWidth: '150px',
 					justifyContent: 'center',
 					backgroundColor: colors.background.box,
-					borderRadius: '20px',
+					borderRadius: '10px',
 					padding: '10px',
 				}}>
 				<Typography fontSize={10}>리밸런싱 주 수</Typography>
-				<Stack direction="row" alignItems="center">
+				<Stack direction="row" alignItems="center" justifyContent="center">
 					<Typography
 						sx={{
 							fontSize: '16px',
-							color: colors.text.sub1,
+							color: colors.text.main,
 							marginRight: '5px',
 						}}>
 						{stock.rebalancedPrice}원
 					</Typography>
-					<Typography sx={{ fontSize: '16px', fontWeight: 'bold' }}>
+					<Typography sx={{ fontSize: '20px', fontWeight: 'bold' }}>
 						{stock.rebalancedShares}주
 					</Typography>
 				</Stack>
@@ -93,17 +100,20 @@ const StockChangeListItem = ({ stock }) => {
 			<Box
 				sx={{
 					flex: 1,
+					height: '60px',
+					minWidth: '150px',
 					display: 'flex',
 					justifyContent: 'center',
 					alignItems: 'center',
 					backgroundColor: colors.main.primary200,
-					borderRadius: '20px',
+					borderRadius: '10px',
 					padding: '10px',
 				}}>
 				<Typography
 					sx={{
-						fontSize: '16px',
-						color: colors.text.sub1,
+						fontSize: '18px',
+						fontWeight: 'bold',
+						color: colors.text.main,
 						marginRight: '5px',
 					}}>
 					{stock.rebalancedPrice}원
@@ -111,7 +121,7 @@ const StockChangeListItem = ({ stock }) => {
 				<Typography
 					sx={{
 						color: stock.change > 0 ? 'red' : colors.text.sub1,
-						fontSize: '16px',
+						fontSize: '20px',
 						fontWeight: 'bold',
 					}}>
 					{stock.change > 0 ? `+${stock.change}주` : `-${stock.change}주`}

@@ -8,7 +8,7 @@ const DetailContainer = ({ title, children, ...props }) => {
 		<Stack spacing={1} direction={'column'} width={'100%'} height={'100%'}>
 			<Box
 				sx={{
-					backgroundColor: colors.main.primary300,
+					backgroundColor: colors.main.primary500,
 					borderRadius: '10px',
 					padding: '10px',
 				}}>

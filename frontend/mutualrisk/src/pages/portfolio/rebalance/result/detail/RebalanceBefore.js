@@ -11,68 +11,45 @@ import {
 	ResponsiveContainer,
 } from 'recharts';
 import { colors } from 'constants/colors';
-import styled from 'styled-components';
-import StockItemCard from 'components/card/StockItemCard';
+import PortfolioAssetList from '../../main/piechart/PortfolioAssetList';
 
 const data = [
 	{
 		name: '삼성전자',
 		value: 30,
 		color: colors.main.primary200,
+		code: '005930', // 자산 코드
+		market: 'KOSPI',
+		weight: 0.3,
 	},
 	{
 		name: '테슬라',
 		value: 30,
 		color: '#ff4d4d', // Tesla의 빨간색
+		code: 'TSLA',
+		market: 'NASDAQ',
+		weight: 0.3,
 	},
 	{
 		name: '엔비디아',
 		value: 30,
 		color: '#00b33c', // Nvidia의 녹색
+		code: 'NVDA',
+		market: 'NASDAQ',
+		weight: 0.3,
 	},
 	{
 		name: 'TIGER 미국달러단기채권액티브',
 		value: 30,
 		color: '#ff9933', // TIGER의 주황색
+		code: '276990',
+		market: 'KOSPI',
+		weight: 0.3,
 	},
 ];
 
-const StockList = styled.ul`
-	list-style: none;
-	padding: 0;
-	margin-left: 20px;
-`;
-
-const StockItem = styled.li`
-	display: flex;
-	align-items: center;
-	padding: 10px;
-	margin-bottom: 10px;
-	transition: transform 0.2s;
-	background-color: #f9f9f9;
-	border-radius: 5px;
-
-	&:hover {
-		transform: scale(1.05);
-	}
-
-	${props =>
-		props.highlighted &&
-		`
-        transform: scale(1.1);
-        background-color: #e6f7ff;
-    `}
-`;
-
-const ColorBlock = styled.div`
-	width: 20px;
-	height: 20px;
-	background-color: ${props => props.color};
-	margin-right: 10px;
-`;
-
 const RebalanceBefore = () => {
-	const [highlightedStock, setHighlightedStock] = useState(null);
+	const [highlightedStockIndex, setHighlightedStockIndex] = useState(null);
 
 	return (
 		<DetailContainer title={'기존 포트폴리오'}>
@@ -90,10 +67,10 @@ const RebalanceBefore = () => {
 						barSize={20}
 						onMouseMove={state => {
 							if (state.isTooltipActive) {
-								const { payload } = state.activePayload[0];
-								setHighlightedStock(payload.name);
+								const index = state.activeTooltipIndex; // 마우스가 위치한 바의 인덱스를 가져옴
+								setHighlightedStockIndex(index);
 							} else {
-								setHighlightedStock(null);
+								setHighlightedStockIndex(null);
 							}
 						}}>
 						<XAxis type="number" />
@@ -103,21 +80,18 @@ const RebalanceBefore = () => {
 						<CartesianGrid strokeDasharray="3 3" />
 						<Bar
 							dataKey="value"
-							fill={colors.main.primary200}
+							name="%"
+							fill={colors.main.primary500}
 							background={{ fill: '#eee' }}
 						/>
 					</BarChart>
 				</ResponsiveContainer>
-				<StockList>
-					{data.map(stock => (
-						<StockItem
-							key={stock.name}
-							highlighted={highlightedStock === stock.name}>
-							<ColorBlock color={stock.color} />
-							{stock.name} {stock.value}%
-						</StockItem>
-					))}
-				</StockList>
+
+				{/* PortfolioAssetList로 UI 대체 */}
+				<PortfolioAssetList
+					assets={data}
+					hoveredIndex={highlightedStockIndex} // 강조될 항목의 인덱스 전달
+				/>
 			</div>
 		</DetailContainer>
 	);
