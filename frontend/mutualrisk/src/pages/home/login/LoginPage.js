@@ -1,44 +1,58 @@
 import React from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Stack, Button, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
-import loginButton from 'assets/images/kakao_login_medium_wide.png';
+import loginButton from 'assets/images/kakao_login_large_wide.png';
+import logoImage from 'assets/images/logo.png';
 
 const LoginPage = () => {
 	return (
 		<Box
 			sx={{
 				width: '100%',
+				height: '100%',
 				display: 'flex',
 				justifyContent: 'center',
 			}}>
 			<Box
 				sx={{
+					position: 'fixed',
+					aspectRatio: '1 / 1',
+					top: '-224vh',
+					height: '300vh',
+					background:
+						'radial-gradient(closest-side, #89d8d8 0%, rgba(49,130,246,0.15) 70%, rgba(255,255,255,0) 100%)',
+					pointerEvents: 'none',
+					zIndex: '-1',
+				}}
+			/>
+			<Stack
+				direction="column"
+				sx={{
 					width: '400px',
 					height: '300px',
 					borderRadius: '20px',
-					backgroundColor: colors.background.box, // 박스 배경색 설정
+					backgroundColor: colors.background.white, // 박스 배경색 설정
 					display: 'flex',
-					flexDirection: 'column',
-					justifyContent: 'center',
 					alignSelf: 'center',
 					textAlign: 'center',
 					padding: '20px',
+					justifyContent: 'space-evenly',
+					alignItems: 'center',
 				}}>
-				<Typography
+				<Box
 					sx={{
-						fontSize: '14px',
-						color: colors.text.sub1,
-						marginBottom: '80px',
+						width: '100px',
+						height: '100px',
+						borderRadius: '25%',
+						overflow: 'hidden',
 					}}>
-					로그인 후 서비스 이용이 가능합니다.
-				</Typography>
-				<Typography
-					sx={{
-						fontSize: '16px',
-						fontWeight: 'bold',
-						color: colors.text.sub1,
-						marginBottom: '20px',
-					}}>
+					<img
+						style={{ width: '100%', height: '100%' }}
+						src={logoImage}
+						alt="로고 이미지"
+					/>
+				</Box>
+				<Typography sx={{ fontSize: '24px', fontWeight: '600' }}>
 					로그인
 				</Typography>
 				<button
@@ -57,11 +71,12 @@ const LoginPage = () => {
 						src={loginButton}
 						alt="로그인"
 						style={{
-							width: '250px',
+							width: '300px',
 							height: 'auto',
-						}}></img>
+						}}
+					/>
 				</button>
-			</Box>
+			</Stack>
 		</Box>
 	);
 };
