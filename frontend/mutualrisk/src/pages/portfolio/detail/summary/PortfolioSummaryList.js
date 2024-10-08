@@ -5,6 +5,7 @@ import { Stack, Typography, Box } from '@mui/material';
 import { colors } from 'constants/colors';
 import HorizontalScrollContainer from 'components/scroll/HorizontalScrollContainer';
 import { fetchPortfolioSummaryByVer } from 'utils/apis/analyze';
+import { useEffect } from 'react';
 
 // 위험도 박스를 렌더링하는 함수
 const renderRiskBox = (rank, total, title) => {
@@ -68,6 +69,10 @@ const PortfolioSummaryList = ({ ver }) => {
 		queryKey: ['portfolioSummary', ver],
 		queryFn: () => fetchPortfolioSummaryByVer(ver),
 	});
+
+	React.useEffect(() => {
+		console.log('PortfolioSummary received version:', ver);
+	}, [ver]);
 
 	React.useEffect(() => {
 		if (data) {
