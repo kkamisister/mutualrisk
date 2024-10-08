@@ -14,50 +14,11 @@ import {
 	ReferenceLine,
 } from 'recharts';
 import InvestorTradingTable from './InvestorTradingTable';
-const records = [
-	{
-		date: '2024-09-13',
-		foreignerPureBuyQuant: 3014,
-		foreignerHoldRatio: 30.76,
-		organPureBuyQuant: 68278,
-		individualPureBuyQuant: -70044,
-		accumulatedTradingVolume: 191057,
-	},
-	{
-		date: '2024-09-12',
-		foreignerPureBuyQuant: 57626,
-		foreignerHoldRatio: 30.76,
-		organPureBuyQuant: -46520,
-		individualPureBuyQuant: -13038,
-		accumulatedTradingVolume: 314290,
-	},
-	{
-		date: '2024-09-11',
-		foreignerPureBuyQuant: 13976,
-		foreignerHoldRatio: 30.69,
-		organPureBuyQuant: -69392,
-		individualPureBuyQuant: 43807,
-		accumulatedTradingVolume: 364283,
-	},
-	{
-		date: '2024-09-10',
-		foreignerPureBuyQuant: 13368,
-		foreignerHoldRatio: 30.8,
-		organPureBuyQuant: -329,
-		individualPureBuyQuant: -13116,
-		accumulatedTradingVolume: 191065,
-	},
-	{
-		date: '2024-09-09',
-		foreignerPureBuyQuant: 34754,
-		foreignerHoldRatio: 30.79,
-		organPureBuyQuant: 10764,
-		individualPureBuyQuant: -45980,
-		accumulatedTradingVolume: 263324,
-	},
-];
 
-const InvestorTradingWidget = ({}) => {
+const InvestorTradingWidget = ({ records }) => {
+	const normalizeRecords = records.map(record => {
+		return { ...record, date: record.date.slice(0, 6) };
+	});
 	return (
 		<Stack
 			spacing={1}
@@ -112,7 +73,7 @@ const InvestorTradingWidget = ({}) => {
 						</BarChart>
 					</ResponsiveContainer>
 				</Box>
-				<InvestorTradingTable records={records} />
+				<InvestorTradingTable records={normalizeRecords} />
 			</Stack>
 		</Stack>
 	);
