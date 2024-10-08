@@ -2,14 +2,12 @@ package com.example.mutualrisk.portfolio.controller;
 
 import java.util.List;
 
-import com.example.mutualrisk.asset.dto.AssetResponse.*;
 import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
 import com.example.mutualrisk.fund.dto.FundResponse.SectorInfo;
-import com.example.mutualrisk.portfolio.dto.PortfolioRequest;
 import com.example.mutualrisk.portfolio.dto.PortfolioRequest.PortfolioInitDto;
 import com.example.mutualrisk.portfolio.dto.PortfolioRequest.RecommendAssetRequestDto;
 import com.example.mutualrisk.portfolio.service.PortfolioService;
@@ -71,10 +69,10 @@ public class PortfolioController {
 	}
 
     @PostMapping("/recommend")
-    public ResponseEntity<ResponseWithData<PortfolioAnalysis>> recommendPortfolioAssets(@RequestBody
+    public ResponseEntity<ResponseWithData<List<RecommendAssetResponseResultDto>>> recommendPortfolioAssets(@RequestBody
         RecommendAssetRequestDto recommendAssetRequestDto){
 
-        ResponseWithData<PortfolioAnalysis> recommendedAssets = portfolioService.getRecommendedAssets(
+        ResponseWithData<List<RecommendAssetResponseResultDto>> recommendedAssets = portfolioService.getRecommendedAssets(
             recommendAssetRequestDto);
 
         return ResponseEntity.status(recommendedAssets.status())

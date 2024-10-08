@@ -554,8 +554,9 @@ public class FundServiceImpl implements FundService {
 	 * @return
 	 */
 	private static int findAssetIndex(List<FundAsset> assets,Integer assetId) {
-		for (int i = 1; i < assets.size(); i++) {
-			if (assets.get(i).getAssetId().equals(assetId)) {
+		for (int i = 0; i < assets.size(); i++) {
+			Integer curAssetId = assets.get(i).getAssetId();
+			if (curAssetId != null && curAssetId.equals(assetId)) {
 				return i;
 			}
 		}

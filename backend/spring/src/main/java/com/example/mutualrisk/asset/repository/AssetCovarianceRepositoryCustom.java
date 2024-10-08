@@ -10,4 +10,6 @@ public interface AssetCovarianceRepositoryCustom {
 	List<AssetCovariance> findAllVolatilityByAssets(List<Integer> assetIds);
 
     List<AssetCovariance> findAllCovarianceIn(List<Asset> assetList);
+
+    List<AssetCovariance> findAllCovarianceByAssetsAndAssetId(List<Asset> assetList, Integer assetId);
 }
