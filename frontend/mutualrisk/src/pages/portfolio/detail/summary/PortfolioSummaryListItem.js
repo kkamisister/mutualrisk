@@ -3,7 +3,7 @@ import { Box, Stack, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import WidgetContainer from 'components/container/WidgetConatiner';
 
-const PortfolioSummaryListItem = ({ title, children }) => {
+const PortfolioSummaryListItem = ({ title, children, sx }) => {
 	return (
 		<WidgetContainer
 			sx={{
@@ -18,6 +18,7 @@ const PortfolioSummaryListItem = ({ title, children }) => {
 				'&:hover': {
 					backgroundColor: colors.background.box,
 				},
+				...sx,
 			}}>
 			<Typography
 				sx={{
