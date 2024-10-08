@@ -6,6 +6,7 @@ import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.portfolio.entity.FrontierPoint;
 import com.example.mutualrisk.portfolio.entity.Portfolio;
+import com.example.mutualrisk.portfolio.entity.RecommendAsset;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -47,7 +48,8 @@ public record PortfolioResponse() {
     public record PortfolioInfo(
         String portfolioId,
         PortfolioPerformance performance,
-        List<PortfolioAssetInfo> assets
+        List<PortfolioAssetInfo> assets,
+        List<PortfolioRecommendResultDto> recommendAssets
     ) {
 
     }
@@ -55,9 +57,39 @@ public record PortfolioResponse() {
     @Builder
     @Schema(name = "포트폴리오 종목 추천 결과")
     public record PortfolioRecommendResultDto(
-
+        Integer assetId,
+        String name,
+        String code,
+        String imagePath,
+        String imageName,
+        String market,
+        Double price,
+        String region,
+        Double expectedReturn,
+        String dailyPriceChangeRate,
+        String dailyPriceChange,
+        Double expectedReturnChange,
+        Double volatilityChange,
+        Double sharpeRatioChange
     ) {
-
+        public static PortfolioRecommendResultDto of(AssetInfo assetInfo, RecommendAsset recommendAsset, PortfolioPerformance portfolioPerformance) {
+            return PortfolioRecommendResultDto.builder()
+                .assetId(assetInfo.assetId())
+                .name(assetInfo.name())
+                .code(assetInfo.code())
+                .imagePath(assetInfo.imagePath())
+                .imageName(assetInfo.imageName())
+                .market(assetInfo.market())
+                .price(assetInfo.price())
+                .region(assetInfo.region())
+                .expectedReturn(assetInfo.expectedReturn())
+                .dailyPriceChangeRate(assetInfo.dailyPriceChangeRate())
+                .dailyPriceChange(assetInfo.dailyPriceChange())
+                .expectedReturnChange(recommendAsset.getExpectedReturn() - portfolioPerformance.expectedReturn())
+                .volatilityChange(recommendAsset.getVolatility() - portfolioPerformance.volatility())
+                .sharpeRatioChange(recommendAsset.getSharpeRatio() - portfolioPerformance.sharpeRatio())
+                .build();
+        }
     }
 
     @Builder

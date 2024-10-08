@@ -70,10 +70,11 @@ public class PortfolioController {
 
     @PostMapping("/recommend")
     public ResponseEntity<ResponseWithData<List<RecommendAssetResponseResultDto>>> recommendPortfolioAssets(@RequestBody
-        RecommendAssetRequestDto recommendAssetRequestDto){
+        RecommendAssetRequestDto recommendAssetRequestDto, HttpServletRequest request){
 
-        ResponseWithData<List<RecommendAssetResponseResultDto>> recommendedAssets = portfolioService.getRecommendedAssets(
-            recommendAssetRequestDto);
+        Integer userId = (Integer) request.getAttribute("userId");
+
+        ResponseWithData<List<RecommendAssetResponseResultDto>> recommendedAssets = portfolioService.getRecommendedAssets(userId, recommendAssetRequestDto);
 
         return ResponseEntity.status(recommendedAssets.status())
             .body(recommendedAssets);

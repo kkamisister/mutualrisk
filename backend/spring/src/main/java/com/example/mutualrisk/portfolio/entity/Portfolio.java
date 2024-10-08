@@ -36,6 +36,7 @@ public class Portfolio {
 	private List<Double> weights;
 	private PortfolioPerformance fictionalPerformance;
 	private List<FrontierPoint> frontierPoints;
+	private List<RecommendAsset> recommendAssets;
 
 	/**
 	 * 포트폴리오의 구성 자산 목록을 받아올 때, id순으로 정렬시키는 로직 추가
@@ -49,6 +50,14 @@ public class Portfolio {
 		sortedList.sort(Comparator.comparingInt(PortfolioAsset::getAssetId));
 
 		// 정렬된 리스트 반환
+		return sortedList;
+	}
+
+	public List<RecommendAsset> getRecommendAssets() {
+		List<RecommendAsset> sortedList = new ArrayList<>(this.recommendAssets);
+
+		sortedList.sort(Comparator.comparingInt(RecommendAsset::getAssetId));
+
 		return sortedList;
 	}
 }

@@ -340,6 +340,7 @@ public class AssetServiceImpl implements AssetService{
     private AssetInfo getAssetInfo(Asset asset,Double recentExchangeRate) {
 
         LocalDateTime targetDate = LocalDateTime.now();
+        
         List<LocalDateTime> validDate = assetHistoryService.getValidDate(asset, targetDate, 2);
         if (validDate.size() < 2) throw new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND);
 
