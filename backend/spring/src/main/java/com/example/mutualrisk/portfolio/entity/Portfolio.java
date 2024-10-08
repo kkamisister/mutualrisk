@@ -33,6 +33,7 @@ public class Portfolio {
 	private List<PortfolioAsset> asset;
 	private List<Double> lowerBound;
 	private List<Double> upperBound;
+	private List<Double> exactProportion;
 	private List<Double> weights;
 	private PortfolioPerformance fictionalPerformance;
 	private List<FrontierPoint> frontierPoints;
