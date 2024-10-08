@@ -9,6 +9,8 @@ const WidgetContainer = ({ children, sx = {} }) => {
 				backgroundColor: colors.background.white,
 				padding: '20px',
 				borderRadius: '20px',
+				width: 'calc(100% - 40px)',
+				height: 'calc(100% - 40px)',
 				border: `solid 1px ${colors.point.stroke}`,
 				...sx,
 			}}>
