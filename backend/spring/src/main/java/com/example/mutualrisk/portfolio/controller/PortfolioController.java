@@ -44,7 +44,8 @@ public class PortfolioController {
     @GetMapping("/summary")
     public ResponseEntity<ResponseWithData<PortfolioStatusSummary>> UserPortfolioSummary(@RequestParam("ver") Integer version, HttpServletRequest request){
 
-        Integer userId = (Integer) request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         ResponseWithData<PortfolioStatusSummary> portfolioSummary = portfolioService.userPortfolioSummary(userId,version);
 
@@ -60,7 +61,8 @@ public class PortfolioController {
 	@PostMapping("/init")
 	public ResponseEntity<ResponseWithData<CalculatedPortfolio>> initUserPortfolio(@RequestBody PortfolioInitDto initInfo, HttpServletRequest request) {
 
-        Integer userId = (Integer) request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
 		ResponseWithData<CalculatedPortfolio> portfolioInfo = portfolioService.initPortfolio(userId, initInfo);
 
@@ -93,7 +95,8 @@ public class PortfolioController {
     @PostMapping("/final")
     public ResponseEntity<ResponseWithData<String>> confirmUserPortfolio(@RequestBody PortfolioInitDto initInfo, HttpServletRequest request) {
 
-        Integer userId = (Integer) request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         ResponseWithData<String> responseWithMessage = portfolioService.confirmPortfolio(userId, initInfo);
 
@@ -113,7 +116,8 @@ public class PortfolioController {
     })
     @GetMapping("/my")
     public ResponseEntity<ResponseWithData<PortfolioTotalSearchDto>> getAllUserPortfolio(HttpServletRequest request) {
-        Integer userId = (Integer)request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         ResponseWithData<PortfolioTotalSearchDto> allUserPortfolio = portfolioService.getAllUserPortfolio(userId);
 
@@ -129,7 +133,8 @@ public class PortfolioController {
     })
     @GetMapping("/detail")
     public ResponseEntity<ResponseWithData<PortfolioResultDto>> getUserPortfolio(@RequestParam(value = "portfolioId") String portfolioId, HttpServletRequest request) {
-        Integer userId = (Integer)request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         ResponseWithData<PortfolioResultDto> portfolioInfo = portfolioService.getPortfolioInfo(userId, portfolioId);
 
@@ -166,7 +171,8 @@ public class PortfolioController {
     })
     @GetMapping("/backtest")
     public ResponseEntity<ResponseWithData<PortfolioValuationDto>> getUserPortfolioReturn(@RequestParam(value = "portfolioId") String portfolioId, @RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
-        Integer userId = (Integer)request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         // parameter(Enum) 초기화
         TimeInterval timeInterval;
@@ -190,7 +196,8 @@ public class PortfolioController {
     @PostMapping("/backtest")
     public ResponseEntity<ResponseWithData<PortfolioBackTestDto>> getBackTestOfCreatedPortfolio(@RequestBody List<RecommendAssetInfo> recommendAssetInfoList, @RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
 
-        Integer userId = (Integer)request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
         // parameter(Enum) 초기화
         TimeInterval timeInterval;
         PerformanceMeasure measure;
@@ -214,7 +221,8 @@ public class PortfolioController {
     @GetMapping("/sector")
     public ResponseEntity<ResponseWithData<List<SectorInfo>>> getUserPortfolioSector(@RequestParam(value = "portfolioId") String portfolioId, HttpServletRequest request) {
 
-        Integer userId = (Integer)request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         ResponseWithData<List<SectorInfo>> userPortfolioSector = portfolioService.getUserPortfolioSector(userId, portfolioId);
 
@@ -232,7 +240,8 @@ public class PortfolioController {
     })
     @GetMapping("/frontier")
     public ResponseEntity<ResponseWithData<FrontierDto>> getFrontierPoints(@RequestParam(value = "portfolioId") String portfolioId, HttpServletRequest request) {
-        Integer userId = (Integer)request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         ResponseWithData<FrontierDto> frontierDtoResponseWithData = portfolioService.getFrontierPoints(userId, portfolioId);
 
@@ -250,7 +259,8 @@ public class PortfolioController {
     })
     @GetMapping("/valuation")
     public ResponseEntity<ResponseWithData<PortfolioValuationDto>> getValuation(@RequestParam(value = "portfolioId") String portfolioId, @RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "VALUATION") String measureString, HttpServletRequest request) {
-        Integer userId = (Integer)request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         // parameter(Enum) 초기화
         TimeInterval timeInterval;
@@ -282,7 +292,8 @@ public class PortfolioController {
         @RequestParam(value = "portfolioId") String portfolioId,
         @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString,
         HttpServletRequest request) {
-        Integer userId = (Integer)request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         // parameter(Enum) 초기화
         PerformanceMeasure measure;
@@ -306,7 +317,8 @@ public class PortfolioController {
     public ResponseEntity<ResponseWithData<List<PortfolioAssetInfo>>> getPortfolioAssetList(
         @RequestParam(value = "portfolioId") String portfolioId,
         HttpServletRequest request) {
-        Integer userId = (Integer)request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         ResponseWithData<List<PortfolioAssetInfo>> portfolioAssetInfo = portfolioService.getAssetInfoList(userId, portfolioId);
 
