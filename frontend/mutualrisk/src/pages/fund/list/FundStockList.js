@@ -15,7 +15,7 @@ const FundStockList = ({ title, data, dataName, dataKey }) => {
 				borderRadius: '20px',
 				border: `solid 1px ${colors.point.stroke}`,
 			}}>
-			<Title text={title} caption="(단위: 1000만 달러)"></Title>
+			<Title text={title} caption="(단위: 10만 달러)"></Title>
 			<FundStockBarChart data={data} dataName={dataName} dataKey={dataKey} />
 			{data.map((asset, idx) => (
 				<FundStockListItem

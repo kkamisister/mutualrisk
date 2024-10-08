@@ -16,6 +16,7 @@ const FundPage = () => {
 		queryKey: ['fundList'], // keyword를 queryKey에 포함하여 키워드가 변경되면 새로운 요청 실행
 		queryFn: () => fetchFundList(),
 	});
+
 	const fundList = data?.funds || [];
 	const topHoldAsset = data?.topHoldAndBuyAmount.topHoldAsset || [];
 	const topBuyAsset = data?.topHoldAndBuyAmount.topBuyAsset || [];
