@@ -16,18 +16,23 @@ import { colors } from 'constants/colors';
 import { fetchPortfolioList } from 'utils/apis/analyze';
 import useAssetStore from 'stores/useAssetStore';
 import useConstraintStore from 'stores/useConstraintStore';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { createPortfolio } from 'utils/apis/portfolio';
 
 const AssetConstraintList = ({ assets }) => {
 	const [openDialog, setOpenDialog] = useState(false);
 	const [hasPortfolio, setHasPortfolio] = useState(false);
-	const { totalCash, addTotalCash, updateTotalCash } = useAssetStore(
-		state => ({
-			totalCash: state.totalCash,
-			addTotalCash: state.addTotalCash,
-			updateTotalCash: state.updateTotalCash,
-		})
-	);
+	const {
+		totalCash,
+		assets: assetIds,
+		addTotalCash,
+		updateTotalCash,
+	} = useAssetStore(state => ({
+		totalCash: state.totalCash,
+		addTotalCash: state.addTotalCash,
+		updateTotalCash: state.updateTotalCash,
+	}));
+
 	const {
 		lowerBounds,
 		upperBounds,
@@ -47,6 +52,29 @@ const AssetConstraintList = ({ assets }) => {
 		},
 	});
 
+	const mutation = useMutation({
+		mutationFn: createPortfolio,
+		onSuccess: data => {
+			console.log('포트폴리오 제작 완료:', data);
+		},
+		onError: error => {
+			console.error('에러 발생:', error);
+		},
+	});
+
+	const handleCreatePortfolio = () => {
+		console.log('totalCash', totalCash);
+		console.log('assetids', assetIds);
+		console.log('lowerBounds', lowerBounds);
+		mutation.mutate({
+			totalCash,
+			assetIds,
+			lowerBounds,
+			upperBounds,
+			exactProportion,
+		});
+	};
+
 	const handleUnlock = () => {
 		setHasPortfolio(false);
 		setOpenDialog(false);
@@ -62,7 +90,9 @@ const AssetConstraintList = ({ assets }) => {
 		}
 	};
 
-	const handleSubmit = () => {};
+	const handleSubmit = () => {
+		handleCreatePortfolio();
+	};
 
 	return (
 		<Box sx={{ height: '100%', position: 'relative' }}>
