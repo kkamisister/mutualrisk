@@ -52,4 +52,12 @@ public class Portfolio {
 		// 정렬된 리스트 반환
 		return sortedList;
 	}
+
+	public List<RecommendAsset> getRecommendAssets() {
+		List<RecommendAsset> sortedList = new ArrayList<>(this.recommendAssets);
+
+		sortedList.sort(Comparator.comparingInt(RecommendAsset::getAssetId));
+
+		return sortedList;
+	}
 }
