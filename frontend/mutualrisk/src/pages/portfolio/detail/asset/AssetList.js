@@ -28,7 +28,7 @@ const AssetList = ({ assets, hoveredIndex }) => {
 	return (
 		<Stack
 			sx={{
-				height: '450px',
+				height: '435px',
 				position: 'relative',
 			}}>
 			<Box
