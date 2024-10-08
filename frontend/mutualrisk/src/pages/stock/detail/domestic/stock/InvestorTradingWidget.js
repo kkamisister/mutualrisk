@@ -16,8 +16,8 @@ import {
 import InvestorTradingTable from './InvestorTradingTable';
 
 const InvestorTradingWidget = ({ records }) => {
-	const normalizeRecords = records.map(record => {
-		return { ...record, date: record.date.slice(0, 6) };
+	const normalizeRecords = records.reverse().map(record => {
+		return { ...record, date: record.date.slice(0, 10) };
 	});
 	return (
 		<Stack
