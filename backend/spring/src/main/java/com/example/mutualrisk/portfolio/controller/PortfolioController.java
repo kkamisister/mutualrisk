@@ -68,6 +68,8 @@ public class PortfolioController {
 			.body(portfolioInfo);
 	}
 
+//    @Operation(summary = "리밸런싱 ")
+
     @PostMapping("/recommend")
     public ResponseEntity<ResponseWithData<List<RecommendAssetResponseResultDto>>> recommendPortfolioAssets(@RequestBody
         RecommendAssetRequestDto recommendAssetRequestDto, HttpServletRequest request){

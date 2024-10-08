@@ -130,6 +130,9 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 추천 자산 목록은 assetId순으로 정렬되어 있음이 보장되어 있다
         List<RecommendAsset> recommendAssets = portfolio.getRecommendAssets();
 
+        // recommendAssets가 null이면 -> 빈 리스트를 반환
+        if (recommendAssets.isEmpty()) return new ArrayList<>();
+
         // 2. recommendAsset에 포함된 assetId들을 반환
         List<Integer> assetIds = recommendAssets.stream()
             .map(RecommendAsset::getAssetId)

@@ -112,4 +112,16 @@ public record PortfolioRequest() {
 
 	}
 
+	/**
+	 * 리밸런싱 포트폴리오를 제작하는 api를 호출할 때 필요한 body 데이터
+	 */
+	@Builder
+	@Schema(name = "리밸런싱 api 호출용 request dto")
+	public record RebalancePortfolioRequestDto(
+		Integer extraAssetId,
+		Integer extraCash
+	) {
+
+	}
+
 }

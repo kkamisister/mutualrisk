@@ -54,6 +54,10 @@ public class Portfolio {
 	}
 
 	public List<RecommendAsset> getRecommendAssets() {
+		if (this.recommendAssets == null) {
+			return new ArrayList<>();
+		}
+
 		List<RecommendAsset> sortedList = new ArrayList<>(this.recommendAssets);
 
 		sortedList.sort(Comparator.comparingInt(RecommendAsset::getAssetId));
