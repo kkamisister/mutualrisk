@@ -1,15 +1,82 @@
 import React from 'react';
-import { Box, Stack, Typography, Grid } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
+import { Stack, Typography, Box, Grid } from '@mui/material';
 import { colors } from 'constants/colors';
 import PortfolioSummaryListItem from 'pages/portfolio/detail/summary/PortfolioSummaryListItem';
+import { fetchPortfolioSummaryByVer } from 'utils/apis/analyze';
 
-const PortfolioSummary = () => {
+const renderRiskBox = (rank, total, title) => {
+	const percentage = (rank / total) * 100;
+	let color = 'green';
+	let text = '안전';
+
+	if (percentage >= 33 && percentage < 67) {
+		color = 'orange';
+		text = '주의';
+	} else if (percentage >= 67) {
+		color = 'red';
+		text = '위험';
+	}
+
 	return (
-		<Stack
-			sx={{
-				width: '450px',
-				overflow: 'hidden',
-			}}>
+		<PortfolioSummaryListItem title={title}>
+			<Stack
+				spacing={0.5}
+				direction="column"
+				sx={{
+					display: 'flex',
+					justifyContent: 'center',
+					alignItems: 'center',
+					height: '100%',
+				}}>
+				<Typography
+					sx={{ fontSize: '14px', color: 'gray', fontWeight: 'bold' }}>
+					상위 {percentage.toFixed(2)}%
+				</Typography>
+				<Stack direction="row" justifyContent="center">
+					<Box
+						sx={{
+							width: '30px',
+							height: '30px',
+							borderRadius: '50%',
+							backgroundColor: color,
+							marginRight: '8px',
+						}}
+					/>
+					<Typography
+						sx={{ fontSize: '18px', color: color, fontWeight: 'bold' }}>
+						{text}
+					</Typography>
+				</Stack>
+			</Stack>
+		</PortfolioSummaryListItem>
+	);
+};
+
+const PortfolioSummary = ({ version }) => {
+	const { data, isError, isLoading } = useQuery({
+		queryKey: ['portfolioSummary', version],
+		queryFn: () => fetchPortfolioSummaryByVer(version),
+		enabled: !!version,
+		staleTime: 300000,
+		refetchOnWindowFocus: false,
+	});
+
+	if (isLoading) return <div>Loading...</div>;
+	if (isError || !data) return <div>Error loading portfolio summary.</div>;
+
+	const {
+		curValuation,
+		initValuation,
+		sharpeRatio,
+		krxSharpeRatio,
+		krxETFSharpeRatio,
+		nasdaqSharpeRatio,
+		nasdaqETFSharpeRatio,
+	} = data;
+
+	return (
+		<Stack sx={{ width: '450px', overflow: 'hidden' }}>
 			<Box
 				sx={{
 					flex: 1,
@@ -18,14 +85,6 @@ const PortfolioSummary = () => {
 					justifyContent: 'center',
 					overflowY: 'auto',
 					scrollbarWidth: 'none',
-					'& .react-horizontal-scrolling-menu--scroll-container::-webkit-scrollbar':
-						{
-							display: 'none',
-						},
-					'& .react-horizontal-scrolling-menu--scroll-container': {
-						scrollbarWidth: 'none',
-						'-ms-overflow-style': 'none',
-					},
 				}}>
 				<Grid container spacing={1} sx={{ marginTop: '20px' }}>
 					<Grid item xs={6}>
@@ -36,27 +95,31 @@ const PortfolioSummary = () => {
 									fontWeight: 'bold',
 									color: colors.text.sub1,
 								}}>
-								4,070,000원
-							</Typography>
-							<Typography sx={{ fontSize: '14px', color: 'red' }}>
-								370,000원 (10%)
+								{curValuation.toLocaleString()}원
 							</Typography>
 						</PortfolioSummaryListItem>
 					</Grid>
-
 					<Grid item xs={6}>
 						<PortfolioSummaryListItem title="예상 수익률">
 							<Typography
 								sx={{
-									fontSize: '18px',
+									lineHeight: '1.2',
+									fontSize: '15px',
 									fontWeight: 'bold',
-									color: 'red',
+									color:
+										curValuation - initValuation > 0 ? 'red' : 'blue',
 								}}>
-								370,000원 (10%)
+								{curValuation - initValuation > 0 ? '+' : ''}
+								{(curValuation - initValuation).toLocaleString()}원 (
+								{curValuation - initValuation > 0 ? '+' : ''}
+								{(
+									((curValuation - initValuation) / initValuation) *
+									100
+								).toFixed(1)}
+								%)
 							</Typography>
 						</PortfolioSummaryListItem>
 					</Grid>
-
 					<Grid item xs={6}>
 						<PortfolioSummaryListItem title="위험률 대비 수익률">
 							<Typography
@@ -65,129 +128,37 @@ const PortfolioSummary = () => {
 									fontWeight: 'bold',
 									color: colors.text.sub1,
 								}}>
-								16.3%
+								{sharpeRatio.toFixed(2)}%
 							</Typography>
 						</PortfolioSummaryListItem>
 					</Grid>
-
 					<Grid item xs={6}>
-						<PortfolioSummaryListItem title="국내채권 대비 위험도">
-							<Box
-								sx={{
-									display: 'flex',
-									justifyContent: 'center',
-									alignItems: 'center',
-									height: '100%',
-								}}>
-								<Box
-									sx={{
-										width: '30px',
-										height: '30px',
-										borderRadius: '50%',
-										backgroundColor: 'green',
-										marginRight: '8px',
-									}}
-								/>
-								<Typography
-									sx={{
-										fontSize: '18px',
-										color: 'green',
-										fontWeight: 'bold',
-									}}>
-									안정
-								</Typography>
-							</Box>
-						</PortfolioSummaryListItem>
+						{renderRiskBox(
+							krxSharpeRatio.rank,
+							krxSharpeRatio.total,
+							'KRX 대비 위험도'
+						)}
 					</Grid>
-
 					<Grid item xs={6}>
-						<PortfolioSummaryListItem title="해외채권 대비 위험도">
-							<Box
-								sx={{
-									display: 'flex',
-									justifyContent: 'center',
-									alignItems: 'center',
-									height: '100%',
-								}}>
-								<Box
-									sx={{
-										width: '30px',
-										height: '30px',
-										borderRadius: '50%',
-										backgroundColor: 'green',
-										marginRight: '8px',
-									}}
-								/>
-								<Typography
-									sx={{
-										fontSize: '18px',
-										color: 'green',
-										fontWeight: 'bold',
-									}}>
-									안정
-								</Typography>
-							</Box>
-						</PortfolioSummaryListItem>
+						{renderRiskBox(
+							krxETFSharpeRatio.rank,
+							krxETFSharpeRatio.total,
+							'KRX ETF 대비 위험도'
+						)}
 					</Grid>
-
 					<Grid item xs={6}>
-						<PortfolioSummaryListItem title="S&P 대비 위험도">
-							<Box
-								sx={{
-									display: 'flex',
-									justifyContent: 'center',
-									alignItems: 'center',
-									height: '100%',
-								}}>
-								<Box
-									sx={{
-										width: '30px',
-										height: '30px',
-										borderRadius: '50%',
-										backgroundColor: 'green',
-										marginRight: '8px',
-									}}
-								/>
-								<Typography
-									sx={{
-										fontSize: '18px',
-										color: 'green',
-										fontWeight: 'bold',
-									}}>
-									안정
-								</Typography>
-							</Box>
-						</PortfolioSummaryListItem>
+						{renderRiskBox(
+							nasdaqSharpeRatio.rank,
+							nasdaqSharpeRatio.total,
+							'NASDAQ 대비 위험도'
+						)}
 					</Grid>
-
 					<Grid item xs={6}>
-						<PortfolioSummaryListItem title="코스피 대비 위험도">
-							<Box
-								sx={{
-									display: 'flex',
-									justifyContent: 'center',
-									alignItems: 'center',
-									height: '100%',
-								}}>
-								<Box
-									sx={{
-										width: '30px',
-										height: '30px',
-										borderRadius: '50%',
-										backgroundColor: 'green',
-										marginRight: '8px',
-									}}
-								/>
-								<Typography
-									sx={{
-										fontSize: '18px',
-										color: 'green',
-										fontWeight: 'bold',
-									}}>
-									안정
-								</Typography>
-							</Box>
-						</PortfolioSummaryListItem>
+						{renderRiskBox(
+							nasdaqETFSharpeRatio.rank,
+							nasdaqETFSharpeRatio.total,
+							'NASDAQ ETF 대비 위험도'
+						)}
 					</Grid>
 				</Grid>
 			</Box>

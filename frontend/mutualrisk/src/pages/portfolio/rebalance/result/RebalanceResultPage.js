@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Stack, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
@@ -7,30 +7,13 @@ import RebalanceDetail from 'pages/portfolio/rebalance/result/detail/RebalanceDe
 import StockChangeList from 'pages/portfolio/rebalance/result/stockchange/StockChangeList';
 import BackTestChart from 'pages/portfolio/rebalance/result/backtest/BackTestChart';
 import CustomButton from 'components/button/BasicButton';
+import ConfirmModal from 'pages/portfolio/rebalance/result/modal/ConfirmModal';
 
 const RebalanceResultPage = () => {
 	const navigate = useNavigate();
+	const [isModalOpen, setIsModalOpen] = useState(false);
+
 	const stockData = [
-		{
-			name: '엔비디아',
-			ticker: 'NVDA(NASDAQ)',
-			imagePath: 'https://link-to-image/nvda.png',
-			currentPrice: '58,000',
-			currentShares: '14',
-			rebalancedPrice: '56,500',
-			rebalancedShares: '19',
-			change: 5,
-		},
-		{
-			name: '엔비디아',
-			ticker: 'NVDA(NASDAQ)',
-			imagePath: 'https://link-to-image/nvda.png',
-			currentPrice: '58,000',
-			currentShares: '14',
-			rebalancedPrice: '56,500',
-			rebalancedShares: '19',
-			change: 5,
-		},
 		{
 			name: '엔비디아',
 			ticker: 'NVDA(NASDAQ)',
@@ -43,6 +26,21 @@ const RebalanceResultPage = () => {
 		},
 		// 추가 데이터
 	];
+
+	const handleModalOpen = () => {
+		setIsModalOpen(true);
+	};
+
+	const handleModalClose = () => {
+		setIsModalOpen(false);
+	};
+
+	const handleSavePortfolioName = name => {
+		console.log('저장된 포트폴리오 이름:', name);
+		// 저장 로직 구현
+		navigate('/rebalance/result');
+	};
+
 	return (
 		<Stack spacing={2} sx={{ backgroundColor: colors.background.pcrimary }}>
 			<Stack spacing={1}>
@@ -91,9 +89,14 @@ const RebalanceResultPage = () => {
 							backgroundColor: colors.main.primary200,
 						},
 					}}
-					onClick={() => navigate('/rebalance/result')}
+					onClick={handleModalOpen}
 					text={'리밸런싱 적용'}></CustomButton>
 			</Stack>
+			<ConfirmModal
+				open={isModalOpen}
+				handleClose={handleModalClose}
+				handleSave={handleSavePortfolioName}
+			/>
 		</Stack>
 	);
 };

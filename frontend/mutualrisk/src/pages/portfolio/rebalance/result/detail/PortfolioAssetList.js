@@ -19,7 +19,7 @@ const PortfolioAssetList = ({ assets, hoveredIndex }) => {
 						<PortfolioAssetListItem
 							key={index}
 							asset={asset}
-							highlight={hoveredIndex === index} // 강조 처리
+							highlight={hoveredIndex === index}
 						/>
 					))}
 				</Box>

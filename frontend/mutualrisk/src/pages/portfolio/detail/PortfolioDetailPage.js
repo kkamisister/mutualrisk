@@ -1,5 +1,5 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import TitleDivider from 'components/title/TitleDivider';
 import Title from 'components/title/Title';
@@ -29,6 +29,7 @@ const formatDate = dateString => {
 
 const PortfolioDetailPage = () => {
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
 	const [selectedPortfolio, setSelectedPortfolio] = React.useState(null);
 
 	const { data, isLoading, isError } = useQuery({
@@ -49,10 +50,15 @@ const PortfolioDetailPage = () => {
 					version: latestPortfolio.version,
 					createdAt: latestPortfolio.createdAt,
 				});
-				localStorage.setItem('latestPortfolioId', latestPortfolio.id);
+
+				// 최신 포트폴리오의 id와 version을 캐싱합니다.
+				queryClient.setQueryData('latestPortfolio', {
+					portfolioId: latestPortfolio.id,
+					version: latestPortfolio.version,
+				});
 			}
 		}
-	}, [data, navigate, selectedPortfolio]);
+	}, [data, navigate, selectedPortfolio, queryClient]);
 
 	if (isLoading) {
 		return <div>Loading...</div>;
