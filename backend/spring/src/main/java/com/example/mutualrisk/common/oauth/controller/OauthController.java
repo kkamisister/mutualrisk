@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.mutualrisk.common.dto.CommonResponse;
 import com.example.mutualrisk.common.oauth.dto.AuthToken;
+import com.example.mutualrisk.common.oauth.dto.LoginInfo;
 import com.example.mutualrisk.common.oauth.service.OauthLoginService;
 import com.example.mutualrisk.common.oauth.util.OauthProvider;
 
@@ -50,10 +51,10 @@ public class OauthController {
 		@ApiResponse(responseCode = "200", description = "로그인 완료"),
 	})
 	@GetMapping("/kakao/callback")
-	public ResponseEntity<AuthToken> kakaoLogin(@RequestParam("code") String code) {
+	public ResponseEntity<LoginInfo> kakaoLogin(@RequestParam("code") String code) {
 		// log.warn("code = {}",code);
-		AuthToken authToken = oAuthLoginService.login(OauthProvider.KAKAO, code);
-		return new ResponseEntity<>(authToken, HttpStatus.OK);
+		LoginInfo loginInfo = oAuthLoginService.login(OauthProvider.KAKAO, code);
+		return new ResponseEntity<>(loginInfo, HttpStatus.OK);
 	}
 
 	@Operation(summary = "로그아웃 ", description = "로그아웃을 하는 api")
