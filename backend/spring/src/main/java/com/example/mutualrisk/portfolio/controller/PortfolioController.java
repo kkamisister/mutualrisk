@@ -24,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 
+import com.example.mutualrisk.portfolio.dto.PortfolioRequest.*;
 import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 
 
@@ -68,7 +69,20 @@ public class PortfolioController {
 			.body(portfolioInfo);
 	}
 
-//    @Operation(summary = "리밸런싱 ")
+    @Operation(summary = "리밸런싱 ")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "포트폴리오 미리보기 성공")
+    })
+    @PostMapping("/rebalance/init")
+    public ResponseEntity<ResponseWithData<CalculatedPortfolio>> initUserPortfolioRebalance(@RequestBody RebalancePortfolioInitDto rebalancePortfolioInitDto, HttpServletRequest request) {
+
+        Integer userId = (Integer) request.getAttribute("userId");
+
+        ResponseWithData<CalculatedPortfolio> portfolioInfo = portfolioService.initPortfolioRebalance(userId, rebalancePortfolioInitDto);
+
+        return ResponseEntity.status(portfolioInfo.status())
+            .body(portfolioInfo);
+    }
 
     @PostMapping("/recommend")
     public ResponseEntity<ResponseWithData<List<RecommendAssetResponseResultDto>>> recommendPortfolioAssets(@RequestBody
