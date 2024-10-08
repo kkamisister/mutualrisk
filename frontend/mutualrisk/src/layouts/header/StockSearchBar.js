@@ -48,6 +48,7 @@ const StockSearchBar = () => {
 			/>
 			<Autocomplete
 				freeSolo
+				sx={{ zIndex: 4 }}
 				options={searchResult}
 				autoHighlight
 				inputValue={keyword} // This binds the input value to keyword state
