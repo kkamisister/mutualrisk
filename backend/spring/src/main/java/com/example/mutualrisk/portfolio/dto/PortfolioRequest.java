@@ -13,6 +13,7 @@ import lombok.Builder;
 public record PortfolioRequest() {
 
 
+	@Builder
 	@Schema(name = "포트폴리오 제작 데이터를 담는 DTO",description = "유저가 포트폴리오 제작 시 입력한"
 		+ "정보를 담는다")
 	public record PortfolioInitDto(
@@ -25,7 +26,7 @@ public record PortfolioRequest() {
 		@Schema(name = "유저가 설정한 투자 금액을 입력합니다",
 			example="1,500,000"
 		)
-		Integer totalCash,
+		Double totalCash,
 		@ArraySchema(schema = @Schema(
 			description = "유저가 담은 자산의 id를 담은 리스트여야 합니다.",
 			example = "1,2,3,4,5",
@@ -56,6 +57,20 @@ public record PortfolioRequest() {
 		List<Double> exactProportion
 	){
 	}
+
+	/**
+	 * 리밸런싱 포트폴리오를 제작하는 api를 호출할 때 필요한 body 데이터
+	 */
+	@Builder
+	@Schema(name = "리밸런싱 api 호출용 request dto")
+	public record RebalancePortfolioInitDto(
+		String name,
+		Integer extraAssetId,
+		Integer extraCash
+	) {
+
+	}
+
 
 	@Builder
 	@Schema(name = "포트폴리오 제작 fastapi를 호출할 때 필요한 요청 정보를 넣는다")
@@ -111,17 +126,4 @@ public record PortfolioRequest() {
 	) {
 
 	}
-
-	/**
-	 * 리밸런싱 포트폴리오를 제작하는 api를 호출할 때 필요한 body 데이터
-	 */
-	@Builder
-	@Schema(name = "리밸런싱 api 호출용 request dto")
-	public record RebalancePortfolioRequestDto(
-		Integer extraAssetId,
-		Integer extraCash
-	) {
-
-	}
-
 }

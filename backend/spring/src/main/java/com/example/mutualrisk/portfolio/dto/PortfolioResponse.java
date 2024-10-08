@@ -242,12 +242,20 @@ public record PortfolioResponse() {
 
     @Builder
     public record PortfolioAnalysis(
+        Double totalCash,
+        List<Double> lowerBounds,
+        List<Double> upperBounds,
+        List<Double> exactProportion,
         PortfolioPerformance fictionalPerformance,
         PortfolioPerformance performance,
         List<RecommendAssetInfo> assets
     ){
-        public static PortfolioAnalysis of(PortfolioPerformance fictionalPerformance, PortfolioPerformance portfolioPerformance, List<RecommendAssetInfo> assets) {
+        public static PortfolioAnalysis of(PortfolioRequest.PortfolioInitDto initInfo, PortfolioPerformance fictionalPerformance, PortfolioPerformance portfolioPerformance, List<RecommendAssetInfo> assets) {
             return PortfolioAnalysis.builder()
+                .totalCash(initInfo.totalCash())
+                .lowerBounds(initInfo.lowerBounds())
+                .upperBounds(initInfo.upperBounds())
+                .exactProportion(initInfo.exactProportion())
                 .fictionalPerformance(fictionalPerformance)
                 .performance(portfolioPerformance)
                 .assets(assets)
