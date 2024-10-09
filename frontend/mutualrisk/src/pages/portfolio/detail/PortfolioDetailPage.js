@@ -39,7 +39,7 @@ const PortfolioDetailPage = () => {
 
 	React.useEffect(() => {
 		if (data && !data.hasPortfolio) {
-			navigate('/');
+			navigate('/portfolio/create');
 		} else if (data && data.portfolioList.length > 0) {
 			const latestPortfolio = data.portfolioList[0];
 
