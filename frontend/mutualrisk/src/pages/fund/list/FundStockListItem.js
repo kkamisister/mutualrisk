@@ -95,9 +95,13 @@ const FundStockListItem = ({
 					justifyContent: 'flex-start',
 					alignItems: 'center',
 				}}>
-				<Box>${valueOfHolding.toLocaleString('ko-KR')}</Box>
+				<Box sx={{ fontSize: '12px' }}>
+					${valueOfHolding.toLocaleString('ko-KR')}
+				</Box>
 				{valueOfHoldingRatio && (
-					<Box>({`${valueOfHoldingRatio.toPrecision(2)}%`})</Box>
+					<Box sx={{ fontSize: '12px' }}>
+						({`${valueOfHoldingRatio.toPrecision(2)}%`})
+					</Box>
 				)}
 				<Box
 					sx={{

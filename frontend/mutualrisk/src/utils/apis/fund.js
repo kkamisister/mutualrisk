@@ -38,7 +38,6 @@ export const fetchFundEvaluateFluctuateByCompany = async ({
 	company,
 	period,
 }) => {
-	console.log(company.period);
 	const response = await axiosInstance.get(
 		`/funds/history?company=${company}&period=${period}`
 	);

@@ -13,6 +13,7 @@ import {
 	Line,
 	ResponsiveContainer,
 	Legend,
+	ReferenceLine,
 } from 'recharts';
 
 import { useQueryClient, useQuery } from '@tanstack/react-query';
@@ -115,7 +116,7 @@ const AssetEvaluationChart = ({ title, company }) => {
 						<XAxis dataKey="submissionDateString" />
 						<YAxis />
 						<Tooltip />
-
+						<ReferenceLine y="0" stroke={colors.text.sub2} />
 						<Legend verticalAlign="top" align="left" height={36} />
 						<Line
 							name="포트폴리오 평가액"
