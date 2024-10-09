@@ -5,9 +5,7 @@ const axiosInstance = axios.create({
 	// timeout: 1000,
 	timeout: 20000,
 	headers: {
-		Authorization: `Bearer ${
-			sessionStorage.getItem('accessToken') || 'dummyAccessToken'
-		}`,
+		Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`,
 	},
 	withCredentials: true,
 });
