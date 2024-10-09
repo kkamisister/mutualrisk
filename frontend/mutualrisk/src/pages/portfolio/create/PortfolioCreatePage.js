@@ -16,7 +16,7 @@ import { colors } from 'constants/colors';
 
 const PortfolioCreatePage = () => {
 	const [isModalOpen, setIsModalOpen] = useState(true);
-	const [hasPortfolio, setHasPortfolio] = useState(true);
+	const [hasPortfolio, setHasPortfolio] = useState(false);
 	const [latestPortfolioId, setLatestPortfolioId] = useState('');
 	const [showContraint, setShowConstraint] = useState(false);
 
@@ -37,7 +37,7 @@ const PortfolioCreatePage = () => {
 
 	useEffect(() => {
 		console.log('이 자는 포트폴리오가..!', hasPortfolio);
-		if (hasPortfolio) {
+		if (portfolioList && hasPortfolio) {
 			setHasPortfolio(portfolioList.hasPortfolio);
 			updateTotalCash(portfolioList.recentValuation);
 			setLatestPortfolioId(portfolioList.portfolioList[0].id);
