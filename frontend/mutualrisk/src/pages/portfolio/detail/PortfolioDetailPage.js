@@ -59,7 +59,7 @@ const PortfolioDetailPage = () => {
 
 	React.useEffect(() => {
 		if (portfolioListData && !portfolioListData.hasPortfolio) {
-			navigate('/portfolio/detail');
+			navigate('/portfolio/create');
 		} else if (
 			portfolioListData &&
 			portfolioListData.portfolioList.length > 0
