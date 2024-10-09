@@ -24,7 +24,7 @@ const DomesticDetailPage = ({ assetInfo }) => {
 	const imageUrl = `https://j11a607.p.ssafy.io${assetInfo.assets[0].imagePath}/${assetInfo.assets[0].imageName}`;
 
 	return (
-		<Stack sx={{ height: '100%' }} spacing={1}>
+		<Stack sx={{ height: '100%', width: '100%' }} spacing={1}>
 			<Stack direction="row" spacing={1}>
 				<StockTitle
 					name={name}
@@ -71,7 +71,6 @@ const DomesticDetailPage = ({ assetInfo }) => {
 				<WidgetContainer
 					sx={{
 						height: '700px',
-						width: '100%',
 						overflow: 'hidden',
 						borderRadius: '15px',
 						backgroundColor: colors.background.white,

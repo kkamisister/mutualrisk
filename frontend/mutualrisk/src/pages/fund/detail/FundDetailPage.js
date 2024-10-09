@@ -40,7 +40,7 @@ const FundDetailPage = () => {
 					<Stack spacing={1}>
 						<FundSummary title="펀드 정보 요약" data={data.fund} />
 						<AssetEvaluationChart
-							title="자산 평가액 변동 기록"
+							title="분기별 수익률 기록"
 							company={data.fund.company}
 						/>
 						<SectorBias title="섹터 편중" data={data} />

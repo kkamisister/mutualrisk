@@ -5,6 +5,7 @@ export const colors = {
 		sub2: '#909090',
 		icon: '#303030',
 		icon2: '#909090',
+		white: '#ffffff',
 	},
 	main: {
 		primary100: '#DFF0FD',

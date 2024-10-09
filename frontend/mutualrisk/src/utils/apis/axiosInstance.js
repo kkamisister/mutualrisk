@@ -1,12 +1,15 @@
 import axios from 'axios';
-sessionStorage.setItem('accessToken', 'dummyAccessToken');
+
 const axiosInstance = axios.create({
 	baseURL: 'https://j11a607.p.ssafy.io/api/v1',
 	// timeout: 1000,
-	timeout: 3000,
+	timeout: 20000,
 	headers: {
-		Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`,
+		Authorization: `Bearer ${
+			sessionStorage.getItem('accessToken') || 'dummyAccessToken'
+		}`,
 	},
+	withCredentials: true,
 });
 
 // AccessToken 만료시 재요청하는 Axios interceptor

@@ -8,7 +8,7 @@ const HeaderLayout = ({ sx }) => {
 			direction="row"
 			sx={{
 				backgroundColor: colors.background.primary,
-				zIndex: 1,
+				zIndex: 3,
 				minHeight: '60px',
 				borderBottom: `1px solid ${colors.point.stroke}`,
 				justifyContent: 'center',
