@@ -120,7 +120,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             .sorted(Comparator.comparingDouble(PortfolioRecommendResultDto::sharpeRatioChange).reversed())
             .toList();
 
-        return buildPortfolioResponse(portfolio, portfolioAssetInfoList, portfolioPerformance, recommendAssetResponseResultDtoList);
+        return buildPortfolioResponse(totalValuation, portfolio, portfolioAssetInfoList, portfolioPerformance, recommendAssetResponseResultDtoList);
     }
 
     private List<PortfolioRecommendResultDto> getRecommendAssetResponseResultDto(Portfolio portfolio, PortfolioPerformance portfolioPerformance) {
@@ -1969,7 +1969,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 3-3. assetInfoList, valuationList, weights를 이용하여 portfolioAssetInfoList 생성
         List<PortfolioAssetInfo> portfolioAssetInfoList = IntStream.range(0, assetInfoList.size())
-            .mapToObj(i -> PortfolioAssetInfo.of(assetInfoList.get(i), weights.get(i), valuationList.get(i)))
+            .mapToObj(i -> PortfolioAssetInfo.of(portfolioAssetList.get(i), assetInfoList.get(i), weights.get(i), valuationList.get(i)))
             .toList();
         return portfolioAssetInfoList;
     }
@@ -2174,9 +2174,10 @@ public class PortfolioServiceImpl implements PortfolioService{
             ));
     }
 
-    private ResponseWithData<PortfolioResultDto> buildPortfolioResponse(Portfolio portfolio, List<PortfolioAssetInfo> portfolioAssetInfoList, PortfolioPerformance portfolioPerformance, List<PortfolioRecommendResultDto> recommendAssetResponseResultDtoList) {
+    private ResponseWithData<PortfolioResultDto> buildPortfolioResponse(double totalValuation, Portfolio portfolio, List<PortfolioAssetInfo> portfolioAssetInfoList, PortfolioPerformance portfolioPerformance, List<PortfolioRecommendResultDto> recommendAssetResponseResultDtoList) {
         PortfolioInfo portfolioInfo = PortfolioInfo.builder()
             .portfolioId(portfolio.getId())
+            .totalCash(totalValuation)
             .performance(portfolioPerformance)
             .assets(portfolioAssetInfoList)
             .recommendAssets(recommendAssetResponseResultDtoList)
