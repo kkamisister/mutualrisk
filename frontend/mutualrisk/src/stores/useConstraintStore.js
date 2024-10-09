@@ -9,21 +9,50 @@ const useConstraintStore = create(set => ({
 
 	// 초기화 함수: 자산의 길이에 맞춰 배열 길이 설정
 	initialization: assetLength =>
-		set(() => ({
-			lowerBounds: new Array(assetLength).fill(0),
-			upperBounds: new Array(assetLength).fill(1),
-			exactProportion: new Array(assetLength).fill(null),
-			isLowerBoundExceeded: false,
-			isUpperBoundUnderLimit: false,
-		})),
+		set(state => {
+			// 현재 상태 유지
+			const { lowerBounds, upperBounds, exactProportion } = state;
+
+			// 배열의 길이 조정
+			const newLowerBounds = [
+				...lowerBounds.slice(0, assetLength),
+				...Array(Math.max(0, assetLength - lowerBounds.length)).fill(0),
+			];
+
+			const newUpperBounds = [
+				...upperBounds.slice(0, assetLength),
+				...Array(Math.max(0, assetLength - upperBounds.length)).fill(1),
+			];
+
+			const newExactProportion = [
+				...exactProportion.slice(0, assetLength),
+				...Array(Math.max(0, assetLength - exactProportion.length)).fill(
+					null
+				),
+			];
+
+			return {
+				lowerBounds: newLowerBounds,
+				upperBounds: newUpperBounds,
+				exactProportion: newExactProportion,
+				isLowerBoundExceeded:
+					newLowerBounds.reduce((sum, value) => sum + value * 100, 0) >
+					100,
+				isUpperBoundUnderLimit:
+					newUpperBounds.reduce((sum, value) => sum + value * 100, 0) <
+					100,
+			};
+		}),
 
 	setLowerBound: (index, value) =>
 		set(state => {
 			const updatedLowerBounds = [...state.lowerBounds];
-			const newValue = value !== '' ? parseFloat(value) / 100 : 0;
+			let newValue = value !== '' ? parseFloat(value) / 100 : 0;
 
-			// 값이 유효하지 않은 경우 보호 조건
-			if (isNaN(newValue)) return state;
+			// 입력 값 조건 확인
+			if (isNaN(newValue) || value === '.') newValue = 0;
+			if (newValue < 0) newValue = 0;
+			if (newValue > 1) newValue = 1;
 
 			updatedLowerBounds[index] = newValue;
 			const lowerSum = updatedLowerBounds.reduce(
@@ -40,9 +69,11 @@ const useConstraintStore = create(set => ({
 	setUpperBound: (index, value) =>
 		set(state => {
 			const updatedUpperBounds = [...state.upperBounds];
-			const newValue = value !== '' ? parseFloat(value) / 100 : 1;
+			let newValue = value !== '' ? parseFloat(value) / 100 : 1;
 
-			if (isNaN(newValue)) return state;
+			if (isNaN(newValue) || value === '.') newValue = 1;
+			if (newValue < 0) newValue = 0;
+			if (newValue > 1) newValue = 1;
 
 			updatedUpperBounds[index] = newValue;
 			const upperSum = updatedUpperBounds.reduce(
@@ -59,9 +90,11 @@ const useConstraintStore = create(set => ({
 	setExactProportion: (index, value) =>
 		set(state => {
 			const updatedProportion = [...state.exactProportion];
-			const newValue = value !== '' ? parseFloat(value) / 100 : null;
+			let newValue = value !== '' ? parseFloat(value) / 100 : null;
 
-			if (isNaN(newValue)) return state;
+			if (isNaN(newValue) || value === '.') newValue = null;
+			if (newValue < 0) newValue = 0;
+			if (newValue > 1) newValue = 1;
 
 			updatedProportion[index] = newValue;
 			return { exactProportion: updatedProportion };

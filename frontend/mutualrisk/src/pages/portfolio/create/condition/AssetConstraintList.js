@@ -22,7 +22,6 @@ import useConstraintStore from 'stores/useConstraintStore';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { createPortfolio } from 'utils/apis/portfolio';
 import { useNavigate } from 'react-router-dom';
-import { NavigateBeforeTwoTone } from '@mui/icons-material';
 
 const AssetConstraintList = ({ assets }) => {
 	const [openDialog, setOpenDialog] = useState(false);
@@ -61,21 +60,24 @@ const AssetConstraintList = ({ assets }) => {
 		initialization(assets.length);
 	}, []);
 
-	useQuery({
+	const { data } = useQuery({
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
-		onSuccess: data => {
-			setHasPortfolio(data.hasPortfolio);
-		},
 	});
 
 	const navigate = useNavigate();
+
+	useEffect(() => {
+		if (data) {
+			setHasPortfolio(data.hasPortfolio);
+		}
+	}, [data]);
 
 	const mutation = useMutation({
 		mutationFn: createPortfolio,
 		onSuccess: data => {
 			console.log('포트폴리오 제작 완료:', data);
-			navigate('rebalance/result');
+			navigate('/rebalance/result');
 		},
 		onError: error => {
 			console.error('에러 발생:', error);

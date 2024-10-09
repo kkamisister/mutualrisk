@@ -3,6 +3,7 @@ import { colors } from 'constants/colors';
 import StockListItem from 'pages/portfolio/create/stocksearch/StockListItem';
 import HorizontalScrollContainer from 'components/scroll/HorizontalScrollContainer';
 import useAssetStore from 'stores/useAssetStore';
+import { useEffect } from 'react';
 
 const StockList = ({ assets }) => {
 	const { tempAssets, toggleTempAsset } = useAssetStore(state => ({
@@ -10,6 +11,9 @@ const StockList = ({ assets }) => {
 		toggleTempAsset: state.toggleTempAsset,
 	}));
 
+	useEffect(() => {
+		console.log('tempasset', tempAssets);
+	}, [tempAssets]);
 	return (
 		<HorizontalScrollContainer>
 			<List
@@ -26,9 +30,7 @@ const StockList = ({ assets }) => {
 							name={asset.name}
 							imagePath={asset.imagePath}
 							imageName={asset.imageName}
-							clicked={tempAssets.some(
-								selected => selected.assetId === asset.assetId
-							)}
+							clicked={tempAssets.has(asset)}
 							onClick={() => toggleTempAsset(asset)}
 						/>
 					))}
