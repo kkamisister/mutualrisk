@@ -172,10 +172,10 @@ public class PortfolioServiceImpl implements PortfolioService{
             // 유저의 포트폴리오가 없는경우 패스
             if(ObjectUtils.isEmpty(curPortfolio))continue;
 
-            List<PortfolioAsset> assets = curPortfolio.getAsset();
+            List<PortfolioAsset> portfolioAssets = curPortfolio.getAsset();
 
             // 오늘일자 기준 포트폴리오 자산의 (자산코드,총가격)
-            Map<String, Double> recentAssetPrice = getTodayValueOfHoldings(assets);
+            Map<String, Double> recentAssetPrice = getTodayValueOfHoldings(portfolioAssets);
 
             // 오늘일자 기준 총 자산 가치 계산
             Double totalRecentValueOfHolding = recentAssetPrice.values().stream()
@@ -192,22 +192,21 @@ public class PortfolioServiceImpl implements PortfolioService{
              *
              */
             // 종목 코드와 비중을 비교하기 위해 자산 리스트와 포트폴리오 정보를 매핑
-            List<Integer> assetIds = assets.stream()
+            List<Integer> assetIds = portfolioAssets.stream()
                 .map(PortfolioAsset::getAssetId)
                 .toList();
 
-            List<String> assetCodes = assetRepository.findAllById(assetIds)
+            List<Asset> assets = assetRepository.findAllById(assetIds);
+
+            List<String> assetCodes = assets
                 .stream()
                 .map(Asset::getCode)
                 .toList();
 
-            List<String> assetNames = assetRepository.findAllById(assetIds)
+            List<String> assetNames = assets
                 .stream()
                 .map(Asset::getName)
                 .toList();
-
-            Map<String,Integer> codeIdxMap = new HashMap<>();
-            // assetCodes
 
             // lowerBound, upperBound, weights와 최근 비중을 비교
 
@@ -220,9 +219,10 @@ public class PortfolioServiceImpl implements PortfolioService{
                 String names = assetNames.get(i);
                 String code = assetCodes.get(i);
                 Double recentWeight = recentAssetWeights.get(code); // 최근 비중
-                Double lowerBound = curPortfolio.getLowerBound().get(i); // 포트폴리오의 하한선
-                Double upperBound = curPortfolio.getUpperBound().get(i); // 포트폴리오의 상한선
-                Double originWeight = curPortfolio.getWeights().get(i) * 100; // 포트폴리오의 기존 비중
+                PortfolioAsset portfolioAsset = portfolioAssets.get(i);
+                Double lowerBound = portfolioAsset.getLowerBound(); // 포트폴리오의 하한선
+                Double upperBound = portfolioAsset.getUpperBound(); // 포트폴리오의 상한선
+                Double originWeight = portfolioAsset.getFictionalWeight() * 100; // 포트폴리오의 기존 비중
 
                 log.warn("names : {}",names);
                 log.warn("code : {}",code);
@@ -1340,20 +1340,22 @@ public class PortfolioServiceImpl implements PortfolioService{
             portfolio = getNewPortfolioFrom(responseBody, initInfo, userId, recentPortfolio.getVersion()+1, findAssets, recentPortfolio);
         }
 
-        List<RecommendAsset> recommendAssets;
+        List<RecommendAsset> recommendAssets = new ArrayList<>();
 
         ObjectMapper objectMapper = new ObjectMapper();
         // Redis에서 JSON 문자열을 가져옴
-        String json = (String) redisHashRepository.getHashData("recommend", String.valueOf(userId));
+        ArrayList<LinkedHashMap<String, Object>> json = (ArrayList<LinkedHashMap<String, Object>>) redisHashRepository.getHashData("recommend", String.valueOf(userId));
+//        System.out.println("json = " + json);
 
         try {
             // JSON 배열을 List<RecommendAssetResponseResultDto>로 변환
-            List<RecommendAssetResponseResultDto> realResponse = objectMapper.readValue(json, new TypeReference<>() {});
-            recommendAssets = realResponse.stream()
-                .map(RecommendAsset::from)
-                .toList();
-
-        } catch (JsonProcessingException e) {
+            for (LinkedHashMap<String, Object> j: json) {
+                RecommendAssetResponseResultDto recommendAssetResponseResultDto = objectMapper.convertValue(j, RecommendAssetResponseResultDto.class);
+                recommendAssets.add(RecommendAsset.from(recommendAssetResponseResultDto));
+            }
+        } catch (Exception e) {
+            System.out.println("e.getMessage() = " + e.getMessage());
+            System.out.println("e = " + e);
             throw new MutualRiskException(ErrorCode.REDIS_PARSE_ERROR);
         }
 
@@ -1652,7 +1654,6 @@ public class PortfolioServiceImpl implements PortfolioService{
             throw new MutualRiskException(ErrorCode.HADOOP_RECOMMEND_ASSET_API_ERROR);
         }
 
-
         System.out.println("responseBody = " + responseBody);
 
         // 6. 받은 응답을 가지고 유저가 실제로 투자했을 때의 성과 지표 계산
@@ -1722,19 +1723,29 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 2-1. totalCash(현재 포트폴리오의 valuation) 구하기
         Double totalCash = getCurrentValuation(latestPortfolio) + initInfo.extraCash();
 
-        // 2-2. assetIds 구하기
-        List<Integer> assetIds = new ArrayList<>(latestPortfolio.getAsset()
+        // 2-2. 포트폴리오의 asset 구하기
+        // asset은 assetId 순으로 정렬되어 있음이 보장
+        List<PortfolioAsset> portfolioAssetList = latestPortfolio.getAsset();
+
+        // 2-3. assetIds 구하기
+        List<Integer> assetIds = new ArrayList<>(portfolioAssetList
             .stream()
             .map(PortfolioAsset::getAssetId)
             .sorted()
             .toList());
 
-        // 2-3. 제약 조건 구하기
-        List<Double> lowerBound = latestPortfolio.getLowerBound();
-        List<Double> upperBound = latestPortfolio.getUpperBound();
-        List<Double> exactProportion = latestPortfolio.getExactProportion();
+        // 2-4. 제약 조건 구하기
+        List<Double> lowerBound = new ArrayList<>(portfolioAssetList.stream()
+            .map(PortfolioAsset::getLowerBound)
+            .toList());
+        List<Double> upperBound = new ArrayList<>(portfolioAssetList.stream()
+            .map(PortfolioAsset::getUpperBound)
+            .toList());
+        List<Double> exactProportion = new ArrayList<>(portfolioAssetList.stream()
+            .map(PortfolioAsset::getExactProportion)
+            .toList());
 
-        // 2-4. extraAssetId가 있다면 assetIds와 제약 조건 변경
+        // 2-5. extraAssetId가 있다면 assetIds와 제약 조건 변경
         Integer extraAssetId = initInfo.extraAssetId();
         if (extraAssetId != null) {
             assetIds.add(extraAssetId);
@@ -1807,17 +1818,17 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         Double totalCash = initInfo.totalCash();
         List<PortfolioAsset> portfolioAssetList = new ArrayList<>();
-        List<Double> weights = new ArrayList<>();
 
+        int idx = 0;
         for (Entry<String, Double> entry : fictionalWeights.entrySet()) {
             // 자산 비중을 가지고 온다
             Asset asset = findAssets.get(Integer.parseInt(entry.getKey()));
-            Double weight = entry.getValue();
+            Double fictionalWeight = entry.getValue();
             Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
             // 구매량을 결정해야한다
             // 구매량은, (전체 현금 보유량 * 자산 비중 / 해당 자산의 가격) 을 반올림 한 값으로 한다
-            int purchaseNum = (int) Math.round(totalCash * weight / asset.getRecentPrice(recentExchangeRate));
+            int purchaseNum = (int) Math.round(totalCash * fictionalWeight / asset.getRecentPrice(recentExchangeRate));
 
             int recentPurchaseNum;
             double recentPurchasePrice;
@@ -1838,9 +1849,13 @@ public class PortfolioServiceImpl implements PortfolioService{
                 .code(asset.getCode())
                 .totalPurchaseQuantity(purchaseNum)
                 .totalPurchasePrice(purchasePrice)
+                .lowerBound(initInfo.lowerBounds().get(idx))
+                .upperBound(initInfo.upperBounds().get(idx))
+                .exactProportion(initInfo.exactProportion().get(idx))
+                .fictionalWeight(fictionalWeight)
                 .build());
 
-            weights.add(weight);
+            idx++;
         }
 
 
@@ -1852,9 +1867,6 @@ public class PortfolioServiceImpl implements PortfolioService{
             .isActive(Boolean.TRUE)
             .createdAt(LocalDateTime.now())
             .asset(portfolioAssetList)
-            .lowerBound(initInfo.lowerBounds())
-            .upperBound(initInfo.upperBounds())
-            .weights(weights)
             .fictionalPerformance(fictionalPerformance)
             .frontierPoints(frontierPoints)
             .build();
@@ -1877,27 +1889,29 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         Double totalCash = initInfo.totalCash();
         List<PortfolioAsset> portfolioAssetList = new ArrayList<>();
-        List<Double> weights = new ArrayList<>();
 
+        int idx = 0;
         for (Entry<String, Double> entry : fictionalWeights.entrySet()) {
 
             // 자산 비중을 가지고 온다
             Asset asset = findAssets.get(Integer.parseInt(entry.getKey()));
-            Double weight = entry.getValue();
+            Double fictionalWeight = entry.getValue();
             Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
             // 구매량을 결정해야한다
             // 구매량은, (전체 현금 보유량 * 자산 비중 / 해당 자산의 가격) 을 반올림 한 값으로 한다
-            int purchaseNum = (int) Math.round(totalCash * weight / asset.getRecentPrice(recentExchangeRate));
+            int purchaseNum = (int) Math.round(totalCash * fictionalWeight / asset.getRecentPrice(recentExchangeRate));
 
             portfolioAssetList.add(PortfolioAsset.builder()
                 .assetId(asset.getId())
                 .code(asset.getCode())
                 .totalPurchaseQuantity(purchaseNum)
                 .totalPurchasePrice(purchaseNum * asset.getRecentPrice(recentExchangeRate))
+                .lowerBound(initInfo.lowerBounds().get(idx))
+                .upperBound(initInfo.upperBounds().get(idx))
+                .exactProportion(initInfo.exactProportion().get(idx))
+                .fictionalWeight(fictionalWeight)
                 .build());
-
-            weights.add(weight);
         }
 
 
@@ -1909,9 +1923,6 @@ public class PortfolioServiceImpl implements PortfolioService{
             .isActive(Boolean.TRUE)
             .createdAt(LocalDateTime.now())
             .asset(portfolioAssetList)
-            .lowerBound(initInfo.lowerBounds())
-            .upperBound(initInfo.upperBounds())
-            .weights(weights)
             .fictionalPerformance(fictionalPerformance)
             .frontierPoints(frontierPoints)
             .build();

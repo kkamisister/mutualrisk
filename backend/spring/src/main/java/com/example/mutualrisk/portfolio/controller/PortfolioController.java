@@ -91,7 +91,8 @@ public class PortfolioController {
     public ResponseEntity<ResponseWithData<List<RecommendAssetResponseResultDto>>> recommendPortfolioAssets(@RequestBody
         RecommendAssetRequestDto recommendAssetRequestDto, HttpServletRequest request){
 
-        Integer userId = (Integer) request.getAttribute("userId");
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
 
         ResponseWithData<List<RecommendAssetResponseResultDto>> recommendedAssets = portfolioService.getRecommendedAssets(userId, recommendAssetRequestDto);
 
