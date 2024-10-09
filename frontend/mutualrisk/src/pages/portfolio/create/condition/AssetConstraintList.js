@@ -76,7 +76,7 @@ const AssetConstraintList = ({ assets }) => {
 	const mutation = useMutation({
 		mutationFn: createPortfolio,
 		onSuccess: data => {
-			console.log('포트폴리오 제작 완료:', data);
+			// console.log('포트폴리오 제작 완료:', data);
 			navigate('/rebalance/result');
 		},
 		onError: error => {
