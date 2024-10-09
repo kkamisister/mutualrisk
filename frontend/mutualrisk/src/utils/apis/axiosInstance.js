@@ -4,12 +4,16 @@ const axiosInstance = axios.create({
 	baseURL: 'https://j11a607.p.ssafy.io/api/v1',
 	// timeout: 1000,
 	timeout: 20000,
-	headers: {
-		Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`,
-	},
+	// headers: {
+	// 	Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`,
+	// },
 	withCredentials: true,
 });
-
+if (sessionStorage.getItem('accessToken')) {
+	axiosInstance.defaults.headers.common[
+		'Authorization'
+	] = `Bearer ${sessionStorage.getItem('accessToken')}`;
+}
 // AccessToken 만료시 재요청하는 Axios interceptor
 axiosInstance.interceptors.response.use(
 	response => {

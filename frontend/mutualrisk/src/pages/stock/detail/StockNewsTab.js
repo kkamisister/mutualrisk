@@ -1,5 +1,5 @@
+import StockNewsList from 'components/news/StockNewsList';
 import React from 'react';
-import StockNewsList from './StockNewsList';
 
 const StockNewsTab = ({ newsList }) => {
 	console.log(newsList);
