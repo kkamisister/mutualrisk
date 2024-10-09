@@ -70,7 +70,6 @@ const Sidebar = ({ onHoverChange }) => {
 				left: 0,
 				borderRight: 'solid 1px',
 				borderColor: `${colors.point.stroke}`,
-				backgroundColor: colors.background.primary,
 				justifyContent: 'flex-start',
 				transition: 'width 0.3s ease',
 				alignItems: 'center',

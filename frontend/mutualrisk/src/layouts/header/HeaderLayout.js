@@ -1,10 +1,11 @@
 import React from 'react';
-import { Stack, Box } from '@mui/material';
+import { Stack, Box, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import StockSearchBar from './StockSearchBar';
 import { logoutUser } from 'utils/apis/user';
 import { useNavigate } from 'react-router-dom';
 import { enqueueSnackbar } from 'notistack';
+import logoImage from 'assets/images/logo.png';
 
 const HeaderLayout = ({ sx }) => {
 	const userName = sessionStorage.getItem('name');
@@ -19,14 +20,37 @@ const HeaderLayout = ({ sx }) => {
 		<Stack
 			direction="row"
 			sx={{
-				backgroundColor: colors.background.primary,
 				zIndex: 3,
 				minHeight: '60px',
-				borderBottom: `1px solid ${colors.point.stroke}`,
 				justifyContent: 'center',
 				alignItems: 'center',
 				...sx,
 			}}>
+			<Stack
+				spacing={1}
+				direction="row"
+				sx={{
+					position: 'absolute',
+					left: '20px',
+					justifyContent: 'center',
+					alignItems: 'center',
+					color: colors.text.main,
+				}}>
+				<Box
+					sx={{
+						width: '36px',
+						height: '36px',
+						borderRadius: '25%',
+						overflow: 'hidden',
+					}}>
+					<img
+						style={{ width: '100%', height: '100%' }}
+						src={logoImage}
+						alt="로고 이미지"
+					/>
+				</Box>
+			</Stack>
+
 			<StockSearchBar />
 			<Stack
 				spacing={0.3}

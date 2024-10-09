@@ -12,6 +12,7 @@ const SelectedList = ({ assets, onItemsConfirm, sx }) => {
 				sx={{
 					position: 'relative',
 					boxSizing: 'border-box',
+					width: '100%',
 					...sx,
 				}}>
 				<Title text="담은 종목" />
