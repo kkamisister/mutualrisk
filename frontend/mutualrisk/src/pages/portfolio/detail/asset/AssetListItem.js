@@ -9,15 +9,13 @@ const AssetListItem = ({ asset, highlight }) => {
 			direction="row"
 			sx={{
 				width: highlight ? '520px' : '500px',
-				height: highlight ? '80px' : 'none',
+				height: highlight ? '80px' : '70px',
 				maxWidth: '100%',
 				display: 'flex',
 				justifyContent: 'space-between',
 				alignItems: 'stretch',
 				marginBottom: '9px',
-				// border: highlight ? `2px solid ${colors.main.primary500}` : 'none', // highlight 여부에 따른 테두리
 				borderRadius: '10px',
-				// backgroundColor: highlight ? colors.main.primary200 : 'transparent', // 강조된 항목의 배경색
 				transition: 'background-color 0.3s ease, border 0.3s ease', // 부드러운 스타일 전환
 			}}>
 			{/* StockItemCard 컴포넌트에 API 데이터를 전달 */}
