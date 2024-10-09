@@ -10,6 +10,7 @@ const IconImage = ({ src, alt }) => {
 			sx={{
 				width: '200px',
 				height: 'auto',
+				borderRadius: '10%',
 			}}
 		/>
 	);

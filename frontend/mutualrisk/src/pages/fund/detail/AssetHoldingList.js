@@ -47,7 +47,7 @@ const AssetHoldingList = ({ title, data }) => {
 							name={asset.name}
 							region={asset.region}
 							market={asset.market}
-							mvRank={asset.rank}
+							mvRank={asset.rank || '-'}
 							rank={idx + 1}
 							valueOfHolding={asset.valueOfHolding}
 							valueOfHoldingRatio={asset.valueOfHoldingRatio}

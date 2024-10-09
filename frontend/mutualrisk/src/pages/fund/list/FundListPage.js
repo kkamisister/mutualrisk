@@ -9,6 +9,8 @@ const FundListPage = ({ topHoldAsset, topBuyAsset }) => {
 				<Stack spacing={1}>
 					<FundStockList
 						data={topHoldAsset}
+						dataName="보유량"
+						dataKey="valueOfHolding"
 						title="보유량 상위 10개 종목"
 					/>
 				</Stack>
@@ -17,6 +19,8 @@ const FundListPage = ({ topHoldAsset, topBuyAsset }) => {
 				<Stack spacing={1}>
 					<FundStockList
 						data={topBuyAsset}
+						dataName="구매량"
+						dataKey="changeValueOfHolding"
 						title="구매량 상위 10개 종목"
 					/>
 				</Stack>

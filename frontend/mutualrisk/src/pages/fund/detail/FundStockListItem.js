@@ -91,6 +91,7 @@ const FundStockListItem = ({
 				sx={{
 					justifyContent: 'flex-start',
 					alignItems: 'center',
+					fontSize: '12px',
 				}}>
 				<Box>${valueOfHolding.toLocaleString('ko-KR')}</Box>
 				{valueOfHoldingRatio && (
@@ -99,7 +100,7 @@ const FundStockListItem = ({
 				<Box
 					sx={{
 						fontWeight: 'bold',
-						fontSize: '14px',
+						fontSize: '12px',
 					}}>
 					{`${rank}위(${mvRank})`}
 				</Box>
