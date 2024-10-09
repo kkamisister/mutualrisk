@@ -172,10 +172,10 @@ public class PortfolioServiceImpl implements PortfolioService{
             // 유저의 포트폴리오가 없는경우 패스
             if(ObjectUtils.isEmpty(curPortfolio))continue;
 
-            List<PortfolioAsset> assets = curPortfolio.getAsset();
+            List<PortfolioAsset> portfolioAssets = curPortfolio.getAsset();
 
             // 오늘일자 기준 포트폴리오 자산의 (자산코드,총가격)
-            Map<String, Double> recentAssetPrice = getTodayValueOfHoldings(assets);
+            Map<String, Double> recentAssetPrice = getTodayValueOfHoldings(portfolioAssets);
 
             // 오늘일자 기준 총 자산 가치 계산
             Double totalRecentValueOfHolding = recentAssetPrice.values().stream()
@@ -192,22 +192,21 @@ public class PortfolioServiceImpl implements PortfolioService{
              *
              */
             // 종목 코드와 비중을 비교하기 위해 자산 리스트와 포트폴리오 정보를 매핑
-            List<Integer> assetIds = assets.stream()
+            List<Integer> assetIds = portfolioAssets.stream()
                 .map(PortfolioAsset::getAssetId)
                 .toList();
 
-            List<String> assetCodes = assetRepository.findAllById(assetIds)
+            List<Asset> assets = assetRepository.findAllById(assetIds);
+
+            List<String> assetCodes = assets
                 .stream()
                 .map(Asset::getCode)
                 .toList();
 
-            List<String> assetNames = assetRepository.findAllById(assetIds)
+            List<String> assetNames = assets
                 .stream()
                 .map(Asset::getName)
                 .toList();
-
-            Map<String,Integer> codeIdxMap = new HashMap<>();
-            // assetCodes
 
             // lowerBound, upperBound, weights와 최근 비중을 비교
 
@@ -220,9 +219,10 @@ public class PortfolioServiceImpl implements PortfolioService{
                 String names = assetNames.get(i);
                 String code = assetCodes.get(i);
                 Double recentWeight = recentAssetWeights.get(code); // 최근 비중
-                Double lowerBound = curPortfolio.getLowerBound().get(i); // 포트폴리오의 하한선
-                Double upperBound = curPortfolio.getUpperBound().get(i); // 포트폴리오의 상한선
-                Double originWeight = curPortfolio.getWeights().get(i) * 100; // 포트폴리오의 기존 비중
+                PortfolioAsset portfolioAsset = portfolioAssets.get(i);
+                Double lowerBound = portfolioAsset.getLowerBound(); // 포트폴리오의 하한선
+                Double upperBound = portfolioAsset.getUpperBound(); // 포트폴리오의 상한선
+                Double originWeight = portfolioAsset.getFictionalWeight() * 100; // 포트폴리오의 기존 비중
 
                 log.warn("names : {}",names);
                 log.warn("code : {}",code);
@@ -1340,20 +1340,22 @@ public class PortfolioServiceImpl implements PortfolioService{
             portfolio = getNewPortfolioFrom(responseBody, initInfo, userId, recentPortfolio.getVersion()+1, findAssets, recentPortfolio);
         }
 
-        List<RecommendAsset> recommendAssets;
+        List<RecommendAsset> recommendAssets = new ArrayList<>();
 
         ObjectMapper objectMapper = new ObjectMapper();
         // Redis에서 JSON 문자열을 가져옴
-        String json = (String) redisHashRepository.getHashData("recommend", String.valueOf(userId));
+        ArrayList<LinkedHashMap<String, Object>> json = (ArrayList<LinkedHashMap<String, Object>>) redisHashRepository.getHashData("recommend", String.valueOf(userId));
+//        System.out.println("json = " + json);
 
         try {
             // JSON 배열을 List<RecommendAssetResponseResultDto>로 변환
-            List<RecommendAssetResponseResultDto> realResponse = objectMapper.readValue(json, new TypeReference<>() {});
-            recommendAssets = realResponse.stream()
-                .map(RecommendAsset::from)
-                .toList();
-
-        } catch (JsonProcessingException e) {
+            for (LinkedHashMap<String, Object> j: json) {
+                RecommendAssetResponseResultDto recommendAssetResponseResultDto = objectMapper.convertValue(j, RecommendAssetResponseResultDto.class);
+                recommendAssets.add(RecommendAsset.from(recommendAssetResponseResultDto));
+            }
+        } catch (Exception e) {
+            System.out.println("e.getMessage() = " + e.getMessage());
+            System.out.println("e = " + e);
             throw new MutualRiskException(ErrorCode.REDIS_PARSE_ERROR);
         }
 
@@ -1651,7 +1653,6 @@ public class PortfolioServiceImpl implements PortfolioService{
             log.warn("hadoop 종목 추천 api 호출시 에러 발생 - 에러 메시지: {}", e.getMessage());
             throw new MutualRiskException(ErrorCode.HADOOP_RECOMMEND_ASSET_API_ERROR);
         }
-
 
         System.out.println("responseBody = " + responseBody);
 
