@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
 	Box,
-	Input,
+	TextField,
+	InputAdornment,
 	Tooltip,
 	Stack,
 	Button,
@@ -9,6 +10,8 @@ import {
 	DialogTitle,
 	DialogContent,
 	DialogActions,
+	Avatar,
+	Grid,
 } from '@mui/material';
 import BasicButton from 'components/button/BasicButton';
 import BasicChip from 'components/chip/BasicChip';
@@ -97,7 +100,7 @@ const AssetConstraintList = ({ assets }) => {
 
 	const handleDialogClose = () => setOpenDialog(false);
 
-	const handleInputClick = () => {
+	const handleTextFieldClick = () => {
 		if (hasPortfolio) {
 			console.log('hasPortfolio', hasPortfolio);
 			setOpenDialog(true);
@@ -110,7 +113,7 @@ const AssetConstraintList = ({ assets }) => {
 	};
 
 	return (
-		<Box sx={{ height: '100%', position: 'relative' }}>
+		<Grid container justifyContent="space-between" sx={{ height: '100%' }}>
 			<Dialog open={openDialog} onClose={handleDialogClose}>
 				<DialogTitle>주의</DialogTitle>
 				<DialogContent>
@@ -127,180 +130,249 @@ const AssetConstraintList = ({ assets }) => {
 				</DialogActions>
 			</Dialog>
 
-			<Stack direction="row" spacing={2}>
-				<BasicChip label="종목 이름" />
-				<BasicChip label="최솟값(%)" />
-				<BasicChip label="최댓값 (%)" />
-				<BasicChip label="지정 비율 (%)" />
-			</Stack>
+			{['종목 이름', '최솟값(%)', '최댓값(%)', '지정 비율(%)'].map(
+				(label, index) => (
+					<Grid item xs={3} key={index} px={1}>
+						<BasicChip label={label} />
+					</Grid>
+				)
+			)}
 
 			<Box
 				sx={{
-					pt: 2,
+					width: '100%',
 					height: 'calc(100% - 140px)',
 					overflowY: 'auto',
 					'&::-webkit-scrollbar': { display: 'none' },
 					msOverflowStyle: 'none',
 					scrollbarWidth: 'none',
 				}}>
-				<Stack spacing={2}>
-					{assets.map((asset, index) => {
-						const isPriceOverTotalCash = asset.price > totalCash;
-						const lowerBoundTooltip = isLowerBoundExceeded
-							? '최소 비율 합이 100%를 초과했습니다.'
-							: '';
-						const upperBoundTooltip = isUpperBoundUnderLimit
-							? '최대 비율 합이 100%미만입니다.'
-							: '';
-						const priceTooltip = isPriceOverTotalCash
-							? '종목 가격이 총 자산보다 높습니다'
-							: '';
+				{assets.map((asset, index) => {
+					const isPriceOverTotalCash = asset.price > totalCash;
+					const lowerBoundTooltip = isLowerBoundExceeded
+						? '최소 비율 합이 100%를 초과했습니다.'
+						: '';
+					const upperBoundTooltip = isUpperBoundUnderLimit
+						? '최대 비율 합이 100%미만입니다.'
+						: '';
+					const priceTooltip = isPriceOverTotalCash
+						? '종목 가격이 총 자산보다 높습니다'
+						: '';
+					const imageURL = `https://j11a607.p.ssafy.io${asset.imagePath}/${asset.imageName}`;
 
-						return (
-							<Stack direction="row" key={asset.assetId} spacing={2}>
+					return (
+						<Grid
+							container
+							item
+							xs={12}
+							key={asset.assetId}
+							alignContent={'space-between'}>
+							{/* 종목 이름 */}
+							<Grid item xs={3}>
+								<Stack
+									p={1}
+									direction="row"
+									spacing={1}
+									alignItems={'center'}
+									height={'calc(100% - 16px)'}>
+									<Avatar
+										alt={asset.name}
+										src={imageURL}
+										sx={{ width: 24, height: 24 }}
+									/>
+									<Box>
+										{asset.region === 'KR' ? (
+											asset.name
+										) : (
+											<Tooltip title={asset.name}>
+												<span>{asset.code}</span>
+											</Tooltip>
+										)}
+									</Box>
+								</Stack>
+							</Grid>
+
+							{/* 최솟값 */}
+							<Grid item xs={3} p={1}>
 								<Stack
 									sx={{
-										flex: 1,
-										alignItems: 'center',
 										justifyContent: 'center',
-										bgcolor: colors.background.box,
-										borderRadius: '8px',
-										fontSize: '12px',
-										fontWeight: 'bold',
+										alignItems: 'center',
+										width: '100%',
 									}}>
-									{asset.region === 'KR' ? (
-										asset.name
-									) : (
-										<Tooltip title={asset.name}>
-											<span>{asset.code}</span>
-										</Tooltip>
-									)}
-								</Stack>
-
-								<Tooltip title={lowerBoundTooltip || priceTooltip}>
-									<Input
-										type="number"
-										onClick={handleInputClick}
-										disabled={hasPortfolio}
-										defaultValue={0}
-										onChange={e =>
-											setLowerBound(index, e.target.value)
-										}
-										sx={{
-											flex: 1,
-											backgroundColor:
+									<Tooltip title={lowerBoundTooltip || priceTooltip}>
+										<TextField
+											type="number"
+											error={
 												isLowerBoundExceeded || isPriceOverTotalCash
-													? colors.background.red
-													: 'inherit',
-											borderRadius: '8px',
-											overflow: 'hidden',
-										}}
-										inputProps={{
-											style: {
-												textAlign: 'center',
-												borderRadius: '8px',
-											},
-										}}
-									/>
-								</Tooltip>
+											}
+											onClick={handleTextFieldClick}
+											disabled={hasPortfolio}
+											variant="outlined"
+											defaultValue={0}
+											onChange={e =>
+												setLowerBound(index, e.target.value)
+											}
+											size="small"
+											InputProps={{
+												endAdornment: (
+													<InputAdornment position="end">
+														%
+													</InputAdornment>
+												),
+												sx: {
+													backgroundColor:
+														isLowerBoundExceeded ||
+														isPriceOverTotalCash
+															? colors.background.red
+															: 'inherit',
+													borderRadius: '4px',
+												},
+												inputProps: { min: 0, max: 100, step: 1 },
+											}}
+										/>
+									</Tooltip>
+								</Stack>
+							</Grid>
 
-								<Tooltip title={upperBoundTooltip || priceTooltip}>
-									<Input
-										type="number"
-										onClick={handleInputClick}
-										disabled={hasPortfolio}
-										defaultValue={100}
-										onChange={e =>
-											setUpperBound(index, e.target.value)
-										}
-										sx={{
-											flex: 1,
-											backgroundColor:
+							{/* 최댓값 */}
+							<Grid item xs={3} p={1}>
+								<Stack
+									sx={{
+										justifyContent: 'center',
+										alignItems: 'center',
+										width: '100%',
+									}}>
+									<Tooltip title={upperBoundTooltip || priceTooltip}>
+										<TextField
+											type="number"
+											error={
 												isUpperBoundUnderLimit ||
 												isPriceOverTotalCash
-													? colors.background.red
-													: 'inherit',
-											borderRadius: '8px',
-											overflow: 'hidden',
-										}}
-										inputProps={{
-											style: {
-												textAlign: 'center',
-												borderRadius: '8px',
-											},
-										}}
-									/>
-								</Tooltip>
+											}
+											onClick={handleTextFieldClick}
+											disabled={hasPortfolio}
+											variant="outlined"
+											defaultValue={100}
+											onChange={e =>
+												setUpperBound(index, e.target.value)
+											}
+											size="small"
+											InputProps={{
+												endAdornment: (
+													<InputAdornment position="end">
+														%
+													</InputAdornment>
+												),
+												sx: {
+													backgroundColor:
+														isLowerBoundExceeded ||
+														isPriceOverTotalCash
+															? colors.background.red
+															: 'inherit',
+													borderRadius: '4px',
+												},
+												inputProps: { min: 0, max: 100, step: 1 },
+											}}
+										/>
+									</Tooltip>
+								</Stack>
+							</Grid>
 
-								<Tooltip title={priceTooltip}>
-									<Input
-										type="number"
-										onClick={handleInputClick}
-										disabled={hasPortfolio}
-										defaultValue=""
-										onChange={e =>
-											setExactProportion(index, e.target.value)
-										}
-										sx={{
-											flex: 1,
-											backgroundColor: isPriceOverTotalCash
-												? colors.background.red
-												: 'inherit',
-											borderRadius: '8px',
-											overflow: 'hidden',
-										}}
-										inputProps={{
-											style: {
-												textAlign: 'center',
-												borderRadius: '8px',
-											},
-										}}
-									/>
-								</Tooltip>
-							</Stack>
-						);
-					})}
-				</Stack>
+							{/* 지정 비율 */}
+							<Grid item xs={3} p={1}>
+								<Stack
+									sx={{
+										justifyContent: 'center',
+										alignItems: 'center',
+										width: '100%',
+									}}>
+									<Tooltip title={priceTooltip}>
+										<TextField
+											type="number"
+											error={isPriceOverTotalCash}
+											onClick={handleTextFieldClick}
+											disabled={hasPortfolio}
+											variant="outlined"
+											defaultValue=""
+											onChange={e =>
+												setExactProportion(index, e.target.value)
+											}
+											size="small"
+											InputProps={{
+												endAdornment: (
+													<InputAdornment position="end">
+														%
+													</InputAdornment>
+												),
+												sx: {
+													backgroundColor:
+														isLowerBoundExceeded ||
+														isPriceOverTotalCash
+															? colors.background.red
+															: 'inherit',
+													borderRadius: '4px',
+												},
+												inputProps: { min: 0, max: 100, step: 1 },
+											}}
+										/>
+									</Tooltip>
+								</Stack>
+							</Grid>
+						</Grid>
+					);
+				})}
 			</Box>
 
-			<Stack
-				spacing={2}
-				sx={{
-					justifyContent: 'center',
-				}}>
-				<Stack
-					direction="row"
-					justifyContent="center"
-					sx={{ width: '100%' }}>
-					<Tooltip
-						title={
-							hasPortfolio
-								? '현재 포트폴리오의 자산 가치를 기반으로 산정된 금액입니다.'
-								: ''
-						}>
-						<Box display="flex" alignItems="center" flex={2}>
-							총자산:{' '}
-							<Input
-								sx={{ fontWeight: 'bold' }}
-								value={totalCash}
-								onChange={e => updateTotalCash(Number(e.target.value))}
-								type="number"
-							/>{' '}
-							원
-						</Box>
-					</Tooltip>
-					<Button onClick={() => addTotalCash(10000)}>만원</Button>
-					<Button onClick={() => addTotalCash(100000)}>십만원</Button>
-					<Button onClick={() => addTotalCash(1000000)}>백만원</Button>
-					<Button onClick={() => addTotalCash(10000000)}>천만원</Button>
-				</Stack>
-				<BasicButton
-					text="포트폴리오 제작하기"
-					onClick={handleSubmit}
-					sx={{ alignSelf: 'center' }}
-				/>
-			</Stack>
-		</Box>
+			<Grid
+				container
+				item
+				xs={12}
+				justifyContent={'space-evenly'}
+				rowSpacing={1}>
+				<Grid item xs={6}>
+					<TextField
+						label="총자산"
+						value={totalCash}
+						onChange={e => updateTotalCash(Number(e.target.value))}
+						type="number"
+						size="small"
+						InputProps={{
+							endAdornment: (
+								<InputAdornment position="end">원</InputAdornment>
+							),
+						}}
+					/>
+				</Grid>
+
+				{[
+					{ label: '만원', amount: 10000 },
+					{ label: '십만원', amount: 100000 },
+					{ label: '백만원', amount: 1000000 },
+					{ label: '천만원', amount: 10000000 },
+				].map(({ label, amount }) => (
+					<Grid item xs={1.3} key={label}>
+						<Button
+							fullWidth
+							onClick={() => addTotalCash(amount)}
+							sx={{
+								fontSize: '12px',
+								border: 'solid 1px',
+								borderRadius: '4px',
+								fontWeight: 600,
+								borderColor: colors.point.stroke,
+								color: colors.text.sub1,
+							}}>
+							{label}
+						</Button>
+					</Grid>
+				))}
+
+				<Grid item xs={12} display="flex" justifyContent="center">
+					<BasicButton text="포트폴리오 제작하기" onClick={handleSubmit} />
+				</Grid>
+			</Grid>
+		</Grid>
 	);
 };
 
