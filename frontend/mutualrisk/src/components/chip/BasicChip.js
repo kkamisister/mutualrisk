@@ -7,9 +7,10 @@ const BasicChip = ({ label }) => {
 		<Chip
 			sx={{
 				flex: 1,
-				fontSize: '16px',
-				fontWeight: 'bold',
-				bgcolor: colors.main.primary100,
+				fontSize: '14px',
+				fontWeight: '540',
+				bgcolor: colors.main.primary600,
+				color: colors.text.white,
 			}}
 			label={label} // 전달된 label 값
 		/>
