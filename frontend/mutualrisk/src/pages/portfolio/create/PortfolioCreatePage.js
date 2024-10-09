@@ -5,10 +5,12 @@ import StockSearch from 'pages/portfolio/create/stocksearch/StockSearch';
 import ConditionSetting from 'pages/portfolio/create/condition/ConditionSetting';
 import SelectedList from 'pages/portfolio/create/selectedstock/SelectedList';
 import AssetInputModal from 'pages/portfolio/create/AssetInputModal';
-import { fetchPortfolioList } from 'utils/apis/analyze';
+import {
+	fetchPortfolioList,
+	fetchPortfolioByPorfolioId,
+} from 'utils/apis/analyze';
 import useAssetStore from 'stores/useAssetStore';
 import { useQuery } from '@tanstack/react-query';
-import { fetchPortfolioByPorfolioId } from 'utils/apis/analyze';
 import { enqueueSnackbar } from 'notistack';
 import { colors } from 'constants/colors';
 
@@ -16,7 +18,7 @@ const PortfolioCreatePage = () => {
 	const [isModalOpen, setIsModalOpen] = useState(true);
 	const [hasPortfolio, setHasPortfolio] = useState(true);
 	const [latestPortfolioId, setLatestPortfolioId] = useState('');
-	const [previousAssets, setPreviousAssets] = useState([]);
+	const [showContraint, setShowConstraint] = useState(false);
 
 	const { assets, updateAsset, updateTotalCash } = useAssetStore(state => ({
 		assets: state.assets,
@@ -32,49 +34,37 @@ const PortfolioCreatePage = () => {
 		},
 	});
 
+	const onItemsConfirm = () => {
+		setShowConstraint(true);
+	};
+
 	useEffect(() => {
 		if (portfolioList) {
 			updateTotalCash(portfolioList.recentValuation);
-			setLatestPortfolioId(portfolioList.portfolioList.id);
+			setLatestPortfolioId(portfolioList.portfolioList[0].id);
 		}
-	}, [portfolioList, updateTotalCash]);
+	}, [portfolioList]);
 
 	const { data: latestPortfolio } = useQuery({
 		queryKey: ['portfolioDetail', latestPortfolioId],
-		queryFn: () => fetchPortfolioByPorfolioId(latestPortfolioId),
-		enabled: !!latestPortfolioId,
-		onSuccess: data => {
-			updateAsset(data.portfolio.assets);
+		queryFn: () => {
+			return fetchPortfolioByPorfolioId(latestPortfolioId);
 		},
+		enabled: !!latestPortfolioId,
 	});
 
 	useEffect(() => {
-		if (previousAssets.length > 0) {
-			const addedAssets = assets.filter(
-				asset => !previousAssets.includes(asset)
-			);
-			const removedAssets = previousAssets.filter(
-				asset => !assets.includes(asset)
-			);
-
-			addedAssets.forEach(asset =>
-				enqueueSnackbar(`${asset.name} 종목이 추가되었습니다.`, {
-					variant: 'success',
-				})
-			);
-			removedAssets.forEach(asset =>
-				enqueueSnackbar(`${asset.name} 종목이 제거되었습니다.`, {
-					variant: 'warning',
-				})
-			);
+		if (latestPortfolio && latestPortfolio.portfolio) {
+			updateAsset(latestPortfolio.portfolio.assets);
 		}
-		setPreviousAssets(assets);
-	}, [assets, previousAssets]);
+	}, [latestPortfolio]);
 
 	const handleModalClose = () => {
 		setIsModalOpen(false);
 	};
-
+	useEffect(() => {
+		console.log('assets', assets);
+	}, [assets]);
 	return (
 		<Stack spacing={1} sx={{ height: '100vh' }}>
 			<BoxTitle title="포트폴리오 제작" />
@@ -87,16 +77,23 @@ const PortfolioCreatePage = () => {
 						<StockSearch
 							sx={{
 								minHeight: '45%',
+								maxHeight: '45%',
 							}}
 						/>
 						{assets && (
-							<SelectedList assets={assets} sx={{ height: '45%' }} />
+							<SelectedList
+								onItemsConfirm={onItemsConfirm}
+								assets={assets}
+								sx={{ height: '45%' }}
+							/>
 						)}
 					</Stack>
 				</Grid>
 
 				<Grid item xs={7} sx={{ height: '100%', maxHeight: '800px' }}>
-					{assets.length > 0 && <ConditionSetting assets={assets} />}
+					{(showContraint || hasPortfolio) && (
+						<ConditionSetting assets={assets} />
+					)}
 				</Grid>
 			</Grid>
 			{!hasPortfolio && (

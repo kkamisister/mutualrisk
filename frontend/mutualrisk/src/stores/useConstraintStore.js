@@ -9,13 +9,15 @@ const useConstraintStore = create(set => ({
 
 	// 초기화 함수: 자산의 길이에 맞춰 배열 길이 설정
 	initialization: assetLength =>
-		set(() => ({
-			lowerBounds: new Array(assetLength).fill(0),
-			upperBounds: new Array(assetLength).fill(1),
-			exactProportion: new Array(assetLength).fill(null),
-			isLowerBoundExceeded: false,
-			isUpperBoundUnderLimit: false,
-		})),
+		set(() => {
+			return {
+				lowerBounds: new Array(assetLength).fill(0),
+				upperBounds: new Array(assetLength).fill(1),
+				exactProportion: new Array(assetLength).fill(null),
+				isLowerBoundExceeded: false,
+				isUpperBoundUnderLimit: false,
+			};
+		}),
 
 	setLowerBound: (index, value) =>
 		set(state => {
