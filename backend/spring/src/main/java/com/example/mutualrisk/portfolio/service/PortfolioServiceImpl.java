@@ -13,6 +13,7 @@ import com.example.mutualrisk.asset.service.AssetHistoryService;
 import com.example.mutualrisk.asset.service.AssetService;
 import com.example.mutualrisk.common.client.MutualRiskClient;
 import com.example.mutualrisk.common.constants.BenchMark;
+import com.example.mutualrisk.common.constants.MailTemplate;
 import com.example.mutualrisk.common.dto.CommonResponse.*;
 import com.example.mutualrisk.common.enums.Market;
 import com.example.mutualrisk.common.enums.PerformanceMeasure;
@@ -127,9 +128,12 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 전체 유저 목록을 가지고온다
         List<User> users = userRepository.findAll();
 
+        log.warn("users : {}",users);
+
         // 각 유저의 포트폴리오를 가지고온다
         for(User user: users){
             Portfolio curPortfolio = getCurrentPortfolio(user);
+
             // 유저의 포트폴리오가 없는경우 패스
             if(ObjectUtils.isEmpty(curPortfolio))continue;
 
@@ -138,27 +142,14 @@ public class PortfolioServiceImpl implements PortfolioService{
             // 오늘일자 기준 포트폴리오 자산의 (자산코드,총가격)
             Map<String, Double> recentAssetPrice = getTodayValueOfHoldings(assets);
 
-            // for(Entry<String,Double> entry: recentAssetPrice.entrySet()){
-            //     log.warn("CODE1 : {}", entry.getKey());
-            //     log.warn("PRICE: {}", entry.getValue());
-            // }
-
             // 오늘일자 기준 총 자산 가치 계산
             Double totalRecentValueOfHolding = recentAssetPrice.values().stream()
                 .mapToDouble(Double::doubleValue)
                 .sum();
 
-            // log.warn("TOTAL RECENT VALUE : {}", totalRecentValueOfHolding);
-
             // 오늘일자 기준 (종목, 비중) 계산
             Map<String, Double> recentAssetWeights = getWeights(recentAssetPrice, totalRecentValueOfHolding);
 
-            // for(Entry<String,Double> recentAssetWeightEntry: recentAssetWeights.entrySet()){
-            //
-            //     log.warn("CODE2 : {}", recentAssetWeightEntry.getKey());
-            //     log.warn("WEIGHT : {}", recentAssetWeightEntry.getValue());
-            //
-            // }
             /**
              * 구매 당시 비중과 오늘날의 비중을 비교하여
              * 1. 포트폴리오의 lower bound 를 넘은 종목, upper bound를 넘은 종목을 찾는다
@@ -175,38 +166,52 @@ public class PortfolioServiceImpl implements PortfolioService{
                 .map(Asset::getCode)
                 .toList();
 
+            List<String> assetNames = assetRepository.findAllById(assetIds)
+                .stream()
+                .map(Asset::getName)
+                .toList();
+
+            Map<String,Integer> codeIdxMap = new HashMap<>();
+            // assetCodes
+
             // lowerBound, upperBound, weights와 최근 비중을 비교
 
-            List<String> lowerBoundExceededAssets = new ArrayList<>();
-            List<String> upperBoundExceededAssets = new ArrayList<>();
-            List<String> increasedWeightAssets = new ArrayList<>();
-            List<String> decreasedWeightAssets = new ArrayList<>();
+            List<String[]> lowerBoundExceededAssets = new ArrayList<>();
+            List<String[]> upperBoundExceededAssets = new ArrayList<>();
+            List<String[]> increasedWeightAssets = new ArrayList<>();
+            List<String[]> decreasedWeightAssets = new ArrayList<>();
 
             for (int i = 0; i < assetCodes.size(); i++) {
+                String names = assetNames.get(i);
                 String code = assetCodes.get(i);
                 Double recentWeight = recentAssetWeights.get(code); // 최근 비중
                 Double lowerBound = curPortfolio.getLowerBound().get(i); // 포트폴리오의 하한선
                 Double upperBound = curPortfolio.getUpperBound().get(i); // 포트폴리오의 상한선
-                Double originWeight = curPortfolio.getWeights().get(i); // 포트폴리오의 기존 비중
+                Double originWeight = curPortfolio.getWeights().get(i) * 100; // 포트폴리오의 기존 비중
+
+                log.warn("names : {}",names);
+                log.warn("code : {}",code);
+                log.warn("recentWeight : {}",recentWeight);
+                log.warn("originWeight : {}",originWeight);
 
                 // 1. lower bound와 upper bound를 넘는 종목 찾기
                 if (recentWeight < lowerBound) {
                     // log.warn(code+"의 비중이 lower bound를 넘었습니다.");
-                    lowerBoundExceededAssets.add(code);
+                    lowerBoundExceededAssets.add(new String[]{names,code});
                 } else if (recentWeight > upperBound) {
                     // log.warn(code+"의 비중이 upper bound를 넘었습니다.");
-                    upperBoundExceededAssets.add(code);
+                    upperBoundExceededAssets.add(new String[]{names,code});
                 }
 
                 if((recentWeight - originWeight) > 10.0){
                     // code 종목의 비중이 10% 상승한것
                     // log.info(code + "의 비중이 10% 상승하였습니다.");
-                    increasedWeightAssets.add(code);
+                    increasedWeightAssets.add(new String[]{names,code});
                 }
                 else if((originWeight - recentWeight) > 10.0){
                     // code 종목의 비중이 -10% 감소한것
                     // log.info(code + "의 비중이 10% 감소하였습니다.");
-                    decreasedWeightAssets.add(code);
+                    decreasedWeightAssets.add(new String[]{names,code});
                 }
             }
             // 알람 메일을 보내야할 종목에 대해 메일을 발송한다
@@ -216,25 +221,70 @@ public class PortfolioServiceImpl implements PortfolioService{
                 // 메일 발송 로직
                 StringBuilder mailContent = new StringBuilder("포트폴리오 자산 비중 경고:\n");
 
+                mailContent.append(MailTemplate.template);
+                // 배열 데이터를 HTML로 변환
+                String lowerBoundAssetsHtml = "";
+                String upperBoundAssetsHtml = "";
+                String increasedWeightAssetsHtml = "";
+                String decreasedWeightAssetsHtml = "";
+
+                // 하한선을 넘은 자산
                 if (!lowerBoundExceededAssets.isEmpty()) {
-                    mailContent.append("하한선을 넘은 자산: ").append(lowerBoundExceededAssets).append("\n");
-                }
-                if (!upperBoundExceededAssets.isEmpty()) {
-                    mailContent.append("상한선을 넘은 자산: ").append(upperBoundExceededAssets).append("\n");
-                }
-                if (!increasedWeightAssets.isEmpty()) {
-                    mailContent.append("비중이 10% 상승한 자산: ").append(increasedWeightAssets).append("\n");
-                }
-                if (!decreasedWeightAssets.isEmpty()) {
-                    mailContent.append("비중이 10% 감소한 자산: ").append(decreasedWeightAssets).append("\n");
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("<p>하한선을 넘은 자산:</p><ul>");
+                    for (String[] asset : lowerBoundExceededAssets) {
+                        sb.append("<li>").append(asset[0]).append("("+asset[1]+")").append("</li>");
+                    }
+                    sb.append("</ul>");
+                    lowerBoundAssetsHtml = sb.toString();
                 }
 
+                // 상한선을 넘은 자산
+                if (!upperBoundExceededAssets.isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("<p>상한선을 넘은 자산:</p><ul>");
+                    for (String[] asset : upperBoundExceededAssets) {
+                        sb.append("<li>").append(asset[0]).append("("+asset[1]+")").append("</li>");
+                    }
+                    sb.append("</ul>");
+                    upperBoundAssetsHtml = sb.toString();
+                }
+
+                // 비중이 10% 상승한 자산
+                if (!increasedWeightAssets.isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("<p>비중이 10% 상승한 자산:</p><ul>");
+                    for (String[] asset : increasedWeightAssets) {
+                        sb.append("<li>").append(asset[0]).append("("+asset[1]+")").append("</li>");
+                    }
+                    sb.append("</ul>");
+                    increasedWeightAssetsHtml = sb.toString();
+                }
+
+                // 비중이 10% 감소한 자산
+                if (!decreasedWeightAssets.isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("<p>비중이 10% 감소한 자산:</p><ul>");
+                    for (String[] asset : decreasedWeightAssets) {
+                        sb.append("<li>").append(asset[0]).append("("+asset[1]+")").append("</li>");
+                    }
+                    sb.append("</ul>");
+                    decreasedWeightAssetsHtml = sb.toString();
+                }
+
+                // // 플레이스홀더를 실제 데이터로 대체
+                String finalMailContent = mailContent.toString()
+                    .replace("{{lowerBoundAssets}}", lowerBoundAssetsHtml)
+                    .replace("{{upperBoundAssets}}", upperBoundAssetsHtml)
+                    .replace("{{increasedWeightAssets}}", increasedWeightAssetsHtml)
+                    .replace("{{decreasedWeightAssets}}", decreasedWeightAssetsHtml);
+                //
                 EmailMessage emailMessage = EmailMessage.builder()
                     .to(user.getEmail())
                     .subject("포트폴리오 자산 비중 경고")
-                    .message(mailContent.toString())
+                    .message(finalMailContent)
                     .build();
-
+                //
                 log.warn("emailMessage: {}", emailMessage);
                 // 메일 발송 함수 호출
                 emailService.sendMail(emailMessage);
