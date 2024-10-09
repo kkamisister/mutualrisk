@@ -173,7 +173,8 @@ public record PortfolioResponse() {
     @Schema(name = "날짜별 포트폴리오의 자산 평가액을 나타내는 데이터")
     public record Performance(
         LocalDateTime time,
-        Double valuation
+        Double valuation,
+        Double sp500Valuation
     ) {
 
     }
