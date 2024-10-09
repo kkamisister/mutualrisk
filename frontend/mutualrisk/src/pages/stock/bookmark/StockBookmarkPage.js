@@ -2,10 +2,10 @@ import { Stack } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import TitleDivider from 'components/title/TitleDivider';
 import StockBookmarkList from './StockBookmarkList';
-import StockNewsList from './StockNewsList';
 import { useQuery } from '@tanstack/react-query';
 import { fetchBookmarks } from 'utils/apis/interest';
 import { enqueueSnackbar } from 'notistack';
+import StockNewsList from 'components/news/StockNewsList';
 const StockBookmarkPage = () => {
 	const { data, isLoading, isError } = useQuery({
 		queryKey: ['bookmark'], // 새롭게 자산이 추가되면 추가되는 자산 트래킹
