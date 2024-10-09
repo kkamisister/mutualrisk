@@ -13,6 +13,10 @@ public class PortfolioAsset {
     private String code;
     private Integer totalPurchaseQuantity;
     private Double totalPurchasePrice;
+    private Double lowerBound;
+    private Double upperBound;
+    private Double exactProportion;
+    private Double fictionalWeight;
 
     @Override
     public String toString() {

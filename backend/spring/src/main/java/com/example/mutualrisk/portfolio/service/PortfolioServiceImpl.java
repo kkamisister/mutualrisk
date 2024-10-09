@@ -1672,19 +1672,29 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 2-1. totalCash(현재 포트폴리오의 valuation) 구하기
         Double totalCash = getCurrentValuation(latestPortfolio) + initInfo.extraCash();
 
-        // 2-2. assetIds 구하기
-        List<Integer> assetIds = new ArrayList<>(latestPortfolio.getAsset()
+        // 2-2. 포트폴리오의 asset 구하기
+        // asset은 assetId 순으로 정렬되어 있음이 보장
+        List<PortfolioAsset> portfolioAssetList = latestPortfolio.getAsset();
+
+        // 2-3. assetIds 구하기
+        List<Integer> assetIds = new ArrayList<>(portfolioAssetList
             .stream()
             .map(PortfolioAsset::getAssetId)
             .sorted()
             .toList());
 
-        // 2-3. 제약 조건 구하기
-        List<Double> lowerBound = latestPortfolio.getLowerBound();
-        List<Double> upperBound = latestPortfolio.getUpperBound();
-        List<Double> exactProportion = latestPortfolio.getExactProportion();
+        // 2-4. 제약 조건 구하기
+        List<Double> lowerBound = new ArrayList<>(portfolioAssetList.stream()
+            .map(PortfolioAsset::getLowerBound)
+            .toList());
+        List<Double> upperBound = new ArrayList<>(portfolioAssetList.stream()
+            .map(PortfolioAsset::getUpperBound)
+            .toList());
+        List<Double> exactProportion = new ArrayList<>(portfolioAssetList.stream()
+            .map(PortfolioAsset::getExactProportion)
+            .toList());
 
-        // 2-4. extraAssetId가 있다면 assetIds와 제약 조건 변경
+        // 2-5. extraAssetId가 있다면 assetIds와 제약 조건 변경
         Integer extraAssetId = initInfo.extraAssetId();
         if (extraAssetId != null) {
             assetIds.add(extraAssetId);
@@ -1757,17 +1767,17 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         Double totalCash = initInfo.totalCash();
         List<PortfolioAsset> portfolioAssetList = new ArrayList<>();
-        List<Double> weights = new ArrayList<>();
 
+        int idx = 0;
         for (Entry<String, Double> entry : fictionalWeights.entrySet()) {
             // 자산 비중을 가지고 온다
             Asset asset = findAssets.get(Integer.parseInt(entry.getKey()));
-            Double weight = entry.getValue();
+            Double fictionalWeight = entry.getValue();
             Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
             // 구매량을 결정해야한다
             // 구매량은, (전체 현금 보유량 * 자산 비중 / 해당 자산의 가격) 을 반올림 한 값으로 한다
-            int purchaseNum = (int) Math.round(totalCash * weight / asset.getRecentPrice(recentExchangeRate));
+            int purchaseNum = (int) Math.round(totalCash * fictionalWeight / asset.getRecentPrice(recentExchangeRate));
 
             int recentPurchaseNum;
             double recentPurchasePrice;
@@ -1788,9 +1798,13 @@ public class PortfolioServiceImpl implements PortfolioService{
                 .code(asset.getCode())
                 .totalPurchaseQuantity(purchaseNum)
                 .totalPurchasePrice(purchasePrice)
+                .lowerBound(initInfo.lowerBounds().get(idx))
+                .upperBound(initInfo.upperBounds().get(idx))
+                .exactProportion(initInfo.exactProportion().get(idx))
+                .fictionalWeight(fictionalWeight)
                 .build());
 
-            weights.add(weight);
+            idx++;
         }
 
 
@@ -1802,9 +1816,6 @@ public class PortfolioServiceImpl implements PortfolioService{
             .isActive(Boolean.TRUE)
             .createdAt(LocalDateTime.now())
             .asset(portfolioAssetList)
-            .lowerBound(initInfo.lowerBounds())
-            .upperBound(initInfo.upperBounds())
-            .weights(weights)
             .fictionalPerformance(fictionalPerformance)
             .frontierPoints(frontierPoints)
             .build();
@@ -1827,27 +1838,29 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         Double totalCash = initInfo.totalCash();
         List<PortfolioAsset> portfolioAssetList = new ArrayList<>();
-        List<Double> weights = new ArrayList<>();
 
+        int idx = 0;
         for (Entry<String, Double> entry : fictionalWeights.entrySet()) {
 
             // 자산 비중을 가지고 온다
             Asset asset = findAssets.get(Integer.parseInt(entry.getKey()));
-            Double weight = entry.getValue();
+            Double fictionalWeight = entry.getValue();
             Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
             // 구매량을 결정해야한다
             // 구매량은, (전체 현금 보유량 * 자산 비중 / 해당 자산의 가격) 을 반올림 한 값으로 한다
-            int purchaseNum = (int) Math.round(totalCash * weight / asset.getRecentPrice(recentExchangeRate));
+            int purchaseNum = (int) Math.round(totalCash * fictionalWeight / asset.getRecentPrice(recentExchangeRate));
 
             portfolioAssetList.add(PortfolioAsset.builder()
                 .assetId(asset.getId())
                 .code(asset.getCode())
                 .totalPurchaseQuantity(purchaseNum)
                 .totalPurchasePrice(purchaseNum * asset.getRecentPrice(recentExchangeRate))
+                .lowerBound(initInfo.lowerBounds().get(idx))
+                .upperBound(initInfo.upperBounds().get(idx))
+                .exactProportion(initInfo.exactProportion().get(idx))
+                .fictionalWeight(fictionalWeight)
                 .build());
-
-            weights.add(weight);
         }
 
 
@@ -1859,9 +1872,6 @@ public class PortfolioServiceImpl implements PortfolioService{
             .isActive(Boolean.TRUE)
             .createdAt(LocalDateTime.now())
             .asset(portfolioAssetList)
-            .lowerBound(initInfo.lowerBounds())
-            .upperBound(initInfo.upperBounds())
-            .weights(weights)
             .fictionalPerformance(fictionalPerformance)
             .frontierPoints(frontierPoints)
             .build();
