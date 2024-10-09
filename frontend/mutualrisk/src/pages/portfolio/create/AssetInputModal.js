@@ -12,15 +12,18 @@ const AssetInputModal = ({ open, handleClose, child }) => {
 	const [displayValue, setDisplayValue] = useState(''); // 화면에 표시할 값
 	const [error, setError] = useState(false);
 
-	useQuery({
+	const { data } = useQuery({
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
-		onSuccess: data => {
+	});
+
+	useState(() => {
+		if (data.hasPorfolio) {
 			const initialValue = data.recentValuation.toLocaleString();
 			setAssetValue(initialValue);
 			setDisplayValue(initialValue);
-		},
-	});
+		}
+	}, [data]);
 
 	const handleChange = e => {
 		const value = e.target.value.replace(/,/g, ''); // 쉼표 제거한 값
