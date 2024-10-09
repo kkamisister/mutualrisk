@@ -26,10 +26,7 @@ const FundDetailPage = () => {
 	return data === undefined ? (
 		<></>
 	) : (
-		<Stack
-			sx={{
-				backgroundColor: colors.background.primary,
-			}}>
+		<Stack sx={{}}>
 			<TitleDivider
 				text={`${data.fund.company}의 포트폴리오`}></TitleDivider>
 			<Grid
