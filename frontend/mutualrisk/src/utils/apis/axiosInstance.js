@@ -9,7 +9,11 @@ const axiosInstance = axios.create({
 	// },
 	withCredentials: true,
 });
-
+if (sessionStorage.getItem('accessToken')) {
+	axiosInstance.defaults.headers.common[
+		'Authorization'
+	] = `Bearer ${sessionStorage.getItem('accessToken')}`;
+}
 // AccessToken 만료시 재요청하는 Axios interceptor
 axiosInstance.interceptors.response.use(
 	response => {
