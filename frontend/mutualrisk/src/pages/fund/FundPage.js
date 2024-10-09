@@ -22,7 +22,7 @@ const FundPage = () => {
 	const topBuyAsset = data?.topHoldAndBuyAmount.topBuyAsset || [];
 
 	return (
-		<Stack spacing={2} sx={{ backgroundColor: colors.background.primary }}>
+		<Stack spacing={2} sx={{}}>
 			<Stack spacing={1}>
 				<TitleDivider
 					text="상위 20개 투자운용사 목록"
