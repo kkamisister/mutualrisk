@@ -64,6 +64,9 @@ public class Asset extends BaseEntity {
 	@Column(name = "volatility")
 	private Double volatility;
 
+	@Column(name = "sharpe_ratio")
+	public Double sharpeRatio;
+
 	@Override
 	public String toString() {
 		return "Asset{" +
