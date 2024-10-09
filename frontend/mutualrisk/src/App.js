@@ -19,7 +19,7 @@ const queryClient = new QueryClient();
 
 const App = () => {
 	return (
-		<SnackbarProvider autoHideDuration={1000}>
+		<SnackbarProvider autoHideDuration={2000}>
 			<QueryClientProvider client={queryClient}>
 				<BrowserRouter>
 					<Routes>
