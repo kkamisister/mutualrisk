@@ -8,8 +8,7 @@ const PortfolioAssetListItem = ({ asset, highlight }) => {
 		<Stack
 			direction="row"
 			sx={{
-				// width: highlight ? '410px' : '400px',
-				// height: highlight ? '70px' : 'none',
+				minWidth: '470px',
 				maxWidth: '100%',
 				display: 'flex',
 				justifyContent: 'space-between',

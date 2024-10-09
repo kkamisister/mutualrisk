@@ -14,7 +14,10 @@ import BackTesting from 'pages/portfolio/detail/graph/BackTesting';
 import EquitySectors from 'pages/portfolio/detail/graph/EquitySectors';
 import MonthlyReturns from 'pages/portfolio/detail/graph/MonthlyReturns';
 import WidgetContainer from 'components/container/WidgetConatiner';
-import { fetchPortfolioList } from 'utils/apis/analyze';
+import {
+	fetchPortfolioList,
+	fetchPortfolioByPorfolioId,
+} from 'utils/apis/analyze';
 
 const formatDate = dateString => {
 	const date = new Date(dateString);
@@ -31,17 +34,38 @@ const PortfolioDetailPage = () => {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const [selectedPortfolio, setSelectedPortfolio] = React.useState(null);
+	const [latestPortfolioId, setLatestPortfolioId] = React.useState(null); // 최신 포트폴리오 id 저장
 
-	const { data, isLoading, isError } = useQuery({
+	const {
+		data: portfolioListData,
+		isLoading,
+		isError,
+	} = useQuery({
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
 	});
 
+	const { data: latestPortfolioData } = useQuery({
+		queryKey: ['latestPortfolio', latestPortfolioId],
+		queryFn: () => fetchPortfolioByPorfolioId(latestPortfolioId),
+		enabled: !!latestPortfolioId, // 최신 포트폴리오 id가 설정되면 쿼리 실행
+	});
+
+	const { data: portfolioData } = useQuery({
+		queryKey: ['portfolioDetail', selectedPortfolio?.value],
+		queryFn: () => fetchPortfolioByPorfolioId(selectedPortfolio?.value),
+		enabled: !!selectedPortfolio, // 선택된 포트폴리오가 있을 때만 실행
+	});
+
 	React.useEffect(() => {
-		if (data && !data.hasPortfolio) {
-			navigate('/portfolio/create');
-		} else if (data && data.portfolioList.length > 0) {
-			const latestPortfolio = data.portfolioList[0];
+		if (portfolioListData && !portfolioListData.hasPortfolio) {
+			navigate('/portfolio/detail');
+		} else if (
+			portfolioListData &&
+			portfolioListData.portfolioList.length > 0
+		) {
+			const latestPortfolio = portfolioListData.portfolioList[0];
+			setLatestPortfolioId(latestPortfolio.id); // 최신 포트폴리오 id 설정
 
 			if (!selectedPortfolio) {
 				setSelectedPortfolio({
@@ -58,7 +82,7 @@ const PortfolioDetailPage = () => {
 				});
 			}
 		}
-	}, [data, navigate, selectedPortfolio, queryClient]);
+	}, [portfolioListData, navigate, selectedPortfolio, queryClient]);
 
 	if (isLoading) {
 		return <div>Loading...</div>;
@@ -68,7 +92,7 @@ const PortfolioDetailPage = () => {
 		return <div>Error fetching portfolio list.</div>;
 	}
 
-	const portfolioOptions = data.portfolioList.map(portfolio => ({
+	const portfolioOptions = portfolioListData.portfolioList.map(portfolio => ({
 		value: portfolio.id,
 		label: portfolio.name,
 		version: portfolio.version,
@@ -87,7 +111,15 @@ const PortfolioDetailPage = () => {
 
 	return (
 		<Stack spacing={2} sx={{ backgroundColor: colors.background.primary }}>
-			<StockAddBox />
+			{/* StockAddBox에 항상 최신 포트폴리오의 추천 종목 전달 */}
+			{latestPortfolioData &&
+				latestPortfolioData.portfolio.recommendAssets && (
+					<StockAddBox
+						recommendAssets={
+							latestPortfolioData.portfolio.recommendAssets
+						}
+					/>
+				)}
 			<TitleDivider text="내 포트폴리오" />
 
 			<Select

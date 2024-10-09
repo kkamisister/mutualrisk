@@ -13,13 +13,18 @@ const PortfolioAssetList = ({ assets, hoveredIndex }) => {
 					justifyContent: 'space-between',
 					overflowY: 'auto',
 					padding: '20px 0',
+					'&::-webkit-scrollbar': {
+						display: 'none',
+					},
+					scrollbarWidth: 'none',
+					msOverflowStyle: 'none',
 				}}>
 				<Box sx={{ flex: 1 }}>
 					{assets.map((asset, index) => (
 						<PortfolioAssetListItem
 							key={index}
 							asset={asset}
-							highlight={hoveredIndex === index} // 강조 처리
+							highlight={hoveredIndex === index}
 						/>
 					))}
 				</Box>

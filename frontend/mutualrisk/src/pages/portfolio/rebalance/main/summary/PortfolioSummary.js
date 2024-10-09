@@ -77,7 +77,7 @@ const PortfolioSummary = ({ version }) => {
 	} = data;
 
 	return (
-		<Stack sx={{ width: '450px', overflow: 'hidden' }}>
+		<Stack sx={{ width: '750px', overflow: 'hidden' }}>
 			<Box
 				sx={{
 					flex: 1,
