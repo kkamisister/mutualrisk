@@ -3,8 +3,12 @@ import { Avatar, Box, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import CustomButton from 'components/button/BasicButton';
 import ChangeCircleOutlinedIcon from '@mui/icons-material/ChangeCircleOutlined';
+import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 
 const StockAddBox = ({ recommendAssets }) => {
+	const navigate = useNavigate();
+	const queryClient = useQueryClient();
 	const [currentIndex, setCurrentIndex] = useState(0);
 
 	const currentAsset = recommendAssets[currentIndex];
@@ -12,6 +16,13 @@ const StockAddBox = ({ recommendAssets }) => {
 	const handleNextAsset = () => {
 		setCurrentIndex(prevIndex => (prevIndex + 1) % recommendAssets.length);
 	};
+
+	const handleAddAsset = () => {
+		queryClient.setQueryData('selectedAsset', currentAsset);
+		navigate('/portfolio/create');
+		console.log('추천받은 종목 정보: ', currentAsset);
+	};
+
 	return (
 		<Box
 			sx={{
@@ -74,6 +85,7 @@ const StockAddBox = ({ recommendAssets }) => {
 					},
 				}}
 				text={'종목 추가하기'}
+				onClick={handleAddAsset}
 			/>
 			<ChangeCircleOutlinedIcon
 				onClick={handleNextAsset}
