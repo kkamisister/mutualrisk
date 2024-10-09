@@ -6,7 +6,7 @@ const BasicChip = ({ label }) => {
 	return (
 		<Chip
 			sx={{
-				flex: 1,
+				width: '100%',
 				fontSize: '14px',
 				fontWeight: '540',
 				bgcolor: colors.main.primary600,
