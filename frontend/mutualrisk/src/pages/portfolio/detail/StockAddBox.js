@@ -4,40 +4,11 @@ import { colors } from 'constants/colors';
 import CustomButton from 'components/button/BasicButton';
 import ChangeCircleOutlinedIcon from '@mui/icons-material/ChangeCircleOutlined';
 
-const stockInfoSample = {
-	title: '엔비디아',
-	market: 'NASDAQ',
-	symbol: 'NVDA',
-	holding: 1000000,
-	imageURL:
-		'https://thumb.tossinvest.com/image/resized/96x0/https%3A%2F%2Fstatic.toss.im%2Fpng-icons%2Fsecurities%2Ficn-sec-fill-NAS00208X-E0.png',
-	returnRate: '2',
-	stabilityRate: '0.2',
-};
-
-// 받침 유무 판별
-const hasJongseong = word => {
-	const lastChar = word[word.length - 1];
-	const charCode = lastChar.charCodeAt(0);
-
-	if (charCode >= 0xac00 && charCode <= 0xd7a3) {
-		// 한글 여부 판별 (가~힣)
-		const jongseong = (charCode - 0xac00) % 28; // 28개의 종성 중 0번째는 종성이 없는 경우
-		return jongseong !== 0; // 받침이 있으면 true, 없으면 false
-	}
-	return false;
-};
-
-// 을 or 를 판별
-const getParticle = word => (hasJongseong(word) ? '을' : '를');
-
 const StockAddBox = ({ recommendAssets }) => {
 	const [currentIndex, setCurrentIndex] = useState(0);
 
-	// 현재 인덱스에 해당하는 추천 종목
 	const currentAsset = recommendAssets[currentIndex];
 
-	// 다음 종목으로 이동하는 함수
 	const handleNextAsset = () => {
 		setCurrentIndex(prevIndex => (prevIndex + 1) % recommendAssets.length);
 	};
@@ -49,10 +20,11 @@ const StockAddBox = ({ recommendAssets }) => {
 				alignItems: 'center',
 				position: 'relative',
 				padding: '14px 20px',
-				backgroundColor: colors.background.box,
+				backgroundColor: colors.background.white,
+				border: '1px solid',
+				borderColor: colors.background.box,
 				borderRadius: '20px',
 				minWidth: `900px`,
-				width: `100% - 40px`,
 				gap: '10px',
 			}}>
 			<Avatar
@@ -77,8 +49,6 @@ const StockAddBox = ({ recommendAssets }) => {
 					{currentAsset.name}({currentAsset.code})
 				</span>
 				{`을(를) 포트폴리오에 추가하면 예상 수익률이 `}
-				{/* <br /> 줄 바꿈 추가 */}
-				{/* {`예상 수익률이 `} */}
 				<span style={{ fontWeight: 'bold' }}>
 					{currentAsset.expectedReturn.toFixed(2)}%
 				</span>
