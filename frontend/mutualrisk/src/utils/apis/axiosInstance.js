@@ -4,9 +4,9 @@ const axiosInstance = axios.create({
 	baseURL: 'https://j11a607.p.ssafy.io/api/v1',
 	// timeout: 1000,
 	timeout: 20000,
-	headers: {
-		Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`,
-	},
+	// headers: {
+	// 	Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`,
+	// },
 	withCredentials: true,
 });
 
