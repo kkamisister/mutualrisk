@@ -34,10 +34,17 @@ const SearchStatusBox = ({ Icon, text }) => {
 
 const StockSearch = ({ sx }) => {
 	const { keyword, setKeyword, isLoading, searchResult } = useStockSearch();
-	const { tempAssets, addAssetList } = useAssetStore(state => ({
+	const { tempAssets, addAssetList, assets } = useAssetStore(state => ({
 		tempAssets: state.tempAssets,
 		addAssetList: state.addAssetList,
+		assets: state.assets,
 	}));
+
+	const addTempToAssets = () => {
+		const tempArray = Array.from(tempAssets); // tempAssets를 배열로 변환
+		console.log('Adding assets:', tempArray);
+		addAssetList(tempArray); // 상태 업데이트 시도
+	};
 
 	return (
 		<Stack
@@ -72,10 +79,7 @@ const StockSearch = ({ sx }) => {
 					<StockList assets={searchResult} />
 
 					<Box sx={{ display: 'flex', justifyContent: 'center' }}>
-						<BasicButton
-							text="추가"
-							onClick={() => addAssetList(tempAssets)}
-						/>
+						<BasicButton text="추가" onClick={() => addTempToAssets()} />
 					</Box>
 				</>
 			)}

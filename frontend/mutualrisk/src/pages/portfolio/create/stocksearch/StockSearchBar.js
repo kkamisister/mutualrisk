@@ -2,8 +2,13 @@ import React from 'react';
 import SearchIcon from '@mui/icons-material/Search';
 import { TextField, Box } from '@mui/material';
 import { colors } from 'constants/colors';
+import useAssetStore from 'stores/useAssetStore';
 
 const StockSearchBar = ({ onKeywordChange }) => {
+	const { resetTempAsset } = useAssetStore(state => ({
+		resetTempAsset: state.resetTempAsset,
+	}));
+
 	return (
 		<Box
 			sx={{
@@ -23,6 +28,7 @@ const StockSearchBar = ({ onKeywordChange }) => {
 				placeholder="종목 이름 또는 종목 코드를 입력하세요"
 				onChange={event => {
 					onKeywordChange(event.target.value);
+					resetTempAsset();
 				}}
 				fullWidth
 				sx={{

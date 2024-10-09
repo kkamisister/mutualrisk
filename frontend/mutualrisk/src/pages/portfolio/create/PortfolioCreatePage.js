@@ -18,7 +18,6 @@ const PortfolioCreatePage = () => {
 	const [isModalOpen, setIsModalOpen] = useState(true);
 	const [hasPortfolio, setHasPortfolio] = useState(true);
 	const [latestPortfolioId, setLatestPortfolioId] = useState('');
-	const [previousAssets, setPreviousAssets] = useState([]);
 	const [showContraint, setShowConstraint] = useState(false);
 
 	const { assets, updateAsset, updateTotalCash } = useAssetStore(state => ({
@@ -60,33 +59,12 @@ const PortfolioCreatePage = () => {
 		}
 	}, [latestPortfolio]);
 
-	useEffect(() => {
-		if (previousAssets.length > 0) {
-			const addedAssets = assets.filter(
-				asset => !previousAssets.includes(asset)
-			);
-			const removedAssets = previousAssets.filter(
-				asset => !assets.includes(asset)
-			);
-
-			addedAssets.forEach(asset =>
-				enqueueSnackbar(`${asset.name} 종목이 추가되었습니다.`, {
-					variant: 'success',
-				})
-			);
-			removedAssets.forEach(asset =>
-				enqueueSnackbar(`${asset.name} 종목이 제거되었습니다.`, {
-					variant: 'warning',
-				})
-			);
-		}
-		setPreviousAssets(assets);
-	}, [assets, previousAssets]);
-
 	const handleModalClose = () => {
 		setIsModalOpen(false);
 	};
-
+	useEffect(() => {
+		console.log('assets', assets);
+	}, [assets]);
 	return (
 		<Stack spacing={1} sx={{ height: '100vh' }}>
 			<BoxTitle title="포트폴리오 제작" />

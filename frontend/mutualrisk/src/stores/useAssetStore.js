@@ -1,27 +1,27 @@
 import { create } from 'zustand';
 
 const useAssetStore = create(set => ({
-	tempAssets: [],
+	tempAssets: new Set(),
 	assets: [], // 자산 정보를 저장할 배열
 	totalCash: 0, // 총 자산을 저장할 변수
 
 	toggleTempAsset: asset =>
-		set(state => ({
-			tempAssets: [...state.tempAssets, asset],
-		})),
-
-	addAssetsToTemp: asset_list =>
 		set(state => {
-			const newAssets = asset_list.filter(
-				newAsset =>
-					!state.tempAssets.some(
-						existingAsset => existingAsset.id === newAsset.id
-					)
-			);
-			return {
-				tempAssets: [...state.tempAssets, ...newAssets],
-			};
+			const newTempAssets = new Set(state.tempAssets);
+
+			if (newTempAssets.has(asset)) {
+				newTempAssets.delete(asset); // asset이 이미 있으면 제거
+			} else {
+				newTempAssets.add(asset); // asset이 없으면 추가
+			}
+
+			return { tempAssets: newTempAssets };
 		}),
+
+	resetTempAsset: () =>
+		set(() => ({
+			tempAssets: new Set(),
+		})),
 
 	addAsset: asset =>
 		set(state => {
@@ -43,13 +43,12 @@ const useAssetStore = create(set => ({
 			const newAssets = asset_list.filter(
 				newAsset =>
 					!state.assets.some(
-						existingAsset => existingAsset.id === newAsset.id
+						existingAsset => existingAsset.assetId === newAsset.assetId
 					)
 			);
 
-			// 추가할 새로운 자산이 없을 때는 상태 변경하지 않음
 			if (newAssets.length === 0) {
-				return state; // 기존 상태 반환
+				return state; // 상태 변경 없음
 			}
 
 			return {
