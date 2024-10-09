@@ -29,9 +29,6 @@ const PortfolioCreatePage = () => {
 	const { data: portfolioList } = useQuery({
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
-		onSuccess: data => {
-			setHasPortfolio(data.hasPortfolio);
-		},
 	});
 
 	const onItemsConfirm = () => {
@@ -39,7 +36,9 @@ const PortfolioCreatePage = () => {
 	};
 
 	useEffect(() => {
-		if (portfolioList.length > 0) {
+		console.log('이 자는 포트폴리오가..!', hasPortfolio);
+		if (hasPortfolio) {
+			setHasPortfolio(portfolioList.hasPortfolio);
 			updateTotalCash(portfolioList.recentValuation);
 			setLatestPortfolioId(portfolioList.portfolioList[0].id);
 		}
