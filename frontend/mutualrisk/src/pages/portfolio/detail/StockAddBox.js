@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Avatar, Box, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import CustomButton from 'components/button/BasicButton';
@@ -31,7 +31,16 @@ const hasJongseong = word => {
 // 을 or 를 판별
 const getParticle = word => (hasJongseong(word) ? '을' : '를');
 
-const StockAddBox = () => {
+const StockAddBox = ({ recommendAssets }) => {
+	const [currentIndex, setCurrentIndex] = useState(0);
+
+	// 현재 인덱스에 해당하는 추천 종목
+	const currentAsset = recommendAssets[currentIndex];
+
+	// 다음 종목으로 이동하는 함수
+	const handleNextAsset = () => {
+		setCurrentIndex(prevIndex => (prevIndex + 1) % recommendAssets.length);
+	};
 	return (
 		<Box
 			sx={{
@@ -52,13 +61,12 @@ const StockAddBox = () => {
 					height: '48px',
 				}}
 				alt="종목 이미지"
-				src={stockInfoSample.imageURL}
+				src={`https://j11a607.p.ssafy.io/stockImage/${currentAsset.code}.png`}
 			/>
 			<Typography
 				sx={{
-					fontSize: '14px',
-					color: colors.text.sub2,
-					// flexGrow: 1,
+					fontSize: '16px',
+					color: colors.text.main,
 					minWidth: '330px',
 				}}>
 				<span
@@ -66,27 +74,21 @@ const StockAddBox = () => {
 						fontWeight: 'bold',
 						fontSize: '16px',
 					}}>
-					{stockInfoSample.title}({stockInfoSample.symbol})
+					{currentAsset.name}({currentAsset.code})
 				</span>
-				{getParticle(stockInfoSample.title)} 포트폴리오에 추가하면 예상
-				수익룰이{' '}
-				<span
-					style={{
-						fontWeight: 'bold',
-					}}>
-					{stockInfoSample.returnRate}%
+				{`을(를) 포트폴리오에 추가하면 예상 수익률이 `}
+				{/* <br /> 줄 바꿈 추가 */}
+				{/* {`예상 수익률이 `} */}
+				<span style={{ fontWeight: 'bold' }}>
+					{currentAsset.expectedReturn.toFixed(2)}%
 				</span>
-				, 안정성이{' '}
-				<span
-					style={{
-						fontWeight: 'bold',
-					}}>
-					{stockInfoSample.stabilityRate}%
-				</span>{' '}
-				증가해요
+				{`, 안정성이 `}
+				<span style={{ fontWeight: 'bold' }}>
+					{currentAsset.volatilityChange.toFixed(2)}%
+				</span>
+				{` 증가해요.`}
 			</Typography>
 			<CustomButton
-				// variant="contained"
 				sx={{
 					marginLeft: '20px',
 					minWidth: '140px',
@@ -101,15 +103,15 @@ const StockAddBox = () => {
 						backgroundColor: colors.main.primary200,
 					},
 				}}
-				text={'종목 추가하기'}></CustomButton>
+				text={'종목 추가하기'}
+			/>
 			<ChangeCircleOutlinedIcon
-				onClick={() => console.log('icon Clicked')}
+				onClick={handleNextAsset}
 				sx={{
 					position: 'absolute',
 					right: '40px',
 					color: colors.text.sub1,
 					cursor: 'pointer',
-					marginLeft: '10px',
 					fontSize: '30px',
 					'&:hover': {
 						color: colors.text.sub2,
