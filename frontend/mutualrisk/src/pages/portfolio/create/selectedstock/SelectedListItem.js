@@ -1,12 +1,16 @@
-import { Stack, Box, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import CloseIcon from '@mui/icons-material/Close';
 import StockItemCard from 'components/card/StockItemCard';
+import useAssetStore from 'stores/useAssetStore';
 
-const SelectedListItem = ({ asset, clicked, onClick }) => {
+const SelectedListItem = ({ asset }) => {
 	const imageURL = `https://j11a607.p.ssafy.io${asset.imagePath}/${asset.imageName}`;
 	const price = Math.floor(asset.price).toLocaleString();
 	const dailyPriceChange = Math.floor(asset.dailyPriceChange).toLocaleString();
+	const { removeAsset } = useAssetStore(state => ({
+		removeAsset: state.removeAsset,
+	}));
 
 	return (
 		<StockItemCard
@@ -36,7 +40,7 @@ const SelectedListItem = ({ asset, clicked, onClick }) => {
 				</Stack>
 
 				<CloseIcon
-					onClick={onClick}
+					onClick={() => removeAsset(asset)}
 					sx={{
 						color: colors.text.sub2,
 						p: 1,

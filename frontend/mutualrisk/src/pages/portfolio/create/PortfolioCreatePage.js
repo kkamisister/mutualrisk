@@ -5,20 +5,25 @@ import StockSearch from 'pages/portfolio/create/stocksearch/StockSearch';
 import ConditionSetting from 'pages/portfolio/create/condition/ConditionSetting';
 import SelectedList from 'pages/portfolio/create/selectedstock/SelectedList';
 import AssetInputModal from 'pages/portfolio/create/AssetInputModal';
-import SuccessSnackbar from 'components/snackbar/SuccessSnackbar';
 import { fetchPortfolioList } from 'utils/apis/analyze';
+import useAssetStore from 'stores/useAssetStore';
 import { useQuery } from '@tanstack/react-query';
+import { fetchPortfolioByPorfolioId } from 'utils/apis/analyze';
+import { enqueueSnackbar } from 'notistack';
 
 const PortfolioCreatePage = () => {
-	const [showSelectedItems, setShowSelectedItems] = useState(false);
 	const [showConditionSetting, setShowConditionSetting] = useState(false);
-	const [selectedStocks, setSelectedStocks] = useState([]);
 	const [isModalOpen, setIsModalOpen] = useState(true);
-	const [openAddSnackbar, setOpenAddSnackbar] = useState(false);
-	const [openRemoveSnackbar, setOpenRemoveSnackbar] = useState(false);
 	const [hasPortfolio, setHasPortfolio] = useState(true);
+	const [latestPortfolioId, setLatestPortfolioId] = useState('');
 
-	const { data, isLoading, isError } = useQuery({
+	const { assets, updateAsset, updateTotalCash } = useAssetStore(state => ({
+		assets: state.assets,
+		updateAsset: state.updateAsset,
+		updateTotalCash: state.updateTotalCash,
+	}));
+
+	const { data: portfolioList } = useQuery({
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
 		onSuccess: data => {
@@ -26,41 +31,21 @@ const PortfolioCreatePage = () => {
 		},
 	});
 
-	const handleStockSelect = stock => {
-		if (selectedStocks.find(selected => selected.assetId === stock.assetId)) {
-			setSelectedStocks(
-				selectedStocks.filter(
-					selected => selected.assetId !== stock.assetId
-				)
-			);
-			setOpenRemoveSnackbar(true);
-		} else {
-			setSelectedStocks([...selectedStocks, stock]);
+	useEffect(() => {
+		if (portfolioList) {
+			updateTotalCash(portfolioList.recentValuation);
+			setLatestPortfolioId(portfolioList.portfolioList.id);
 		}
-	};
-	const handleAddSnackbarClose = (event, reason) => {
-		if (reason === 'clickaway') {
-			return;
-		}
-		setOpenAddSnackbar(false);
-	};
+	}, [portfolioList, updateTotalCash]);
 
-	const handleRemoveSnackbarClose = (event, reason) => {
-		if (reason === 'clickaway') {
-			return;
-		}
-		setOpenRemoveSnackbar(false);
-	};
-
-	const handleSearchConfirm = selectedItems => {
-		setOpenAddSnackbar(true);
-		setSelectedStocks(selectedItems);
-		setShowSelectedItems(true);
-	};
-	const handleItemsConfirm = () => {
-		setShowConditionSetting(true);
-	};
-
+	const { data: latestPortfolio } = useQuery({
+		queryKey: ['portfolioDetail', latestPortfolioId],
+		queryFn: () => fetchPortfolioByPorfolioId(latestPortfolioId),
+		enabled: !!latestPortfolioId,
+		onSuccess: data => {
+			updateAsset(data.portfolio.assets);
+		},
+	});
 	const handleModalClose = () => {
 		setIsModalOpen(false);
 	};
@@ -75,18 +60,13 @@ const PortfolioCreatePage = () => {
 				<Grid item xs={4.8} sx={{ height: '100%' }}>
 					<Stack spacing={2} height="100%" alignContent={'space-between'}>
 						<Box height="50%">
-							<StockSearch
-								onConfirm={handleSearchConfirm}
-								selectedStocks={selectedStocks}
-								onStockSelect={handleStockSelect}
-							/>
+							<StockSearch />
 						</Box>
 						<Box height="50%">
-							{showSelectedItems && (
+							{assets && (
 								<SelectedList
-									assets={selectedStocks}
-									onItemsConfirm={handleItemsConfirm}
-									onStockSelect={handleStockSelect}
+									assets={assets}
+									onItemsConfirm={() => setShowConditionSetting(true)}
 									sx={{ height: '100%' }}
 								/>
 							)}
@@ -96,9 +76,7 @@ const PortfolioCreatePage = () => {
 
 				<Grid item xs={7} sx={{ height: '100%', maxHeight: '800px' }}>
 					<Box sx={{ height: '100%' }}>
-						{showConditionSetting && (
-							<ConditionSetting assets={selectedStocks} />
-						)}
+						{showConditionSetting && <ConditionSetting assets={assets} />}
 					</Box>
 				</Grid>
 			</Grid>
@@ -108,16 +86,6 @@ const PortfolioCreatePage = () => {
 					handleClose={handleModalClose}
 				/>
 			)}
-			<SuccessSnackbar
-				message="담은 종목에 추가하였습니다"
-				openSnackbar={openAddSnackbar}
-				handleSnackbarClose={handleAddSnackbarClose}
-			/>
-			<SuccessSnackbar
-				message="담은 종목에서 제거하였습니다"
-				openSnackbar={openRemoveSnackbar}
-				handleSnackbarClose={handleRemoveSnackbarClose}
-			/>
 		</Stack>
 	);
 };
