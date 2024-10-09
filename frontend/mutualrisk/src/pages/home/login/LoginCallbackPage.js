@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
+import axiosInstance from 'utils/apis/axiosInstance';
 const LoginCallbackPage = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
@@ -16,6 +16,9 @@ const LoginCallbackPage = () => {
 			console.log('로그인 성공: ' + data);
 			sessionStorage.setItem('accessToken', data.authToken.accessToken);
 			sessionStorage.setItem('name', data.userName);
+			axiosInstance.defaults.headers.common[
+				'Authorization'
+			] = `Bearer ${data.authToken.accessToken}`;
 			navigate('/portfolio/detail');
 		} catch (error) {
 			alert('로그인 실패');
