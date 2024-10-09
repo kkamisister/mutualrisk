@@ -334,6 +334,19 @@ public record PortfolioResponse() {
     }
 
     /**
+     * 최적 포트폴리오 계산 fastAPI 반환 dto
+     */
+    public record EfficientFrontierResponseDto(
+        List<Double> weights,
+        PortfolioPerformance fictionalPerformance,
+        List<FrontierPoint> frontierPoints
+    ) {
+
+    }
+
+
+
+    /**
      * hadoop 종목 추천 api 반환 dto
      */
     public record HadoopRecommendAssetResultDto(
