@@ -12,7 +12,7 @@ import com.example.mutualrisk.portfolio.dto.PortfolioResponse.*;
 
 public interface PortfolioService {
     ResponseWithData<PortfolioResultDto> getPortfolioInfo(Integer userId, String portfolioId);
-    ResponseWithMessage sendRefreshMail();
+    void sendRefreshMail();
 
     ResponseWithData<PortfolioValuationDto> getUserPortfolioPerformance(TimeInterval timeInterval, PerformanceMeasure measure, Integer userId, String portfolioId);
 
