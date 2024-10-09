@@ -1145,7 +1145,14 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 새로운 자산 id들을 가지고온다
         List<Asset> assetsNotInList = assetRepository.findAssetsNotInList(assetIds, minCovarianceSectorId);
 
-        List<Integer> newAssetIds = assetsNotInList.stream().map(Asset::getId).toList();
+        // sharpeRatio가 높은 순으로, 최대 500개의 자산만 후보군에 넣음
+        List<Asset> newAssetCandidates = assetsNotInList.stream()
+            .filter(asset -> asset.getSharpeRatio() != null)
+            .sorted(Comparator.comparingDouble(Asset::getSharpeRatio).reversed())
+            .limit(500)
+            .toList();
+
+        List<Integer> newAssetIds = newAssetCandidates.stream().map(Asset::getId).toList();
 
         return HadoopRecommendAssetRequestDto.builder()
             .existingAssets(assetIds)
