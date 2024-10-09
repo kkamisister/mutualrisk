@@ -5,10 +5,12 @@ import StockSearch from 'pages/portfolio/create/stocksearch/StockSearch';
 import ConditionSetting from 'pages/portfolio/create/condition/ConditionSetting';
 import SelectedList from 'pages/portfolio/create/selectedstock/SelectedList';
 import AssetInputModal from 'pages/portfolio/create/AssetInputModal';
-import { fetchPortfolioList } from 'utils/apis/analyze';
+import {
+	fetchPortfolioList,
+	fetchPortfolioByPorfolioId,
+} from 'utils/apis/analyze';
 import useAssetStore from 'stores/useAssetStore';
 import { useQuery } from '@tanstack/react-query';
-import { fetchPortfolioByPorfolioId } from 'utils/apis/analyze';
 import { enqueueSnackbar } from 'notistack';
 import { colors } from 'constants/colors';
 
@@ -17,6 +19,7 @@ const PortfolioCreatePage = () => {
 	const [hasPortfolio, setHasPortfolio] = useState(true);
 	const [latestPortfolioId, setLatestPortfolioId] = useState('');
 	const [previousAssets, setPreviousAssets] = useState([]);
+	const [showContraint, setShowConstraint] = useState(false);
 
 	const { assets, updateAsset, updateTotalCash } = useAssetStore(state => ({
 		assets: state.assets,
@@ -32,21 +35,30 @@ const PortfolioCreatePage = () => {
 		},
 	});
 
+	const onItemsConfirm = () => {
+		setShowConstraint(true);
+	};
+
 	useEffect(() => {
 		if (portfolioList) {
 			updateTotalCash(portfolioList.recentValuation);
-			setLatestPortfolioId(portfolioList.portfolioList.id);
+			setLatestPortfolioId(portfolioList.portfolioList[0].id);
 		}
-	}, [portfolioList, updateTotalCash]);
+	}, [portfolioList]);
 
 	const { data: latestPortfolio } = useQuery({
 		queryKey: ['portfolioDetail', latestPortfolioId],
-		queryFn: () => fetchPortfolioByPorfolioId(latestPortfolioId),
-		enabled: !!latestPortfolioId,
-		onSuccess: data => {
-			updateAsset(data.portfolio.assets);
+		queryFn: () => {
+			return fetchPortfolioByPorfolioId(latestPortfolioId);
 		},
+		enabled: !!latestPortfolioId,
 	});
+
+	useEffect(() => {
+		if (latestPortfolio && latestPortfolio.portfolio) {
+			updateAsset(latestPortfolio.portfolio.assets);
+		}
+	}, [latestPortfolio]);
 
 	useEffect(() => {
 		if (previousAssets.length > 0) {
@@ -87,16 +99,23 @@ const PortfolioCreatePage = () => {
 						<StockSearch
 							sx={{
 								minHeight: '45%',
+								maxHeight: '45%',
 							}}
 						/>
 						{assets && (
-							<SelectedList assets={assets} sx={{ height: '45%' }} />
+							<SelectedList
+								onItemsConfirm={onItemsConfirm}
+								assets={assets}
+								sx={{ height: '45%' }}
+							/>
 						)}
 					</Stack>
 				</Grid>
 
 				<Grid item xs={7} sx={{ height: '100%', maxHeight: '800px' }}>
-					{assets.length > 0 && <ConditionSetting assets={assets} />}
+					{(showContraint || hasPortfolio) && (
+						<ConditionSetting assets={assets} />
+					)}
 				</Grid>
 			</Grid>
 			{!hasPortfolio && (
