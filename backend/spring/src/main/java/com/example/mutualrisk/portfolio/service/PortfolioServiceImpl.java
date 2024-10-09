@@ -376,8 +376,21 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 그 date의 valuation을 가지고 온다
         Double firstValuation = valuationPerDate.get(firstDate);
-        AssetHistory historyOfSP500 = assetHistoryRepository.findRecentHistoryOfAsset(sp500, firstDate)
-            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
+
+
+        AssetHistory historyOfSP500;
+        List<LocalDateTime> validDate = assetHistoryService.getValidDate(sp500, firstDate, 1);
+        if(validDate.isEmpty()){ // 유효한 날짜가 없는 경우, 그 자산의 가장 오래된 가격을 가지는 assetHistory생성
+            historyOfSP500 = AssetHistory.builder()
+                .asset(sp500)
+                .price(sp500.getOldestPrice())
+                .date(firstDate)
+                .build();
+        }else{
+            LocalDateTime dateTime = validDate.get(0);
+            historyOfSP500 = assetHistoryRepository.findRecentHistoryOfAsset(sp500, dateTime)
+                .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
+        }
 
         // 그 날 기준 sp500을 몇 개 살 수 있었는지 찾는다
         Double quantityOfSP500 = firstValuation / historyOfSP500.getPrice();
@@ -398,6 +411,8 @@ public class PortfolioServiceImpl implements PortfolioService{
                     .valuation(valuation)
                     .sp500Valuation(sp500Valuation)
                     .build());
+
+
             });
 
         PortfolioValuationDto data = PortfolioValuationDto.builder()
@@ -1381,6 +1396,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
 
         // 유저의 과거 포트폴리오 내역이 존재할 경우, benchMark를 업데이트한다
+        Map<LocalDateTime,Double> BeforeValuationPerDate = new HashMap<>();
         if (!myPortfolioList.isEmpty()) {
             Portfolio latestPortfolio = myPortfolioList.get(0);
             // 1-2. AssetList 구하기
@@ -1402,77 +1418,29 @@ public class PortfolioServiceImpl implements PortfolioService{
             LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
             // 포트폴리오의 성과 지표를 저장하는 list
             List<Performance> performances = new ArrayList<>();
-            // 틱은 30개로 설정
+
+
+            // 이제 자산별로 해당 날짜에 해당하는 valuation을 누적해야한다
             for(int idx = 0;idx < assetList.size();idx++){
                 Asset asset = assetList.get(idx);
+                Double purchaseQuantity = Double.valueOf(purchaseQuantityList.get(idx));
 
-                List<LocalDateTime> cachedValidDates = redisHashRepository.getCachedValidDates(asset.getCode(),timeInterval.toString());
-                if(ObjectUtils.isEmpty(cachedValidDates)){ // 캐싱된 결과가 없는 경우, 직접 찾아야 한다
-                    List<LocalDateTime> validDates = new ArrayList<>();
-                    for(int dDate = 30;dDate>=1;dDate--){
-                        LocalDateTime targetDate = dateUtil.getPastDate(recentDate,timeInterval,dDate);
-                        // 자산에 대해서 유효한 영업일을 찾는다
-                        List<LocalDateTime> validDate = assetHistoryService.getValidDate(asset, targetDate, 1);
-
-                        AssetHistory assetHistory;
-                        if(validDate.isEmpty()){ // 유효한 날짜가 없는 경우, 그 자산의 가장 오래된 가격을 가지는 assetHistory생성
-                            assetHistory = AssetHistory.builder()
-                                .asset(asset)
-                                .price(asset.getOldestPrice())
-                                .date(targetDate)
-                                .build();
-
-                            validDates.add(null);
-                        }
-                        else{ // 유효한 날짜가 있는 경우, 해당 날짜로 가격 기록을 가지고온다
-                            LocalDateTime dateTime = validDate.get(0);
-                            assetHistory = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime)
-                                .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
-
-                            validDates.add(dateTime);
-                        }
-
-                        // 자산의 valuation을 계산한다
-                        double valuation = assetHistory.getPrice() * purchaseQuantityList.get(idx);
-
-                        performances.add(Performance.builder()
-                            .time(targetDate)
-                            .valuation(valuation)
-                            .build());
-                    }
-
-                    // redis 캐싱에 추가
-                    LocalDateTime now = LocalDateTime.now();
-                    LocalDateTime midNight = now.toLocalDate().atTime(LocalTime.MIDNIGHT).plusDays(1);
-
-                    Duration durationUntilMidnight = Duration.between(now,midNight);
-                    long ttlInSeconds = durationUntilMidnight.getSeconds();
-                    redisHashRepository.cacheValidDates(asset.getCode(),timeInterval.toString(),validDates,ttlInSeconds);
-
-                }
-                else{ // 이미 캐싱된 결과가 있는 경우 -> 그 자산에 대해 해당 날짜 단위로 이미 유효한 영업일을 가지고 있다는 것
-                    for (int dDate = 30; dDate >= 1; dDate--) {
-                        LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
-                        LocalDateTime dateTime = cachedValidDates.get(30 - dDate); // 캐시된 유효 날짜 가져오기
-
-                        if(ObjectUtils.isEmpty(dateTime)) { // dateTime이 null인 경우 -> 가장 오래된 값 반환
-                            performances.add(Performance.builder()
-                                .time(targetDate)
-                                .valuation(asset.getOldestPrice())
-                                .build());
-                        }else{
-                            AssetHistory assetHistory = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime)
-                                .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
-
-                            double valuation = assetHistory.getPrice() * purchaseQuantityList.get(idx);
-                            performances.add(Performance.builder()
-                                .time(targetDate)
-                                .valuation(valuation)
-                                .build());
-                        }
-                    }
-                }
+                calculateBackTestValuation(timeInterval,asset,recentDate,purchaseQuantity,BeforeValuationPerDate);
             }
+
+            // 이제 map을 돌면서 performance 객체를 만들어서 리스트에 넣는다
+            BeforeValuationPerDate.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())  // LocalDateTime 기준으로 오름차순 정렬
+                .forEach(entry -> {
+                    LocalDateTime targetDate = entry.getKey();
+                    Double valuation = entry.getValue();
+                    performances.add(Performance.builder()
+                        .time(targetDate)
+                        .valuation(valuation)
+                        .build());
+
+
+                });
             benchMark = PortfolioValuationDto.builder()
                 .portfolioId(latestPortfolio.getId())
                 .timeInterval(timeInterval)
@@ -1493,7 +1461,6 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 참고로, findAllById를 하면 id가 정렬된 순서로 나온다
         List<Asset> assetList = assetRepository.findAllById(assetIdList);
 
-
         // 2-3. 유저가 각 자산에 대해 산 수량 정보(purchaseQuantityList)를 구하기
         List<Integer> purchaseQuantityList = recommendAssetInfoList.stream()
             .map(RecommendAssetInfo::purchaseNum)
@@ -1502,82 +1469,37 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 2-4. 포트폴리오 백테스팅 결과 저장
         LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
 
+
+
         List<Performance> performances = new ArrayList<>();
-
-        // 이 부분을 캐싱을 해보자
-        // 캐싱은 <종목코드,<날짜단위,validDate>> 의 식으로 해보자
-        // ex) <AAPL,<MONTH,[24.09.05,24.08.05, ...]>>
-
+        Map<LocalDateTime,Double> RecentValuationPerDate = new HashMap<>();
         for(int idx = 0;idx < assetList.size();idx++){
             Asset asset = assetList.get(idx);
-
-            List<LocalDateTime> cachedValidDates = redisHashRepository.getCachedValidDates(asset.getCode(),timeInterval.toString());
-            if(ObjectUtils.isEmpty(cachedValidDates)){ // 캐싱된 결과가 없는 경우, 직접 찾아야 한다
-                List<LocalDateTime> validDates = new ArrayList<>();
-                for(int dDate = 30;dDate>=1;dDate--){
-                    LocalDateTime targetDate = dateUtil.getPastDate(recentDate,timeInterval,dDate);
-                    // 자산에 대해서 유효한 영업일을 찾는다
-                    List<LocalDateTime> validDate = assetHistoryService.getValidDate(asset, targetDate, 1);
-
-                    AssetHistory assetHistory;
-                    if(validDate.isEmpty()){ // 유효한 날짜가 없는 경우, 그 자산의 가장 오래된 가격을 가지는 assetHistory생성
-                        assetHistory = AssetHistory.builder()
-                            .asset(asset)
-                            .price(asset.getOldestPrice())
-                            .date(targetDate)
-                            .build();
-
-                        validDates.add(null);
-                    }
-                    else{ // 유효한 날짜가 있는 경우, 해당 날짜로 가격 기록을 가지고온다
-                        LocalDateTime dateTime = validDate.get(0);
-                        assetHistory = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime)
-                            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
-
-                        validDates.add(dateTime);
-                    }
-
-                    // 자산의 valuation을 계산한다
-                    double valuation = assetHistory.getPrice() * purchaseQuantityList.get(idx);
-
-                    performances.add(Performance.builder()
-                        .time(targetDate)
-                        .valuation(valuation)
-                        .build());
-                }
-
-                // redis 캐싱에 추가
-                LocalDateTime now = LocalDateTime.now();
-                LocalDateTime midNight = now.toLocalDate().atTime(LocalTime.MIDNIGHT).plusDays(1);
-
-                Duration durationUntilMidnight = Duration.between(now,midNight);
-                long ttlInSeconds = durationUntilMidnight.getSeconds();
-                redisHashRepository.cacheValidDates(asset.getCode(),timeInterval.toString(),validDates,ttlInSeconds);
-
-            }
-            else{ // 이미 캐싱된 결과가 있는 경우 -> 그 자산에 대해 해당 날짜 단위로 이미 유효한 영업일을 가지고 있다는 것
-                for (int dDate = 30; dDate >= 1; dDate--) {
-                    LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
-                    LocalDateTime dateTime = cachedValidDates.get(30 - dDate); // 캐시된 유효 날짜 가져오기
-
-                    if(ObjectUtils.isEmpty(dateTime)) { // dateTime이 null인 경우 -> 가장 오래된 값 반환
-                        performances.add(Performance.builder()
-                            .time(targetDate)
-                            .valuation(asset.getOldestPrice())
-                            .build());
-                    }else{
-                        AssetHistory assetHistory = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime)
-                            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
-
-                        double valuation = assetHistory.getPrice() * purchaseQuantityList.get(idx);
-                        performances.add(Performance.builder()
-                            .time(targetDate)
-                            .valuation(valuation)
-                            .build());
-                    }
-                }
-            }
+            Double purchaseQuantity = Double.valueOf(purchaseQuantityList.get(idx));
+            calculateBackTestValuation(timeInterval,asset,recentDate,purchaseQuantity,RecentValuationPerDate);
         }
+
+        // 이제 map을 돌면서 performance 객체를 만들어서 리스트에 넣는다
+        // 포트폴리오의 첫 targetDate 가지고온다
+        LocalDateTime firstDate = dateUtil.getPastDate(recentDate,timeInterval,30);
+
+        // 그 date의 valuation을 가지고 온다
+        Double firstValuation = BeforeValuationPerDate.get(firstDate);
+        Double RecentfirstValuation = RecentValuationPerDate.get(firstDate);
+
+        Double initialRatio = firstValuation / RecentfirstValuation;
+
+        RecentValuationPerDate.entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())  // LocalDateTime 기준으로 오름차순 정렬
+            .forEach(entry -> {
+                LocalDateTime targetDate = entry.getKey();
+				Double valuation = entry.getValue() * initialRatio;
+                performances.add(Performance.builder()
+                    .time(targetDate)
+                    .valuation(valuation)
+                    .build());
+            });
+
         PortfolioValuationDto portfolioValuation = PortfolioValuationDto.builder()
             .portfolioId("new portfolio")
             .timeInterval(timeInterval)
