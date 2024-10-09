@@ -110,7 +110,7 @@ const PortfolioDetailPage = () => {
 	);
 
 	return (
-		<Stack spacing={2} sx={{ backgroundColor: colors.background.primary }}>
+		<Stack spacing={2}>
 			{/* StockAddBox에 항상 최신 포트폴리오의 추천 종목 전달 */}
 			{latestPortfolioData &&
 				latestPortfolioData.portfolio.recommendAssets && (

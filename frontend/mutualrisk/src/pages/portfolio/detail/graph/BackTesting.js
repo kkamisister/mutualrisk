@@ -49,6 +49,7 @@ const BackTesting = ({
 					selectedResponse.performances.map(item => ({
 						time: new Date(item.time).toISOString().split('T')[0],
 						selectedValuation: item.valuation,
+						sp500Valuation: item.sp500Valuation,
 					}));
 
 				let latestPortfolioPerformances = [];
@@ -82,6 +83,7 @@ const BackTesting = ({
 						acc.push({
 							time: selectedItem.time,
 							selectedValuation: selectedItem.selectedValuation,
+							sp500Valuation: selectedItem.sp500Valuation,
 							latestValuation: matchingLatestItem
 								? matchingLatestItem.latestValuation
 								: null,
@@ -172,12 +174,20 @@ const BackTesting = ({
 					<Tooltip formatter={value => `${formatCurrency(value)}`} />
 					<Legend />
 					{latestPortfolioId === portfolioId ? (
-						<Line
-							type="monotone"
-							dataKey="selectedValuation"
-							name="현재 포트폴리오 평가 가치"
-							stroke="#82ca9d"
-						/>
+						<>
+							<Line
+								type="monotone"
+								dataKey="selectedValuation"
+								name="현재 포트폴리오 평가 가치"
+								stroke="#82ca9d"
+							/>
+							<Line
+								type="monotone"
+								dataKey="sp500Valuation"
+								name="S&P 500 평가 가치"
+								stroke="#8884d8"
+							/>
+						</>
 					) : (
 						<>
 							<Line
