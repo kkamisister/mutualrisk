@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Stack, Typography } from '@mui/material';
+import { TextField, Stack, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import TitleDivider from 'components/title/TitleDivider';
 import RebalanceDetail from 'pages/portfolio/rebalance/result/detail/RebalanceDetail';
@@ -12,6 +12,11 @@ import ConfirmModal from 'pages/portfolio/rebalance/result/modal/ConfirmModal';
 const RebalanceResultPage = () => {
 	const navigate = useNavigate();
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [inputContent, setInputContent] = useState('');
+
+	const handleInputChange = e => {
+		setInputContent(e.target.value);
+	};
 
 	const stockData = [
 		{
@@ -24,7 +29,6 @@ const RebalanceResultPage = () => {
 			rebalancedShares: '19',
 			change: 5,
 		},
-		// 추가 데이터
 	];
 
 	const handleModalOpen = () => {
@@ -37,7 +41,6 @@ const RebalanceResultPage = () => {
 
 	const handleSavePortfolioName = name => {
 		console.log('저장된 포트폴리오 이름:', name);
-		// 저장 로직 구현
 		navigate('/rebalance/result');
 	};
 
@@ -54,7 +57,7 @@ const RebalanceResultPage = () => {
 				<BackTestChart />
 			</Stack>
 			<Stack
-				direction={'row'}
+				direction="row"
 				sx={{
 					height: '50px',
 					backgroundColor: colors.background.box,
@@ -78,25 +81,35 @@ const RebalanceResultPage = () => {
 						width: '150px',
 						height: '45px',
 						backgroundColor: colors.main.primary400,
-						border: 'none',
 						color: '#FFFFFF',
 						padding: '10px 20px',
 						fontSize: '16px',
 						fontWeight: 'bold',
 						borderRadius: '5px',
-						textAlign: 'left', // 버튼 텍스트 좌측 정렬
+						textAlign: 'left',
 						'&:hover': {
 							backgroundColor: colors.main.primary200,
 						},
 					}}
 					onClick={handleModalOpen}
-					text={'리밸런싱 적용'}></CustomButton>
+					text="리밸런싱 적용"
+				/>
 			</Stack>
 			<ConfirmModal
+				modalTitle="포트폴리오 이름"
+				modalLabel="신규 포트폴리오 이름을 입력해주세요"
+				nextButton="저장"
 				open={isModalOpen}
 				handleClose={handleModalClose}
-				handleSave={handleSavePortfolioName}
-			/>
+				handleSave={handleSavePortfolioName}>
+				<TextField
+					label="신규 포트폴리오 이름을 입력해주세요"
+					variant="outlined"
+					fullWidth
+					value={inputContent}
+					onChange={handleInputChange}
+				/>
+			</ConfirmModal>
 		</Stack>
 	);
 };

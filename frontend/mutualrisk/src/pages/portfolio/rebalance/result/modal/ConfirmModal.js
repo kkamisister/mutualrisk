@@ -1,23 +1,19 @@
 import React, { useState } from 'react';
-import {
-	Modal,
-	Box,
-	Typography,
-	TextField,
-	Button,
-	Stack,
-} from '@mui/material';
+import { Modal, Box, Typography, Button, Stack } from '@mui/material';
 import { colors } from 'constants/colors';
 
-const ConfirmModal = ({ open, handleClose, handleSave }) => {
-	const [portfolioName, setPortfolioName] = useState('');
-
-	const handleInputChange = e => {
-		setPortfolioName(e.target.value);
-	};
+const ConfirmModal = ({
+	modalTitle,
+	nextButton,
+	open,
+	handleClose,
+	handleSave,
+	children,
+}) => {
+	const [inputContent, setInputContent] = useState('');
 
 	const handleSaveClick = () => {
-		handleSave(portfolioName);
+		handleSave(inputContent);
 		handleClose();
 	};
 
@@ -36,19 +32,10 @@ const ConfirmModal = ({ open, handleClose, handleSave }) => {
 					p: 4,
 				}}>
 				<Stack spacing={2}>
-					<Typography
-						variant="h6"
-						component="h2"
-						sx={{ fontWeight: 'normal' }}>
-						포트폴리오 이름
+					<Typography variant="h6" sx={{ fontWeight: 'normal' }}>
+						{modalTitle}
 					</Typography>
-					<TextField
-						label="포트폴리오 이름을 입력해주세요"
-						variant="outlined"
-						fullWidth
-						value={portfolioName}
-						onChange={handleInputChange}
-					/>
+					{children}
 					<Stack direction="row" spacing={2} justifyContent="flex-end">
 						<Button variant="outlined" onClick={handleClose}>
 							취소
@@ -57,7 +44,7 @@ const ConfirmModal = ({ open, handleClose, handleSave }) => {
 							variant="contained"
 							onClick={handleSaveClick}
 							sx={{ backgroundColor: colors.main.primary400 }}>
-							저장
+							{nextButton}
 						</Button>
 					</Stack>
 				</Stack>

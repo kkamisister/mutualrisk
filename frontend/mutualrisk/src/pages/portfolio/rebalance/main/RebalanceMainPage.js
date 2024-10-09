@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Stack, Box, Typography } from '@mui/material';
+import {
+	Modal,
+	TextField,
+	Button,
+	Stack,
+	Box,
+	Typography,
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import TitleDivider from 'components/title/TitleDivider';
 import PortfolioPieChart from 'pages/portfolio/rebalance/main/piechart/PortfolioPieChart';
@@ -13,15 +20,18 @@ import {
 	fetchPortfolioList,
 	fetchPortfolioByPorfolioId,
 } from 'utils/apis/analyze';
+import ConfirmModal from 'pages/portfolio/rebalance/result/modal/ConfirmModal';
 import { colors } from 'constants/colors';
 
 const RebalanceMainPage = () => {
 	const navigate = useNavigate();
 	const [hoveredIndex, setHoveredIndex] = useState(null);
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [inputContent, setInputContent] = useState('');
+	const [displayValue, setDisplayValue] = useState('');
+	const [error, setError] = useState(false);
 	const queryClient = useQueryClient();
 	let latestPortfolio = queryClient.getQueryData('latestPortfolio');
-	const latestPortfolioId = latestPortfolio?.portfolioId;
-	const version = latestPortfolio?.version;
 
 	const { data: portfolioListData, isLoading: isListLoading } = useQuery({
 		queryKey: ['portfolioList'],
@@ -38,6 +48,41 @@ const RebalanceMainPage = () => {
 			}
 		},
 	});
+
+	const handleModalOpen = () => {
+		setIsModalOpen(true);
+	};
+
+	const handleModalClose = () => {
+		setIsModalOpen(false);
+		setInputContent('');
+		setDisplayValue('');
+		setError(false);
+	};
+
+	const handleInputChange = e => {
+		const value = e.target.value.replace(/,/g, '');
+		setDisplayValue(e.target.value);
+
+		if (/^\d*$/.test(value) && Number(value) >= 0) {
+			setInputContent(value === '' ? '' : Number(value).toLocaleString());
+			setError(false);
+		} else {
+			setError(true);
+		}
+	};
+
+	const handleAmountClick = amount => {
+		const currentValue = parseInt(inputContent.replace(/,/g, ''), 10) || 0;
+		const newValue = currentValue + amount;
+		setInputContent(newValue.toLocaleString());
+		setDisplayValue(newValue.toLocaleString());
+	};
+
+	const handleSave = name => {
+		console.log('추가한 자산:', name);
+		navigate('/rebalance/result');
+	};
 
 	const finalPortfolioId =
 		latestPortfolio?.portfolioId || portfolioListData?.portfolioList?.[0]?.id;
@@ -64,14 +109,8 @@ const RebalanceMainPage = () => {
 		console.log('Portfolio version:', finalVersion);
 	}, [finalVersion]);
 
-	if (isLoading || isListLoading) {
-		return <div>Loading...</div>;
-	}
-
-	if (isError) {
-		// return <div>Error loading portfolio data.</div>;
-		return <div></div>;
-	}
+	if (isLoading || isListLoading) return <div>Loading...</div>;
+	if (isError) return <div></div>;
 
 	return (
 		<Stack
@@ -121,11 +160,9 @@ const RebalanceMainPage = () => {
 					sx={{
 						width: '100%',
 						height: '100%',
-						maxHeight: '100%',
 						display: 'flex',
 						justifyContent: 'space-evenly',
 						alignItems: 'center',
-						flexWrap: 'nowrap',
 					}}>
 					<WidgetContainer sx={{ flexWrap: 'nowrap' }}>
 						<Box
@@ -178,19 +215,57 @@ const RebalanceMainPage = () => {
 						width: '200px',
 						height: '45px',
 						backgroundColor: colors.main.primary400,
-						border: 'none',
 						color: '#FFFFFF',
-						padding: '10px 20px',
 						fontSize: '16px',
 						fontWeight: 'bold',
 						borderRadius: '5px',
-						textAlign: 'left',
 						'&:hover': { backgroundColor: colors.main.primary200 },
 					}}
-					onClick={() => navigate('/rebalance/result')}
+					onClick={handleModalOpen}
 					text="포트폴리오 리밸런싱"
 				/>
 			</Stack>
+			<ConfirmModal
+				modalTitle="추가 자산 입력"
+				modalLabel="추가할 자산을 입력해주세요"
+				nextButton="리밸런싱 진행"
+				open={isModalOpen}
+				handleClose={handleModalClose}
+				handleSave={handleSave}>
+				<Stack spacing={2}>
+					<TextField
+						label="자산 (원)"
+						variant="outlined"
+						fullWidth
+						value={displayValue}
+						onChange={handleInputChange}
+						error={error}
+						helperText={error ? '유효한 자산 금액을 입력하세요' : ''}
+					/>
+					<Stack direction="row" spacing={1}>
+						<Button
+							variant="outlined"
+							onClick={() => handleAmountClick(10000)}>
+							1만 원
+						</Button>
+						<Button
+							variant="outlined"
+							onClick={() => handleAmountClick(100000)}>
+							10만 원
+						</Button>
+						<Button
+							variant="outlined"
+							onClick={() => handleAmountClick(1000000)}>
+							100만 원
+						</Button>
+						<Button
+							variant="outlined"
+							onClick={() => handleAmountClick(10000000)}>
+							1000만 원
+						</Button>
+					</Stack>
+				</Stack>
+			</ConfirmModal>
 		</Stack>
 	);
 };
