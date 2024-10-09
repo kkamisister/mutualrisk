@@ -33,6 +33,18 @@ const RebalanceMainPage = () => {
 	const queryClient = useQueryClient();
 	let latestPortfolio = queryClient.getQueryData('latestPortfolio');
 
+	const formatDate = dateString => {
+		const date = new Date(dateString);
+		return date
+			.toLocaleDateString('ko-KR', {
+				year: 'numeric',
+				month: '2-digit',
+				day: '2-digit',
+			})
+			.replace(/\./g, '/') // 점(.)을 슬래시(/)로 바꿈
+			.replace(/\/$/, ''); // 날짜 끝에 '/'가 붙지 않도록 제거
+	};
+
 	const { data: portfolioListData, isLoading: isListLoading } = useQuery({
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
@@ -43,6 +55,7 @@ const RebalanceMainPage = () => {
 				queryClient.setQueryData('latestPortfolio', {
 					portfolioId: latest.id,
 					version: latest.version,
+					createdAt: latest.createdAt,
 				});
 				latestPortfolio = latest;
 			}
@@ -89,6 +102,9 @@ const RebalanceMainPage = () => {
 	const finalVersion =
 		latestPortfolio?.version ||
 		portfolioListData?.portfolioList?.[0]?.version;
+	const finalCreatedAt =
+		latestPortfolio?.createdAt ||
+		portfolioListData?.portfolioList?.[0]?.createdAt;
 
 	const {
 		data: portfolioData,
@@ -151,7 +167,8 @@ const RebalanceMainPage = () => {
 							color: '#FFFFFF',
 							textAlign: 'center',
 						}}>
-						최근 리밸런싱 : 2024/08/30
+						최근 리밸런싱:{' '}
+						{finalCreatedAt ? formatDate(finalCreatedAt) : 'N/A'}
 					</Typography>
 				</Box>
 				<Stack
