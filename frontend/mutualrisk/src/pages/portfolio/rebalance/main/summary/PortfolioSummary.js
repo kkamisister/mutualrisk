@@ -19,7 +19,7 @@ const renderRiskBox = (rank, total, title) => {
 	}
 
 	return (
-		<PortfolioSummaryListItem title={title}>
+		<PortfolioSummaryListItem title={title} sx={{ height: '85px' }}>
 			<Stack
 				spacing={0.5}
 				direction="column"
@@ -63,7 +63,8 @@ const PortfolioSummary = ({ version }) => {
 	});
 
 	if (isLoading) return <div>Loading...</div>;
-	if (isError || !data) return <div>Error loading portfolio summary.</div>;
+	// if (isError || !data) return <div>Error loading portfolio summary.</div>;
+	if (isError || !data) return <div></div>;
 
 	const {
 		curValuation,
@@ -88,7 +89,9 @@ const PortfolioSummary = ({ version }) => {
 				}}>
 				<Grid container spacing={1} sx={{ marginTop: '20px' }}>
 					<Grid item xs={6}>
-						<PortfolioSummaryListItem title="평가 금액">
+						<PortfolioSummaryListItem
+							title="평가 금액"
+							sx={{ height: '85px' }}>
 							<Typography
 								sx={{
 									fontSize: '18px',
@@ -100,7 +103,9 @@ const PortfolioSummary = ({ version }) => {
 						</PortfolioSummaryListItem>
 					</Grid>
 					<Grid item xs={6}>
-						<PortfolioSummaryListItem title="예상 수익률">
+						<PortfolioSummaryListItem
+							title="예상 수익률"
+							sx={{ height: '85px' }}>
 							<Typography
 								sx={{
 									lineHeight: '1.2',
@@ -121,7 +126,9 @@ const PortfolioSummary = ({ version }) => {
 						</PortfolioSummaryListItem>
 					</Grid>
 					<Grid item xs={6}>
-						<PortfolioSummaryListItem title="위험률 대비 수익률">
+						<PortfolioSummaryListItem
+							title="위험률 대비 수익률"
+							sx={{ height: '85px' }}>
 							<Typography
 								sx={{
 									fontSize: '18px',

@@ -18,39 +18,33 @@ import { colors } from 'constants/colors';
 const RebalanceMainPage = () => {
 	const navigate = useNavigate();
 	const [hoveredIndex, setHoveredIndex] = useState(null);
-
-	// 캐싱된 최신 포트폴리오 정보
 	const queryClient = useQueryClient();
 	let latestPortfolio = queryClient.getQueryData('latestPortfolio');
 	const latestPortfolioId = latestPortfolio?.portfolioId;
 	const version = latestPortfolio?.version;
 
-	// 만약 캐싱된 데이터가 없을 경우 새로 요청
 	const { data: portfolioListData, isLoading: isListLoading } = useQuery({
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
-		enabled: !latestPortfolio, // 캐싱된 데이터가 없을 때만 실행
+		enabled: !latestPortfolio,
 		onSuccess: data => {
-			// 최신 포트폴리오 캐싱
 			if (!latestPortfolio) {
 				const latest = data.portfolioList?.[0];
 				queryClient.setQueryData('latestPortfolio', {
 					portfolioId: latest.id,
 					version: latest.version,
 				});
-				latestPortfolio = latest; // 새로 요청한 데이터를 설정
+				latestPortfolio = latest;
 			}
 		},
 	});
 
-	// 새로 캐싱된 latestPortfolio 값을 사용하도록 함
 	const finalPortfolioId =
 		latestPortfolio?.portfolioId || portfolioListData?.portfolioList?.[0]?.id;
 	const finalVersion =
 		latestPortfolio?.version ||
 		portfolioListData?.portfolioList?.[0]?.version;
 
-	// portfolioId로 API 호출을 통해 데이터를 가져옴
 	const {
 		data: portfolioData,
 		isLoading,
@@ -58,7 +52,7 @@ const RebalanceMainPage = () => {
 	} = useQuery({
 		queryKey: ['portfolio', finalPortfolioId],
 		queryFn: () => fetchPortfolioByPorfolioId(finalPortfolioId),
-		enabled: !!finalPortfolioId, // portfolioId가 있을 때만 호출
+		enabled: !!finalPortfolioId,
 		staleTime: 300000,
 		refetchOnWindowFocus: false,
 	});
@@ -75,7 +69,8 @@ const RebalanceMainPage = () => {
 	}
 
 	if (isError) {
-		return <div>Error loading portfolio data.</div>;
+		// return <div>Error loading portfolio data.</div>;
+		return <div></div>;
 	}
 
 	return (
@@ -121,14 +116,14 @@ const RebalanceMainPage = () => {
 					</Typography>
 				</Box>
 				<Stack
-					spacing={2}
+					spacing={1}
 					direction="row"
 					sx={{
 						width: '100%',
 						height: '100%',
 						maxHeight: '100%',
 						display: 'flex',
-						justifyContent: 'space-between',
+						justifyContent: 'space-evenly',
 						alignItems: 'center',
 						flexWrap: 'nowrap',
 					}}>
@@ -154,7 +149,6 @@ const RebalanceMainPage = () => {
 						</Box>
 					</WidgetContainer>
 
-					{/* PortfolioSummary는 version 값이 있을 때만 렌더링 */}
 					{finalVersion ? (
 						<PortfolioSummary version={finalVersion} />
 					) : (

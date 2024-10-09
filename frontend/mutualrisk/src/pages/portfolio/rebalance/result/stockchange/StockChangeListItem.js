@@ -72,7 +72,7 @@ const StockChangeListItem = ({ stock }) => {
 				direction="column"
 				alignItems="start"
 				sx={{
-					// flex: 1,
+					flex: 1,
 					height: '60px',
 					minWidth: '150px',
 					justifyContent: 'center',

@@ -81,7 +81,8 @@ const PortfolioSummaryList = ({ ver }) => {
 	}, [data]);
 
 	if (isError || !data) {
-		return <div>Error loading portfolio summary.</div>;
+		// return <div>Error loading portfolio summary.</div>;
+		return <div></div>;
 	}
 
 	const {
@@ -140,6 +141,37 @@ const PortfolioSummaryList = ({ ver }) => {
 						</span>
 					</Typography>
 				</PortfolioSummaryListItem>
+
+				{/* 예상 수익률 박스 */}
+				{lastValuation !== null && (
+					<PortfolioSummaryListItem title="예상 수익률">
+						<Typography sx={{ lineHeight: '1.2' }}>
+							<span style={{ fontSize: '8px', color: 'gray' }}>
+								매도 가치 기준
+							</span>
+							<br />
+							<span
+								style={{
+									fontSize: '15px',
+									fontWeight: 'bold',
+									color:
+										lastValuation - initValuation > 0
+											? 'red'
+											: 'blue',
+									marginRight: '3px',
+								}}>
+								{lastValuation - initValuation > 0 ? '+' : ''}
+								{(lastValuation - initValuation).toLocaleString()}원 (
+								{lastValuation - initValuation > 0 ? '+' : ''}
+								{(
+									((lastValuation - initValuation) / initValuation) *
+									100
+								).toFixed(1)}
+								%)
+							</span>
+						</Typography>
+					</PortfolioSummaryListItem>
+				)}
 
 				{/* 위험률 대비 수익률 박스 */}
 				<PortfolioSummaryListItem title="위험률 대비 수익률">

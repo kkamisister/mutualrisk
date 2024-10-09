@@ -76,11 +76,11 @@ const RebalanceBefore = () => {
 						<XAxis type="number" />
 						<YAxis type="category" dataKey="name" />
 						<Tooltip />
-						<Legend />
+						{/* <Legend /> */}
 						<CartesianGrid strokeDasharray="3 3" />
 						<Bar
 							dataKey="value"
-							name="%"
+							name="비율"
 							fill={colors.main.primary500}
 							background={{ fill: '#eee' }}
 						/>
