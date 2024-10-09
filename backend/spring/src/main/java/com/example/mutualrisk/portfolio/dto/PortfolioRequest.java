@@ -71,20 +71,6 @@ public record PortfolioRequest() {
 
 	}
 
-
-	@Builder
-	@Schema(name = "포트폴리오 제작 fastapi를 호출할 때 필요한 요청 정보를 넣는다")
-	public record PortfolioRequestDto(
-		List<Double> expectedReturns,
-		List<List<Double>> pricesDataFrame,
-		List<Double> lowerBounds,
-		List<Double> upperBounds,
-		List<Asset> findAssets,
-		List<Double> exactProportion
-		) {
-
-	}
-
 	@Builder
 	@Schema(name = "계산된 비중을 기반으로 새로운 자산추천을 요청하는 DTO")
 	public record RecommendAssetRequestDto(
@@ -99,6 +85,23 @@ public record PortfolioRequest() {
 
 		List<RecommendAssetInfo> newPortfolioAssetInfoList
 	){
+
+	}
+
+	/**
+	 * fastAPI
+	 */
+	@Builder
+	@Schema(name = "포트폴리오 제작 fastapi를 호출할 때 필요한 요청 정보를 넣는다")
+	public record PortfolioRequestDto(
+		List<Double> expectedReturns,
+//		List<List<Double>> pricesDataFrame,
+		Double[][] covMatrix,
+		List<Double> lowerBounds,
+		List<Double> upperBounds,
+		List<Double> exactProportion,
+		List<Asset> findAssets
+	) {
 
 	}
 
