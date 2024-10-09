@@ -8,7 +8,12 @@ const AssetList = ({ assets, hoveredIndex }) => {
 			sx={{
 				height: '400px',
 				position: 'relative',
-				overflowY: 'auto', // 세로 스크롤 적용
+				overflowY: 'auto',
+				'&::-webkit-scrollbar': {
+					display: 'none',
+				},
+				scrollbarWidth: 'none',
+				msOverflowStyle: 'none',
 			}}>
 			<Box
 				sx={{
@@ -21,7 +26,7 @@ const AssetList = ({ assets, hoveredIndex }) => {
 						<AssetListItem
 							key={index}
 							asset={asset}
-							highlight={hoveredIndex === index} // 현재 hover된 항목 강조
+							highlight={hoveredIndex === index}
 						/>
 					))}
 				</Box>
