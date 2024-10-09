@@ -210,6 +210,10 @@ public class FundServiceImpl implements FundService {
 			.sorted(Comparator.comparing(FundAsset::getValueOfHolding).reversed())
 			.toList();
 
+		long sum = fundAssets.stream()
+			.mapToLong(FundAsset::getValueOfHolding)
+			.sum();
+
 		for (FundAsset fundAsset : fundAssets) {
 			// 자산과 FundAsset을 매핑하여 해당 자산의 Sector를 찾음
 			Optional<Sector> sector = assets.stream()
@@ -224,7 +228,7 @@ public class FundServiceImpl implements FundService {
 				sectorIdMap.put(sectorName,sector.get().getId());
 			} else {
 				// 자산이 없을 경우, 이름이 "기타"인 자산을 따로 처리
-				sectorValueMap.put("기타자산 및 채권",fundAsset.getValueOfHolding());
+				sectorValueMap.put("기타자산 및 채권",sectorValueMap.getOrDefault("기타자산 및 채권", 0L) + fundAsset.getValueOfHolding());
 			}
 		}
 
@@ -232,7 +236,7 @@ public class FundServiceImpl implements FundService {
 		// 비율은, 각 섹터별 [Holding / (전체 valueOfHoldings)] * 100.0 으로 정의한다
 		Long valueOfHoldings = fund.getValueOfHoldings();
 		List<SectorInfo> sectorWeights = sectorValueMap.entrySet().stream()
-			.map(entry -> getSectorInfo(entry, valueOfHoldings,sectorIdMap))
+			.map(entry -> getSectorInfo(entry, sum,sectorIdMap))
 			.collect(Collectors.toList());
 
 		// 이전 분기의 펀드를 가지고온다
