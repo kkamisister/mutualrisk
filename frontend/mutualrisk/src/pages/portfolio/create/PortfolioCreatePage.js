@@ -192,7 +192,12 @@ const PortfolioCreatePage = () => {
 										p: 1,
 										height: '100px',
 									}}>
-									<ShoppingBasketIcon color={colors.text.sub1} />
+									<ShoppingBasketIcon
+										sx={{
+											color: colors.text.sub2,
+											fontSize: '50px',
+										}}
+									/>
 									<Typography
 										sx={{
 											color: colors.text.main,

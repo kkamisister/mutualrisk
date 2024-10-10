@@ -81,7 +81,9 @@ const AssetConstraintList = ({ assets }) => {
 			queryClient.removeQueries('selectedAsset');
 			setIsRecommended(false);
 			// console.log('포트폴리오 제작 완료:', data);
-			navigate('/rebalance/result');
+			navigate('/rebalance/result', {
+				state: { newPortfolio: data },
+			});
 		},
 		onError: error => {
 			console.error('에러 발생:', error);
