@@ -3,7 +3,7 @@ import { PieChart, Pie, ResponsiveContainer, Cell, Sector } from 'recharts';
 import { colors } from 'constants/colors';
 
 const PortfolioPieChart = ({ assets, onHover }) => {
-	const [activeIndex, setActiveIndex] = useState(0);
+	const [activeIndex, setActiveIndex] = useState(1);
 
 	const onPieEnter = useCallback(
 		(_, index) => {
