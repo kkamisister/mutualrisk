@@ -17,6 +17,7 @@ import {
 import {
 	createRebalancePortfolio,
 	receiveRecommendAsset,
+	finalBackTest,
 } from 'utils/apis/rebalance';
 import { colors } from 'constants/colors';
 
@@ -137,23 +138,33 @@ const RebalanceMainPage = () => {
 
 			// 두 번째 API 호출
 			const recommendResponse = await recommendAsset(requestData);
-
 			console.log('추천 자산 요청 성공:', recommendResponse);
 
+			// 세 번째 API 호출
+			const backTestResponse = await finalBackTest(
+				newPortfolioAssetInfoList,
+				'day',
+				'profit'
+			);
+
+			console.log('백테스팅 요청 성공:', backTestResponse);
+
 			// 직렬화할 수 없는 데이터를 제외하고 navigate로 전달
-			const rebalanceResponseData = {
-				status: rebalanceData.status,
-				data: rebalanceData.data?.data, // 필요한 부분만 전달
-			};
-
-			const recommendResponseData = {
-				status: recommendResponse.status,
-				data: recommendResponse.data?.data, // 필요한 부분만 전달
-			};
-
-			// navigate로 직렬화 가능한 데이터만 전달
 			navigate('/rebalance/result', {
-				state: { rebalanceResponseData, recommendResponseData },
+				state: {
+					rebalanceResponseData: {
+						status: rebalanceData.status,
+						data: rebalanceData.data?.data, // 필요한 부분만 전달
+					},
+					recommendResponseData: {
+						status: recommendResponse.status,
+						data: recommendResponse.data?.data, // 필요한 부분만 전달
+					},
+					backTestResponseData: {
+						status: backTestResponse.status,
+						data: backTestResponse, // 백테스팅 결과 전달
+					},
+				},
 			});
 		} catch (error) {
 			console.error('리밸런싱 또는 추천 자산 요청 실패:', error);
