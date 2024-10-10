@@ -111,7 +111,7 @@ const StockChangeListItem = ({ stock }) => {
 					sx={{
 						fontSize: '18px',
 						fontWeight: 'bold',
-						color: colors.text.main,
+						color: colors.text.sub1,
 						marginRight: '10px',
 					}}>
 					{stock.rebalancedPrice.toLocaleString()}원
@@ -120,7 +120,7 @@ const StockChangeListItem = ({ stock }) => {
 					sx={{
 						color:
 							stock.change > 0
-								? 'red'
+								? colors.point.red
 								: stock.change < 0
 								? colors.main.primary500
 								: 'gray', // 0이면 회색
@@ -128,9 +128,9 @@ const StockChangeListItem = ({ stock }) => {
 						fontWeight: 'bold',
 					}}>
 					{stock.change > 0
-						? `+${stock.change.toLocaleString()}주`
+						? `+ ${stock.change.toLocaleString()}주`
 						: stock.change < 0
-						? `-${Math.abs(stock.change).toLocaleString()}주`
+						? `- ${Math.abs(stock.change).toLocaleString()}주`
 						: `${stock.change.toLocaleString()}주`}{' '}
 					{/* 0이면 부호 없이 표시 */}
 				</Typography>
