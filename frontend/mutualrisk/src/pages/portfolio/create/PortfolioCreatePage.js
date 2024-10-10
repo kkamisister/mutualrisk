@@ -42,7 +42,7 @@ const PortfolioCreatePage = () => {
 	const fetchRecommended = asset => {
 		if (asset) {
 			console.log('자산추천 받았다네', asset);
-			setIsRecommended();
+			setIsRecommended(true);
 			addAsset(asset);
 		}
 	};
@@ -53,19 +53,29 @@ const PortfolioCreatePage = () => {
 		}
 	}, [recommendedAsset]);
 
-	const { assets, updateAsset, updateTotalCash, setIsRecommended, addAsset } =
-		useAssetStore(state => ({
-			assets: state.assets,
-			updateAsset: state.updateAsset,
-			updateTotalCash: state.updateTotalCash,
-			setIsRecommended: state.setIsRecommended,
-			addAsset: state.addAsset,
-		}));
+	const {
+		assets,
+		updateAsset,
+		updateTotalCash,
+		setIsRecommended,
+		addAsset,
+		isRecommended,
+	} = useAssetStore(state => ({
+		assets: state.assets,
+		updateAsset: state.updateAsset,
+		updateTotalCash: state.updateTotalCash,
+		setIsRecommended: state.setIsRecommended,
+		addAsset: state.addAsset,
+		isRecommended: state.isRecommended,
+	}));
 
 	const { data: portfolioList } = useQuery({
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
 	});
+	useEffect(() => {
+		console.log('Updated assets:', assets);
+	}, [assets]);
 
 	const onItemsConfirm = () => {
 		setShowConstraint(true);
@@ -84,12 +94,16 @@ const PortfolioCreatePage = () => {
 		queryFn: () => {
 			return fetchPortfolioByPorfolioId(latestPortfolioId);
 		},
-		enabled: !!latestPortfolioId,
+		enabled: !!latestPortfolioId && !assets.length,
 	});
 
 	useEffect(() => {
 		if (latestPortfolio && latestPortfolio.portfolio) {
-			updateAsset(latestPortfolio.portfolio.assets);
+			if (isRecommended) {
+				addAsset(recommendedAsset);
+			} else {
+				updateAsset(latestPortfolio.portfolio.assets);
+			}
 		} else {
 			setIsDialogOpen(true);
 		}
