@@ -47,12 +47,3 @@ export const receiveRecommendAsset = async ({
 		newPortfolioAssetInfoList,
 	});
 };
-
-/**
- * 리밸런싱 포트폴리오 확정
- * @param {Object}  - API 문서 참조
- * @returns {Promise} - API 문서 참조
- */
-export const confirmRebalancePortfolio = async ({ assets, cash }) => {
-	return axiosInstance.post('/rebalance/final', { assets, cash });
-};
