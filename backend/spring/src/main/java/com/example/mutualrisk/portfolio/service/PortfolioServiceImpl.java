@@ -1031,7 +1031,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         for (RecommendAssetInfo recommendAssetInfo : newPortfolioAssetInfoList) {
 
-            ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.of(recommendAssetInfo,0);
+            ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.of(recommendAssetInfo,0, recommendAssetInfo.purchaseNum());
             changeAssetInfoList.add(changeAssetInfo);
         }
 
@@ -1072,7 +1072,7 @@ public class PortfolioServiceImpl implements PortfolioService{
                 newPurchaseNum = newAssetInfoMap.get(oldAssetInfo.assetId()).purchaseNum();
             }
 
-            ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.of(oldAssetInfo,newPurchaseNum);
+            ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.of(oldAssetInfo, oldAssetInfo.purchaseNum(), newPurchaseNum);
 
             changeAssetInfoList.add(changeAssetInfo);
         }
@@ -1090,7 +1090,8 @@ public class PortfolioServiceImpl implements PortfolioService{
                     oldPurchaseNum = oldAssetInfoMap.get(newAssetInfo.assetId()).purchaseNum();
                 }
 
-                ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.of(newAssetInfo,oldPurchaseNum);
+                ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.of(newAssetInfo, oldPurchaseNum,
+                    newAssetInfo.purchaseNum());
 
                 changeAssetInfoList.add(changeAssetInfo);
 
