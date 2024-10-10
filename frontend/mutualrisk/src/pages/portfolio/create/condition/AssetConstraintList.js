@@ -28,13 +28,13 @@ const AssetConstraintList = ({ assets }) => {
 	const navigate = useNavigate();
 	const [openDialog, setOpenDialog] = useState(false);
 	const [hasPortfolio, setHasPortfolio] = useState(false);
-	const { totalCash, addTotalCash, updateTotalCash } = useAssetStore(
-		state => ({
+	const { totalCash, addTotalCash, updateTotalCash, setIsRecommended } =
+		useAssetStore(state => ({
 			totalCash: state.totalCash,
 			addTotalCash: state.addTotalCash,
 			updateTotalCash: state.updateTotalCash,
-		})
-	);
+			setIsRecommended: state.setIsRecommended,
+		}));
 
 	const {
 		initialization,
@@ -79,6 +79,7 @@ const AssetConstraintList = ({ assets }) => {
 		mutationFn: createPortfolio,
 		onSuccess: data => {
 			queryClient.removeQueries('selectedAsset');
+			setIsRecommended(false);
 			// console.log('포트폴리오 제작 완료:', data);
 			navigate('/rebalance/result');
 		},
