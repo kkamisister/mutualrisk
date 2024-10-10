@@ -77,7 +77,7 @@ const BackTestChart = ({
 					<Line
 						type="monotone"
 						dataKey="portfolioValuation"
-						name="Portfolio Valuation"
+						name="리밸런싱 포트폴리오 평가가치"
 						stroke="#8884d8"
 					/>
 					{/* 예시: SP500과 비교하는 경우 */}
