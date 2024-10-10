@@ -3,17 +3,6 @@ import { Box, Typography, Avatar, Stack } from '@mui/material';
 import { colors } from 'constants/colors'; // 컬러 상수 불러오기
 import StockItemCard from 'components/card/StockItemCard';
 
-const stockInfoSample = {
-	title: '엔비디아',
-	market: 'NASDAQ',
-	symbol: 'NVDA',
-	price: 13.55,
-	fluctuateRate: 3.2,
-	fluctuatePrice: 0.66,
-	imageURL:
-		'https://thumb.tossinvest.com/image/resized/96x0/https%3A%2F%2Fstatic.toss.im%2Fpng-icons%2Fsecurities%2Ficn-sec-fill-NAS00208X-E0.png',
-};
-
 const StockChangeListItem = ({ stock }) => {
 	return (
 		<Stack
@@ -26,12 +15,11 @@ const StockChangeListItem = ({ stock }) => {
 				marginBottom: '15px',
 			}}>
 			{/* 좌측 주식 정보 */}
-
 			<StockItemCard
-				code={stockInfoSample.symbol}
-				name={stockInfoSample.title}
-				market={stockInfoSample.market}
-				image={stockInfoSample.imageURL}
+				code={stock.code}
+				name={stock.name}
+				market={stock.market}
+				image={stock.imageURL}
 				sx={{
 					height: '60px',
 					maxWidth: '300px',
@@ -124,7 +112,9 @@ const StockChangeListItem = ({ stock }) => {
 						fontSize: '20px',
 						fontWeight: 'bold',
 					}}>
-					{stock.change > 0 ? `+${stock.change}주` : `-${stock.change}주`}
+					{stock.change > 0
+						? `+${stock.change}주`
+						: `-${Math.abs(stock.change)}주`}
 				</Typography>
 			</Box>
 		</Stack>

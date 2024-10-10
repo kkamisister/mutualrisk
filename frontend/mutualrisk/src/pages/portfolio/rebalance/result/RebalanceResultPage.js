@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { TextField, Stack, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import TitleDivider from 'components/title/TitleDivider';
@@ -11,25 +11,20 @@ import ConfirmModal from 'pages/portfolio/rebalance/result/modal/ConfirmModal';
 
 const RebalanceResultPage = () => {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [inputContent, setInputContent] = useState('');
+
+	const { rebalanceResponseData, recommendResponseData, newPortfolioData } =
+		location.state || {};
+
+	console.log('리밸런싱 결과:', rebalanceResponseData);
+	console.log('추천 자산 결과:', recommendResponseData);
+	console.log('포트폴리오 제작 결과:', newPortfolioData);
 
 	const handleInputChange = e => {
 		setInputContent(e.target.value);
 	};
-
-	const stockData = [
-		{
-			name: '엔비디아',
-			ticker: 'NVDA(NASDAQ)',
-			imagePath: 'https://link-to-image/nvda.png',
-			currentPrice: '58,000',
-			currentShares: '14',
-			rebalancedPrice: '56,500',
-			rebalancedShares: '19',
-			change: 5,
-		},
-	];
 
 	const handleModalOpen = () => {
 		setIsModalOpen(true);
@@ -48,10 +43,10 @@ const RebalanceResultPage = () => {
 		<Stack spacing={2} sx={{ backgroundColor: colors.background.pcrimary }}>
 			<Stack spacing={1}>
 				<TitleDivider text="포트폴리오 리밸런싱" />
-				<RebalanceDetail />
+				<RebalanceDetail rebalanceData={rebalanceResponseData} />
 			</Stack>
 			<Stack spacing={1}>
-				<StockChangeList stocks={stockData} />
+				<StockChangeList rebalanceData={rebalanceResponseData} />
 			</Stack>
 			<Stack spacing={1}>
 				<BackTestChart />

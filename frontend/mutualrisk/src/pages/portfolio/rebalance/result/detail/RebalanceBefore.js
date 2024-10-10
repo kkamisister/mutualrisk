@@ -7,56 +7,30 @@ import {
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	Legend,
 	ResponsiveContainer,
 } from 'recharts';
 import { colors } from 'constants/colors';
 import PortfolioAssetList from '../../main/piechart/PortfolioAssetList';
 
-const data = [
-	{
-		name: '삼성전자',
-		value: 30,
-		color: colors.main.primary200,
-		code: '005930', // 자산 코드
-		market: 'KOSPI',
-		weight: 0.3,
-	},
-	{
-		name: '테슬라',
-		value: 30,
-		color: '#ff4d4d', // Tesla의 빨간색
-		code: 'TSLA',
-		market: 'NASDAQ',
-		weight: 0.3,
-	},
-	{
-		name: '엔비디아',
-		value: 30,
-		color: '#00b33c', // Nvidia의 녹색
-		code: 'NVDA',
-		market: 'NASDAQ',
-		weight: 0.3,
-	},
-	{
-		name: 'TIGER 미국달러단기채권액티브',
-		value: 30,
-		color: '#ff9933', // TIGER의 주황색
-		code: '276990',
-		market: 'KOSPI',
-		weight: 0.3,
-	},
-];
-
-const RebalanceBefore = () => {
+const RebalanceBefore = ({ rebalanceData }) => {
 	const [highlightedStockIndex, setHighlightedStockIndex] = useState(null);
+
+	// 기존 포트폴리오 자산 정보
+	const oldAssets =
+		rebalanceData?.data?.oldPortfolioAssetInfoList?.map(asset => ({
+			name: asset.name,
+			value: asset.weight * 100, // weight 비율을 퍼센트로 변환
+			code: asset.code,
+			market: asset.market,
+			weight: asset.weight,
+		})) || [];
 
 	return (
 		<DetailContainer title={'기존 포트폴리오'}>
 			<div style={{ display: 'flex', justifyContent: 'space-between' }}>
 				<ResponsiveContainer width="60%" height={300}>
 					<BarChart
-						data={data}
+						data={oldAssets}
 						layout="vertical"
 						margin={{
 							top: 5,
@@ -76,7 +50,6 @@ const RebalanceBefore = () => {
 						<XAxis type="number" />
 						<YAxis type="category" dataKey="name" />
 						<Tooltip />
-						{/* <Legend /> */}
 						<CartesianGrid strokeDasharray="3 3" />
 						<Bar
 							dataKey="value"
@@ -89,7 +62,7 @@ const RebalanceBefore = () => {
 
 				{/* PortfolioAssetList로 UI 대체 */}
 				<PortfolioAssetList
-					assets={data}
+					assets={oldAssets}
 					hoveredIndex={highlightedStockIndex} // 강조될 항목의 인덱스 전달
 				/>
 			</div>
