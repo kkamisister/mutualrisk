@@ -12,6 +12,7 @@ import {
 	DialogActions,
 	Avatar,
 	Grid,
+	Typography,
 } from '@mui/material';
 import BasicButton from 'components/button/BasicButton';
 import BasicChip from 'components/chip/BasicChip';
@@ -22,8 +23,11 @@ import useConstraintStore from 'stores/useConstraintStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPortfolio } from 'utils/apis/portfolio';
 import { useNavigate } from 'react-router-dom';
+import { receiveRecommendAsset, finalBackTest } from 'utils/apis/rebalance';
+import LoadingDialog from 'components/dialog/LoadingDialog';
 
 const AssetConstraintList = ({ assets }) => {
+	const [isLoading, setIsLoading] = useState(false);
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 	const [openDialog, setOpenDialog] = useState(false);
@@ -61,14 +65,8 @@ const AssetConstraintList = ({ assets }) => {
 	}));
 
 	useEffect(() => {
-		console.log('asset 초기화 체크');
-		if (assets.length > 0) {
-			console.log('assets 길이에 따라 제약 조건 초기화');
-			console.log('asset.length', assets.length);
-			console.log({ initializeConstraints });
-			initializeConstraints(assets.length);
-		}
-	}, [assets]);
+		validateErrors();
+	}, [assets, lowerBounds, upperBounds, exactProportion]);
 
 	// 제약 조건 관리 가보자고
 	const [minErrors, setMinErrors] = useState(
@@ -95,19 +93,23 @@ const AssetConstraintList = ({ assets }) => {
 			// assets이 빈 배열이 아닌 경우에만 초기화
 			const length = assets.length;
 
-			// setMinErrors(Array(length).fill(false));
-			// setMaxErrors(Array(length).fill(false));
-			// setProErrors(Array(length).fill(false));
-			// setMinTooltips(Array(length).fill(''));
-			// setMaxTooltips(Array(length).fill(''));
-			// setProTooltips(Array(length).fill(''));
+			setMinErrors(new Array(length).fill(false));
+			setMaxErrors(new Array(length).fill(false));
+			setProErrors(new Array(length).fill(false));
+			setMinTooltips(new Array(length).fill(''));
+			setMaxTooltips(new Array(length).fill(''));
+			setProTooltips(new Array(length).fill(''));
 		}
 	}, [assets]);
 
 	const validateErrors = () => {
-		const minErrorsTemp = [...minErrors];
-		const maxErrorsTemp = Array.from(maxErrors);
-		const proErrorsTemp = [...proErrors];
+		if (assets.length <= 0) {
+			return;
+		}
+		const minErrorsTemp = Array(assets.length).fill(false);
+		const maxErrorsTemp = Array(assets.length).fill(false);
+		const proErrorsTemp = Array(assets.length).fill(false);
+
 		const minTooltipsTemp = [...minTooltips];
 		const maxTooltipsTemp = [...maxTooltips];
 		const proTooltipsTemp = [...proTooltips];
@@ -150,6 +152,7 @@ const AssetConstraintList = ({ assets }) => {
 		if (maxTotal < 100) {
 			maxErrorsTemp.fill(true);
 			maxTooltipsTemp.fill('모든 최댓값의 합이 100 미만입니다.');
+			console.log('이거 max', maxErrors);
 		} else {
 			maxErrorsTemp.fill(false);
 			maxTooltipsTemp.fill('');
@@ -173,8 +176,13 @@ const AssetConstraintList = ({ assets }) => {
 	};
 
 	useEffect(() => {
+		if (assets.length > 0) {
+			initializeConstraints(assets.length, assets);
+		}
+	}, [assets]);
+
+	useEffect(() => {
 		validateErrors();
-		// console.log(maxErrors);
 	}, [lowerBounds, upperBounds, exactProportion]);
 
 	const { data } = useQuery({
@@ -184,27 +192,9 @@ const AssetConstraintList = ({ assets }) => {
 
 	useEffect(() => {
 		if (data?.hasPortfolio || isRecommended) {
-			// console.log('아 유저 포폴잇다니까');
 			setHasPortfolio(true);
 		}
 	}, [data, isRecommended]);
-
-	const mutation = useMutation({
-		mutationFn: createPortfolio,
-		onSuccess: data => {
-			// setIsRecommended(false);
-			// console.log('제작완료 데이터', data);
-			// console.log(JSON.stringify(data));
-			queryClient.removeQueries('selectedAsset');
-			// console.log('포트폴리오 제작 완료:', data);
-			navigate('/rebalance/result', {
-				state: { rebalanceResponseData: data.data },
-			});
-		},
-		onError: error => {
-			console.error('에러 발생:', error);
-		},
-	});
 
 	const hasErrors = useMemo(
 		() =>
@@ -214,34 +204,60 @@ const AssetConstraintList = ({ assets }) => {
 		[minErrors, maxErrors, proErrors]
 	);
 
-	const handleCreatePortfolio = () => {
-		console.log('totalCash', totalCash);
-		console.log('lowerBounds', lowerBounds);
-		const assetIds = assets.map(asset => asset.assetId);
+	const handleCreatePortfolio = async () => {
+		try {
+			setIsLoading(true);
 
-		// null이 아닌 값만 /100으로 변환
-		const transformedLowerBounds = lowerBounds.map(value =>
-			value !== null ? value / 100 : null
-		);
-		const transformedUpperBounds = upperBounds.map(value =>
-			value !== null ? value / 100 : null
-		);
-		const transformedExactProportion = exactProportion.map(value =>
-			value !== null ? value / 100 : null
-		);
+			const assetIds = assets.map(asset => asset.assetId);
 
-		console.log('assetIds', assetIds);
-		console.log('변환된 lowerBounds', transformedLowerBounds);
-		console.log('변환된 upperBounds', transformedUpperBounds);
-		console.log('변환된 비율', transformedExactProportion);
+			// null이 아닌 값만 /100으로 변환
+			const transformedLowerBounds = lowerBounds.map(value =>
+				value !== null ? value / 100 : null
+			);
+			const transformedUpperBounds = upperBounds.map(value =>
+				value !== null ? value / 100 : null
+			);
+			const transformedExactProportion = exactProportion.map(value =>
+				value !== null ? value / 100 : null
+			);
+			const createProps = {
+				totalCash,
+				assetIds,
+				lowerBounds: transformedLowerBounds,
+				upperBounds: transformedUpperBounds,
+				exactProportion: transformedExactProportion,
+			};
 
-		mutation.mutate({
-			totalCash,
-			assetIds,
-			lowerBounds: transformedLowerBounds,
-			upperBounds: transformedUpperBounds,
-			exactProportion: transformedExactProportion,
-		});
+			console.log('제약조건 설정 이렇게됐다!', createProps);
+
+			const response = await createPortfolio(createProps);
+			const rebalanceResponseData = await response.data.data;
+			// console.log('호출성공', rebalanceResponseData);
+			const newPortfolioAssetInfoList =
+				rebalanceResponseData.newPortfolioAssetInfoList;
+			const recommendProps = {
+				...createProps,
+				newPortfolioAssetInfoList,
+			};
+
+			const recommendResponse = await receiveRecommendAsset(recommendProps);
+
+			const backTestResponse = await finalBackTest(
+				newPortfolioAssetInfoList
+			);
+
+			navigate('/rebalance/result', {
+				state: {
+					rebalanceResponseData: { data: rebalanceResponseData },
+					recommendResponseData: { data: recommendResponse.data },
+					backTestResponseData: { data: backTestResponse },
+				},
+			});
+		} catch (err) {
+			console.log(err);
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	const handleUnlock = () => {
@@ -252,11 +268,8 @@ const AssetConstraintList = ({ assets }) => {
 	const handleDialogClose = () => setOpenDialog(false);
 
 	const handleTextFieldClick = () => {
-		console.log('handletextfield');
 		if (hasPortfolio) {
-			console.log('hasPortfolio true고 handle해볼게', hasPortfolio);
 			setOpenDialog(true);
-			console.log('opendialog', openDialog);
 		}
 	};
 
@@ -349,13 +362,13 @@ const AssetConstraintList = ({ assets }) => {
 											error={minErrors[index]}
 											disabled={hasPortfolio}
 											variant="outlined"
+											defaultValue={0}
 											value={lowerBounds[index]}
 											onChange={e => {
 												const value =
 													e.target.value === ''
 														? null
 														: parseFloat(e.target.value);
-												console.log(e);
 												setLowerBound(index, value);
 												// validateErrors();
 											}}
@@ -399,6 +412,7 @@ const AssetConstraintList = ({ assets }) => {
 											onClick={handleTextFieldClick}
 											disabled={hasPortfolio}
 											variant="outlined"
+											defaultValue={100}
 											value={upperBounds[index]}
 											onChange={e => {
 												const value =
@@ -545,6 +559,17 @@ const AssetConstraintList = ({ assets }) => {
 					/>{' '}
 				</Grid>
 			</Grid>
+
+			{isLoading && (
+				<LoadingDialog onClose={() => setIsLoading(false)} open={isLoading}>
+					<Typography
+						color={colors.text.sub1}
+						fontWeight={550}
+						fontSize={'16px'}>
+						포트폴리오를 생성중입니다.
+					</Typography>
+				</LoadingDialog>
+			)}
 		</Grid>
 	);
 };
