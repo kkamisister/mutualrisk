@@ -35,18 +35,6 @@ const PortfolioCreatePage = () => {
 	const [latestPortfolioId, setLatestPortfolioId] = useState('');
 	const [showContraint, setShowConstraint] = useState(false);
 	const [activeStep, setActiveStep] = useState(0);
-
-	const queryClient = useQueryClient();
-	const recommendedAsset = queryClient.getQueryData('selectedAsset');
-
-	const fetchRecommended = asset => {
-		if (asset) {
-			console.log('자산추천 받았다네', asset);
-			setIsRecommended(true);
-			addAsset(asset);
-		}
-	};
-
 	const {
 		assets,
 		updateAsset,
@@ -63,10 +51,25 @@ const PortfolioCreatePage = () => {
 		isRecommended: state.isRecommended,
 	}));
 
+	const queryClient = useQueryClient();
+	const recommendedAsset = queryClient.getQueryData('selectedAsset');
+	useEffect(() => {
+		setIsRecommended(true);
+		console.log('아 얘는 추천을받았단게');
+	}, [recommendedAsset]);
+
+	const fetchRecommended = asset => {
+		if (asset) {
+			console.log('자산추천 받았다네', asset);
+			addAsset(asset);
+		}
+	};
+
 	const { data: portfolioList } = useQuery({
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
 	});
+
 	useEffect(() => {
 		console.log('Updated assets:', assets);
 	}, [assets]);
@@ -95,10 +98,12 @@ const PortfolioCreatePage = () => {
 		const fetchAndAddAsset = async () => {
 			if (latestPortfolio && latestPortfolio.portfolio) {
 				if (isRecommended) {
-					await fetchRecommended(recommendedAsset);
+					fetchRecommended(recommendedAsset);
 					addAsset(recommendedAsset);
+					console.log('추천도완');
 				} else {
 					updateAsset(latestPortfolio.portfolio.assets);
+					console.log('업뎃완');
 				}
 			} else {
 				setIsDialogOpen(true);
@@ -106,7 +111,7 @@ const PortfolioCreatePage = () => {
 		};
 
 		fetchAndAddAsset();
-	}, [latestPortfolio]);
+	}, [latestPortfolio, isRecommended, recommendedAsset]);
 
 	const handleModalClose = () => {
 		setIsModalOpen(false);
