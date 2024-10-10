@@ -232,7 +232,7 @@ const AssetConstraintList = ({ assets }) => {
 
 			const response = await createPortfolio(createProps);
 			const rebalanceResponseData = await response.data.data;
-			// console.log('호출성공', rebalanceResponseData);
+			// console.log('포폴 생성 완료', rebalanceResponseData);
 			const newPortfolioAssetInfoList =
 				rebalanceResponseData.newPortfolioAssetInfoList;
 			const recommendProps = {
@@ -241,16 +241,22 @@ const AssetConstraintList = ({ assets }) => {
 			};
 
 			const recommendResponse = await receiveRecommendAsset(recommendProps);
+			// console.log('추천 종목 받기 완료', receiveRecommendAsset);
+			let backTestResponse = null;
+			// data.hasPortfolio가 true일 때만 backTestResponse 실행
+			if (data?.hasPortfolio) {
+				backTestResponse = await finalBackTest(newPortfolioAssetInfoList);
+			}
 
-			const backTestResponse = await finalBackTest(
-				newPortfolioAssetInfoList
-			);
+			// console.log('백트래킹 받기 완료', receiveRecommendAsset);
 
 			navigate('/rebalance/result', {
 				state: {
 					rebalanceResponseData: { data: rebalanceResponseData },
 					recommendResponseData: { data: recommendResponse.data },
-					backTestResponseData: { data: backTestResponse },
+					backTestResponseData: backTestResponse
+						? { data: backTestResponse }
+						: null,
 				},
 			});
 		} catch (err) {
