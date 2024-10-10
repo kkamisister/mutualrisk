@@ -24,10 +24,9 @@ import {
 	fetchPortfolioByPorfolioId,
 } from 'utils/apis/analyze';
 import useAssetStore from 'stores/useAssetStore';
-import { useQuery } from '@tanstack/react-query';
-import { enqueueSnackbar } from 'notistack';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { colors } from 'constants/colors';
-import StockSearchBar from 'pages/portfolio/create/stocksearch/StockSearchBar';
+import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
 
 const PortfolioCreatePage = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,24 +35,51 @@ const PortfolioCreatePage = () => {
 	const [latestPortfolioId, setLatestPortfolioId] = useState('');
 	const [showContraint, setShowConstraint] = useState(false);
 	const [activeStep, setActiveStep] = useState(0);
-
-	const { assets, updateAsset, updateTotalCash } = useAssetStore(state => ({
+	const {
+		assets,
+		updateAsset,
+		updateTotalCash,
+		setIsRecommended,
+		addAsset,
+		isRecommended,
+	} = useAssetStore(state => ({
 		assets: state.assets,
 		updateAsset: state.updateAsset,
 		updateTotalCash: state.updateTotalCash,
+		setIsRecommended: state.setIsRecommended,
+		addAsset: state.addAsset,
+		isRecommended: state.isRecommended,
 	}));
+
+	const queryClient = useQueryClient();
+	const recommendedAsset = queryClient.getQueryData('selectedAsset');
+	useEffect(() => {
+		setIsRecommended(true);
+		console.log('아 얘는 추천을받았단게');
+	}, [recommendedAsset]);
+
+	const fetchRecommended = asset => {
+		if (asset) {
+			console.log('자산추천 받았다네', asset);
+			addAsset(asset);
+		}
+	};
 
 	const { data: portfolioList } = useQuery({
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
 	});
 
+	useEffect(() => {
+		console.log('Updated assets:', assets);
+	}, [assets]);
+
 	const onItemsConfirm = () => {
 		setShowConstraint(true);
 	};
 
 	useEffect(() => {
-		if (portfolioList && hasPortfolio) {
+		if (portfolioList && portfolioList.hasPortfolio) {
 			setHasPortfolio(portfolioList.hasPortfolio);
 			updateTotalCash(portfolioList.recentValuation);
 			setLatestPortfolioId(portfolioList.portfolioList[0].id);
@@ -69,12 +95,23 @@ const PortfolioCreatePage = () => {
 	});
 
 	useEffect(() => {
-		if (latestPortfolio && latestPortfolio.portfolio) {
-			updateAsset(latestPortfolio.portfolio.assets);
-		} else {
-			setIsDialogOpen(true);
-		}
-	}, [latestPortfolio]);
+		const fetchAndAddAsset = async () => {
+			if (latestPortfolio && latestPortfolio.portfolio) {
+				if (isRecommended) {
+					updateAsset(latestPortfolio.portfolio.assets);
+					fetchRecommended(recommendedAsset);
+					console.log('추천도완');
+				} else {
+					updateAsset(latestPortfolio.portfolio.assets);
+					console.log('업뎃완');
+				}
+			} else {
+				setIsDialogOpen(true);
+			}
+		};
+
+		fetchAndAddAsset();
+	}, [latestPortfolio, isRecommended, recommendedAsset]);
 
 	const handleModalClose = () => {
 		setIsModalOpen(false);
@@ -130,7 +167,7 @@ const PortfolioCreatePage = () => {
 					)}
 				</Grid>
 			</Grid>
-			{isDialogOpen && (
+			{isDialogOpen && !hasPortfolio && (
 				<>
 					<Backdrop open={isDialogOpen} style={{ zIndex: 1300 }} />
 					<Dialog
@@ -155,8 +192,12 @@ const PortfolioCreatePage = () => {
 										p: 1,
 										height: '100px',
 									}}>
-									<StockSearchBar />
-
+									<ShoppingBasketIcon
+										sx={{
+											color: colors.text.sub2,
+											fontSize: '50px',
+										}}
+									/>
 									<Typography
 										sx={{
 											color: colors.text.main,

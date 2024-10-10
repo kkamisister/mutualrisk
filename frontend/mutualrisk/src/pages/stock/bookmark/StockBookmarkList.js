@@ -10,6 +10,7 @@ import { removeBookmark } from 'utils/apis/interest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import AddStockButton from './AddBookmarkButton';
 import { enqueueSnackbar } from 'notistack';
+import StockBookmarkListEmpty from './StockBookmarkListEmpty';
 const options = [
 	{ value: 'NAME', label: '이름' },
 	{ value: 'RETURN', label: '수익률' },
@@ -113,6 +114,7 @@ const StockBookmarkList = ({ isLoading, assetList }) => {
 					.map((_, index) => {
 						return <StockSkeletonCard key={index} />;
 					})}
+			{!isLoading && assetList.length === 0 && <StockBookmarkListEmpty />}
 
 			{!isLoading &&
 				assetList.map((asset, index) => {

@@ -19,20 +19,22 @@ import { colors } from 'constants/colors';
 import { fetchPortfolioList } from 'utils/apis/analyze';
 import useAssetStore from 'stores/useAssetStore';
 import useConstraintStore from 'stores/useConstraintStore';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPortfolio } from 'utils/apis/portfolio';
 import { useNavigate } from 'react-router-dom';
 
 const AssetConstraintList = ({ assets }) => {
+	const queryClient = useQueryClient();
+	const navigate = useNavigate();
 	const [openDialog, setOpenDialog] = useState(false);
 	const [hasPortfolio, setHasPortfolio] = useState(false);
-	const { totalCash, addTotalCash, updateTotalCash } = useAssetStore(
-		state => ({
+	const { totalCash, addTotalCash, updateTotalCash, setIsRecommended } =
+		useAssetStore(state => ({
 			totalCash: state.totalCash,
 			addTotalCash: state.addTotalCash,
 			updateTotalCash: state.updateTotalCash,
-		})
-	);
+			setIsRecommended: state.setIsRecommended,
+		}));
 
 	const {
 		initialization,
@@ -65,10 +67,10 @@ const AssetConstraintList = ({ assets }) => {
 		queryFn: fetchPortfolioList,
 	});
 
-	const navigate = useNavigate();
-
 	useEffect(() => {
-		if (data) {
+		// console.log('야 쿼리호 ㅜㄹ함?', data);
+		if (data.hasPortfolio) {
+			// console.log('아 유저 포폴잇다니까');
 			setHasPortfolio(data.hasPortfolio);
 		}
 	}, [data]);
@@ -76,8 +78,12 @@ const AssetConstraintList = ({ assets }) => {
 	const mutation = useMutation({
 		mutationFn: createPortfolio,
 		onSuccess: data => {
+			queryClient.removeQueries('selectedAsset');
+			setIsRecommended(false);
 			// console.log('포트폴리오 제작 완료:', data);
-			navigate('/rebalance/result');
+			navigate('/rebalance/result', {
+				state: { newPortfolio: data },
+			});
 		},
 		onError: error => {
 			console.error('에러 발생:', error);
@@ -100,6 +106,9 @@ const AssetConstraintList = ({ assets }) => {
 		});
 	};
 
+	useEffect(() => {
+		console.log(hasPortfolio);
+	}, []);
 	const handleUnlock = () => {
 		setHasPortfolio(false);
 		setOpenDialog(false);
