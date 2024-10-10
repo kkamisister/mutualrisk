@@ -232,18 +232,18 @@ public record PortfolioResponse() {
         Integer newPurchaseNum
     ) {
 
-        public static ChangeAssetInfo of(RecommendAssetInfo newAssetInfo,int oldPurchaseNum){
+        public static ChangeAssetInfo of(RecommendAssetInfo assetInfo,int oldPurchaseNum, int newPurchaseNum){
             return ChangeAssetInfo.builder()
-                .assetId(newAssetInfo.assetId())
-                .name(newAssetInfo.name())
-                .code(newAssetInfo.code())
-                .imagePath(newAssetInfo.imagePath())
-                .imageName(newAssetInfo.imageName())
-                .market(newAssetInfo.market())
-                .price(newAssetInfo.price())
-                .region(newAssetInfo.region())
+                .assetId(assetInfo.assetId())
+                .name(assetInfo.name())
+                .code(assetInfo.code())
+                .imagePath(assetInfo.imagePath())
+                .imageName(assetInfo.imageName())
+                .market(assetInfo.market())
+                .price(assetInfo.price())
+                .region(assetInfo.region())
                 .oldPurchaseNum(oldPurchaseNum)
-                .newPurchaseNum(newAssetInfo.purchaseNum())
+                .newPurchaseNum(newPurchaseNum)
                 .build();
         }
 

@@ -14,7 +14,8 @@ public class Constants {
         new BenchMark(4558, 13),
         new BenchMark(4559, 4),
         new BenchMark(4688, 9),
-        new BenchMark(4728, 10)
+        new BenchMark(4728, 10),
+        new BenchMark(3227,1),
     };
 
     public static final int SP500_ASSET_ID = 3621;

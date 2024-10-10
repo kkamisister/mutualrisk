@@ -158,26 +158,6 @@ public class PortfolioController {
     }
 
     /**
-     * 전체 유저를 대상으로 비중변화가 +-10%p or 유저의 상한/하한을 넘은 경우 알람을 보내는 메서드
-     * 이 메서드는 일반 유저가 접근할 수 없이 ADMIN 권한의 유저만 접근할 수 있도록 설정해야 할 듯
-     *
-     * Todo: 메서드 접근 권한 - 사실
-     * @return
-     */
-    @Operation(summary = "메일발송", description = "리밸런싱이 필요한 유저에게 메일을 발송하는 api")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "메일 발송 성공"),
-    })
-    @PostMapping("/checking")
-    @Hidden
-    public ResponseEntity<ResponseWithMessage> checkPortfolios(){
-
-        ResponseWithMessage responseWithMessage = portfolioService.sendRefreshMail();
-
-        return ResponseEntity.status(responseWithMessage.status()).body(responseWithMessage);
-    }
-
-    /**
      * 포트폴리오 백테스팅 결과를 조회하는 api
      * 백테스팅 시점은, 현재로부터 특정 기간 동안의 과거 데이터를 기반으로 한다
      */

@@ -40,6 +40,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
@@ -152,11 +153,12 @@ public class PortfolioServiceImpl implements PortfolioService{
     /**
      * 전체 유저를 대상으로 포트폴리오의 비중을 재계산하여, +-10%p 이상의 변동이 있거나
      * 유저가 설정한 상한,하한을 초과한 종목이 있을경우 유저에게 메일을 보낸다
-     * @return
+     * 매일 자정에 전체 유저를 검사한다
      */
     @Override
     @Transactional
-    public ResponseWithMessage sendRefreshMail() {
+    @Scheduled(cron = "0 0 0 * * *")
+    public void sendRefreshMail() {
 
         // 전체 유저 목록을 가지고온다
         List<User> users = userRepository.findAll();
@@ -324,7 +326,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             }
 
         }
-        return new ResponseWithMessage(HttpStatus.OK.value(),"메일발송에 성공하였습니다");
+        // return new ResponseWithMessage(HttpStatus.OK.value(),"메일발송에 성공하였습니다");
     }
 
     @Override
@@ -375,6 +377,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 그 date의 valuation을 가지고 온다
         Double firstValuation = valuationPerDate.get(firstDate);
 
+        log.warn("firstValuation : {}",firstValuation);
 
         AssetHistory historyOfSP500;
         List<LocalDateTime> validDate = assetHistoryService.getValidDate(sp500, firstDate, 1);
@@ -1028,7 +1031,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         for (RecommendAssetInfo recommendAssetInfo : newPortfolioAssetInfoList) {
 
-            ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.of(recommendAssetInfo,0);
+            ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.of(recommendAssetInfo,0, recommendAssetInfo.purchaseNum());
             changeAssetInfoList.add(changeAssetInfo);
         }
 
@@ -1069,7 +1072,7 @@ public class PortfolioServiceImpl implements PortfolioService{
                 newPurchaseNum = newAssetInfoMap.get(oldAssetInfo.assetId()).purchaseNum();
             }
 
-            ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.of(oldAssetInfo,newPurchaseNum);
+            ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.of(oldAssetInfo, oldAssetInfo.purchaseNum(), newPurchaseNum);
 
             changeAssetInfoList.add(changeAssetInfo);
         }
@@ -1087,7 +1090,8 @@ public class PortfolioServiceImpl implements PortfolioService{
                     oldPurchaseNum = oldAssetInfoMap.get(newAssetInfo.assetId()).purchaseNum();
                 }
 
-                ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.of(newAssetInfo,oldPurchaseNum);
+                ChangeAssetInfo changeAssetInfo = ChangeAssetInfo.of(newAssetInfo, oldPurchaseNum,
+                    newAssetInfo.purchaseNum());
 
                 changeAssetInfoList.add(changeAssetInfo);
 
