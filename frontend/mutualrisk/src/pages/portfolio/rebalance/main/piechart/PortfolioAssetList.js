@@ -3,6 +3,11 @@ import { Box, Stack } from '@mui/material';
 import PortfolioAssetListItem from 'pages/portfolio/rebalance/main/piechart/PortfolioAssetListItem';
 
 const PortfolioAssetList = ({ assets, hoveredIndex }) => {
+	const sortedAssets = assets
+		.map((asset, index) => ({ ...asset, originalIndex: index }))
+		.slice()
+		.sort((a, b) => b.weight - a.weight);
+
 	return (
 		<Stack
 			sx={{
@@ -25,11 +30,11 @@ const PortfolioAssetList = ({ assets, hoveredIndex }) => {
 					msOverflowStyle: 'none',
 				}}>
 				<Box sx={{ flex: 1 }}>
-					{assets.map((asset, index) => (
+					{sortedAssets.map((asset, index) => (
 						<PortfolioAssetListItem
 							key={index}
 							asset={asset}
-							highlight={hoveredIndex === index}
+							highlight={hoveredIndex === asset.originalIndex}
 						/>
 					))}
 				</Box>
