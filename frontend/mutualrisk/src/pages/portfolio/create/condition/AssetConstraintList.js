@@ -28,13 +28,19 @@ const AssetConstraintList = ({ assets }) => {
 	const navigate = useNavigate();
 	const [openDialog, setOpenDialog] = useState(false);
 	const [hasPortfolio, setHasPortfolio] = useState(false);
-	const { totalCash, addTotalCash, updateTotalCash, setIsRecommended } =
-		useAssetStore(state => ({
-			totalCash: state.totalCash,
-			addTotalCash: state.addTotalCash,
-			updateTotalCash: state.updateTotalCash,
-			setIsRecommended: state.setIsRecommended,
-		}));
+	const {
+		totalCash,
+		addTotalCash,
+		updateTotalCash,
+		setIsRecommended,
+		isRecommended,
+	} = useAssetStore(state => ({
+		totalCash: state.totalCash,
+		addTotalCash: state.addTotalCash,
+		updateTotalCash: state.updateTotalCash,
+		setIsRecommended: state.setIsRecommended,
+		isRecommended: state.isRecommended,
+	}));
 
 	const {
 		initialization,
@@ -69,11 +75,11 @@ const AssetConstraintList = ({ assets }) => {
 
 	useEffect(() => {
 		// console.log('야 쿼리호 ㅜㄹ함?', data);
-		if (data.hasPortfolio) {
-			// console.log('아 유저 포폴잇다니까');
-			setHasPortfolio(data.hasPortfolio);
+		if (data.hasPortfolio || isRecommended) {
+			console.log('아 유저 포폴잇다니까');
+			setHasPortfolio(true);
 		}
-	}, [data]);
+	}, [data, isRecommended]);
 
 	const mutation = useMutation({
 		mutationFn: createPortfolio,
@@ -82,7 +88,7 @@ const AssetConstraintList = ({ assets }) => {
 			setIsRecommended(false);
 			// console.log('포트폴리오 제작 완료:', data);
 			navigate('/rebalance/result', {
-				state: { newPortfolio: data },
+				state: { newPortfolioData: data },
 			});
 		},
 		onError: error => {
@@ -117,8 +123,9 @@ const AssetConstraintList = ({ assets }) => {
 	const handleDialogClose = () => setOpenDialog(false);
 
 	const handleTextFieldClick = () => {
+		console.log('handletextfield');
 		if (hasPortfolio) {
-			console.log('hasPortfolio', hasPortfolio);
+			console.log('hasPortfolio true고 handle해볼게', hasPortfolio);
 			setOpenDialog(true);
 			console.log('opendialog', openDialog);
 		}
@@ -219,10 +226,10 @@ const AssetConstraintList = ({ assets }) => {
 									<Tooltip title={lowerBoundTooltip || priceTooltip}>
 										<TextField
 											type="number"
+											onClick={handleTextFieldClick}
 											error={
 												isLowerBoundExceeded || isPriceOverTotalCash
 											}
-											onClick={handleTextFieldClick}
 											disabled={hasPortfolio}
 											variant="outlined"
 											defaultValue={0}
@@ -244,7 +251,12 @@ const AssetConstraintList = ({ assets }) => {
 															: 'inherit',
 													borderRadius: '4px',
 												},
-												inputProps: { min: 0, max: 100, step: 1 },
+												inputProps: {
+													min: 0,
+													max: 100,
+													step: 1,
+													onClick: handleTextFieldClick,
+												},
 											}}
 										/>
 									</Tooltip>
@@ -288,7 +300,12 @@ const AssetConstraintList = ({ assets }) => {
 															: 'inherit',
 													borderRadius: '4px',
 												},
-												inputProps: { min: 0, max: 100, step: 1 },
+												inputProps: {
+													min: 0,
+													max: 100,
+													step: 1,
+													onClick: handleTextFieldClick,
+												},
 											}}
 										/>
 									</Tooltip>
@@ -329,7 +346,12 @@ const AssetConstraintList = ({ assets }) => {
 															: 'inherit',
 													borderRadius: '4px',
 												},
-												inputProps: { min: 0, max: 100, step: 1 },
+												inputProps: {
+													min: 0,
+													max: 100,
+													step: 1,
+													onClick: handleTextFieldClick,
+												},
 											}}
 										/>
 									</Tooltip>
