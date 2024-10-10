@@ -26,7 +26,7 @@ import {
 import useAssetStore from 'stores/useAssetStore';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { colors } from 'constants/colors';
-import StockSearchBar from 'pages/portfolio/create/stocksearch/StockSearchBar';
+import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
 
 const PortfolioCreatePage = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -98,8 +98,8 @@ const PortfolioCreatePage = () => {
 		const fetchAndAddAsset = async () => {
 			if (latestPortfolio && latestPortfolio.portfolio) {
 				if (isRecommended) {
+					updateAsset(latestPortfolio.portfolio.assets);
 					fetchRecommended(recommendedAsset);
-					addAsset(recommendedAsset);
 					console.log('추천도완');
 				} else {
 					updateAsset(latestPortfolio.portfolio.assets);
@@ -192,8 +192,7 @@ const PortfolioCreatePage = () => {
 										p: 1,
 										height: '100px',
 									}}>
-									<StockSearchBar />
-
+									<ShoppingBasketIcon color={colors.text.sub1} />
 									<Typography
 										sx={{
 											color: colors.text.main,
