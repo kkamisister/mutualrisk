@@ -43,19 +43,19 @@ const AssetInputModal = ({ open, handleClose, child }) => {
 		const newValue = currentValue + amount;
 		const newValueStr = newValue.toLocaleString();
 
-		setAssetValue(newValueStr);
+		setAssetValue(newValue);
 		setDisplayValue(newValueStr);
 	};
 
 	const handleConfirm = () => {
-		const value = parseInt(assetValue.replace(/,/g, ''), 10);
+		const value = assetValue;
 
 		if (!value || isNaN(value) || value <= 0) {
 			setError(true);
 			return;
 		}
 
-		addTotalCash(assetValue);
+		addTotalCash(value);
 		setAssetValue('');
 		setDisplayValue('');
 

@@ -53,7 +53,7 @@ const PortfolioCreatePage = () => {
 	};
 
 	useEffect(() => {
-		if (portfolioList && hasPortfolio) {
+		if (portfolioList && portfolioList.hasPortfolio) {
 			setHasPortfolio(portfolioList.hasPortfolio);
 			updateTotalCash(portfolioList.recentValuation);
 			setLatestPortfolioId(portfolioList.portfolioList[0].id);
