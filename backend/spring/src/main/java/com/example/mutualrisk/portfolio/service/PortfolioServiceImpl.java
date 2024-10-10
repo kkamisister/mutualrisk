@@ -825,6 +825,10 @@ public class PortfolioServiceImpl implements PortfolioService{
         for (Entry<String, List<Asset>> entry : assetsByCategory.entrySet()) {
             String category = entry.getKey();
             List<Asset> assets = entry.getValue();
+
+            System.out.println("category = " + category);
+            System.out.println("assets = " + assets);
+
             RiskRatio riskRatio = calculateSharpeRatioRanking(assets, sharpeRatio);
 
             // 각 카테고리에 맞게 RiskRatio 할당
@@ -2028,13 +2032,13 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         for (int idx = 0; idx < totalAssets; idx++) {
             Asset asset = assets.get(idx);
-            Double volatility = asset.getVolatility();
-            if(ObjectUtils.isEmpty(volatility)){ // volatility가 NULL인 경우, 전체 집단의 수를 줄인다
+            Double assetSharpeRatio = asset.getSharpeRatio();
+            if(ObjectUtils.isEmpty(assetSharpeRatio)){ // assetSharpeRatio가 NULL인 경우, 전체 집단의 수를 줄인다
                 totalAssets--;
                 continue;
             }
             // Sharpe Ratio와 비교하여 순위를 계산
-            if (volatility < sharpeRatio) {
+            if (assetSharpeRatio > sharpeRatio) {
                 rank++; // Sharpe Ratio보다 더 나쁜 자산일 경우 순위를 올림
             }
         }
