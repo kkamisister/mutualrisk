@@ -11,8 +11,41 @@ import axiosInstance from './axiosInstance';
  * @param {{extraAssetId,  extraCash}} assetId - assetId
  * @returns {Promise} - API 문서 참조
  */
-export const createRebalancePortfolio = async ({extraAssetId = null, extraCash = null}) => {
-	return axiosInstance.post('/rebalance', { extraAssetId, extraCash });
+export const createRebalancePortfolio = async ({
+	extraAssetId = null,
+	extraCash = 0,
+}) => {
+	return axiosInstance.post('/portfolio/rebalance/init', {
+		extraAssetId,
+		extraCash,
+	});
+};
+
+/**
+ * 포트폴리오 추천 자산 정보 반환
+ *
+ * @param {Object} params - 추천 자산 요청에 필요한 정보
+ * @param {Number} params.totalCash - 포트폴리오의 총 금액
+ * @param {Number[]} params.lowerBounds - 각 자산의 최소 비율 배열
+ * @param {Number[]} params.upperBounds - 각 자산의 최대 비율 배열
+ * @param {Array<Number|null>} params.exactProportion - 각 자산의 정확한 비율 배열, null일 수 있음
+ * @param {Object[]} params.newPortfolioAssetInfoList - 새로운 포트폴리오에 포함될 자산 리스트
+ * @returns {Promise} - 추천 자산 정보를 반환하는 API 응답을 포함한 Promise 객체
+ */
+export const receiveRecommendAsset = async ({
+	totalCash,
+	lowerBounds,
+	upperBounds,
+	exactProportion,
+	newPortfolioAssetInfoList,
+}) => {
+	return axiosInstance.post('/portfolio/recommend', {
+		totalCash,
+		lower_bounds: lowerBounds,
+		upper_bounds: upperBounds,
+		exact_proportion: exactProportion,
+		newPortfolioAssetInfoList,
+	});
 };
 
 /**
@@ -20,6 +53,6 @@ export const createRebalancePortfolio = async ({extraAssetId = null, extraCash =
  * @param {Object}  - API 문서 참조
  * @returns {Promise} - API 문서 참조
  */
-export const confirmRebalancePortfolio = async ({assets, cash}) => {
-	return axiosInstance.post('/rebalance/final', {assets, cash});
+export const confirmRebalancePortfolio = async ({ assets, cash }) => {
+	return axiosInstance.post('/rebalance/final', { assets, cash });
 };
