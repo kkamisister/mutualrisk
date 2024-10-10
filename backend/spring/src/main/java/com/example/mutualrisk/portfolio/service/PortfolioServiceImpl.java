@@ -434,7 +434,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
                 LocalDateTime curDateTime = dateUtil.getPastDate(recentDate, timeInterval, dDate);
                 List<LocalDateTime> validDate = assetHistoryService.getValidDate(asset, curDateTime, 1);
-                cachedValidDates.add(validDate.get(0));
+                if (!validDate.isEmpty()) cachedValidDates.add(validDate.get(0));
 
             }
 
