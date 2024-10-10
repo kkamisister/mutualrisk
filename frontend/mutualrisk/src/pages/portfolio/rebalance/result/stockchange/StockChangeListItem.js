@@ -22,6 +22,7 @@ const StockChangeListItem = ({ stock }) => {
 				image={stock.imageURL}
 				sx={{
 					height: '60px',
+					minWidth: '200px',
 					maxWidth: '300px',
 				}}
 			/>
@@ -47,7 +48,7 @@ const StockChangeListItem = ({ stock }) => {
 							color: colors.text.main,
 							marginRight: '5px',
 						}}>
-						{stock.currentPrice}원
+						{stock.currentPrice.toLocaleString()}원
 					</Typography>
 					<Typography sx={{ fontSize: '20px', fontWeight: 'bold' }}>
 						{stock.currentShares}주
@@ -76,7 +77,7 @@ const StockChangeListItem = ({ stock }) => {
 							color: colors.text.main,
 							marginRight: '5px',
 						}}>
-						{stock.rebalancedPrice}원
+						{stock.rebalancedPrice.toLocaleString()}원
 					</Typography>
 					<Typography sx={{ fontSize: '20px', fontWeight: 'bold' }}>
 						{stock.rebalancedShares}주
@@ -104,11 +105,11 @@ const StockChangeListItem = ({ stock }) => {
 						color: colors.text.main,
 						marginRight: '5px',
 					}}>
-					{stock.rebalancedPrice}원
+					{stock.rebalancedPrice.toLocaleString()}원
 				</Typography>
 				<Typography
 					sx={{
-						color: stock.change > 0 ? 'red' : colors.text.sub1,
+						color: stock.change > 0 ? 'red' : 'blue',
 						fontSize: '20px',
 						fontWeight: 'bold',
 					}}>

@@ -19,7 +19,7 @@ const RebalanceBefore = ({ rebalanceData }) => {
 	const oldAssets =
 		rebalanceData?.data?.oldPortfolioAssetInfoList?.map(asset => ({
 			name: asset.name,
-			value: asset.weight * 100, // weight 비율을 퍼센트로 변환
+			value: asset.weight * 100,
 			code: asset.code,
 			market: asset.market,
 			weight: asset.weight,
@@ -41,7 +41,7 @@ const RebalanceBefore = ({ rebalanceData }) => {
 						barSize={20}
 						onMouseMove={state => {
 							if (state.isTooltipActive) {
-								const index = state.activeTooltipIndex; // 마우스가 위치한 바의 인덱스를 가져옴
+								const index = state.activeTooltipIndex;
 								setHighlightedStockIndex(index);
 							} else {
 								setHighlightedStockIndex(null);
@@ -60,7 +60,6 @@ const RebalanceBefore = ({ rebalanceData }) => {
 					</BarChart>
 				</ResponsiveContainer>
 
-				{/* PortfolioAssetList로 UI 대체 */}
 				<PortfolioAssetList
 					assets={oldAssets}
 					hoveredIndex={highlightedStockIndex} // 강조될 항목의 인덱스 전달
