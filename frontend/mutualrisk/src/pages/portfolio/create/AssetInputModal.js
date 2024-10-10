@@ -27,7 +27,9 @@ const AssetInputModal = ({ open, handleClose, child }) => {
 
 	const handleChange = e => {
 		const value = e.target.value.replace(/,/g, ''); // 쉼표 제거한 값
-		setDisplayValue(e.target.value); // 입력한 그대로 표시
+		setDisplayValue(
+			value === '' ? '' : Number(value).toLocaleString() // 쉼표 없는 숫자도 허용
+		);
 
 		// 숫자만 포함하고 0 이상인 경우에만 assetValue 업데이트
 		if (/^\d*$/.test(value) && Number(value) >= 0) {

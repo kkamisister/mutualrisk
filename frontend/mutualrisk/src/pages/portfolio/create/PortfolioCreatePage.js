@@ -47,12 +47,6 @@ const PortfolioCreatePage = () => {
 		}
 	};
 
-	useEffect(() => {
-		if (recommendedAsset) {
-			fetchRecommended(recommendedAsset);
-		}
-	}, [recommendedAsset]);
-
 	const {
 		assets,
 		updateAsset,
@@ -98,15 +92,20 @@ const PortfolioCreatePage = () => {
 	});
 
 	useEffect(() => {
-		if (latestPortfolio && latestPortfolio.portfolio) {
-			if (isRecommended) {
-				addAsset(recommendedAsset);
+		const fetchAndAddAsset = async () => {
+			if (latestPortfolio && latestPortfolio.portfolio) {
+				if (isRecommended) {
+					await fetchRecommended(recommendedAsset);
+					addAsset(recommendedAsset);
+				} else {
+					updateAsset(latestPortfolio.portfolio.assets);
+				}
 			} else {
-				updateAsset(latestPortfolio.portfolio.assets);
+				setIsDialogOpen(true);
 			}
-		} else {
-			setIsDialogOpen(true);
-		}
+		};
+
+		fetchAndAddAsset();
 	}, [latestPortfolio]);
 
 	const handleModalClose = () => {
