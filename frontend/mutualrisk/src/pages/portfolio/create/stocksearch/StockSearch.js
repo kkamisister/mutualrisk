@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Box, Typography, CircularProgress, Stack } from '@mui/material';
 import StockList from 'pages/portfolio/create/stocksearch/StockList';
 import BasicButton from 'components/button/BasicButton';
@@ -9,6 +9,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import useStockSearch from 'hooks/useStockSearch';
 import useAssetStore from 'stores/useAssetStore';
+import { enqueueSnackbar } from 'notistack';
 
 const SearchStatusBox = ({ Icon, text }) => {
 	return (
@@ -41,9 +42,8 @@ const StockSearch = ({ sx }) => {
 	}));
 
 	const addTempToAssets = () => {
-		const tempArray = Array.from(tempAssets); // tempAssets를 배열로 변환
-		console.log('Adding assets:', tempArray);
-		addAssetList(tempArray); // 상태 업데이트 시도
+		const tempArray = Array.from(tempAssets);
+		addAssetList(tempArray);
 	};
 
 	return (
@@ -79,7 +79,7 @@ const StockSearch = ({ sx }) => {
 					<StockList assets={searchResult} />
 
 					<Box sx={{ display: 'flex', justifyContent: 'center' }}>
-						<BasicButton text="추가" onClick={() => addTempToAssets()} />
+						<BasicButton text="추가" onClick={addTempToAssets} />
 					</Box>
 				</>
 			)}
