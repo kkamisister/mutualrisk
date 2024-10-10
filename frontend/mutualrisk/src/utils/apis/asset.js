@@ -56,12 +56,17 @@ export const fetchEtfByAssetId = async assetId => {
  * 자산의 기간 내 종가 조회
  * @typedef {Number} assetId
  * @typedef {Number} period - 조회 기간 (일 단위)
- * @param {{assetId, period}}
+ * @typedef {Number} offset - 처음에 조회할 기간의 오프셋
+ * @param {{assetId, period, offest}}
  * @returns {Object} - Response 내 data 객체, API 문서 참조
  */
-export const fetchAssetHistoryByAssetId = async ({ assetId, period }) => {
+export const fetchAssetHistoryByAssetId = async ({
+	assetId,
+	period,
+	offset,
+}) => {
 	const response = await axiosInstance.get(
-		`/asset/history/${assetId}?period=${period}`
+		`/asset/history/${assetId}?period=${period}&offset=${offset}`
 	);
 	return response.data.data;
 };
