@@ -24,8 +24,7 @@ import {
 	fetchPortfolioByPorfolioId,
 } from 'utils/apis/analyze';
 import useAssetStore from 'stores/useAssetStore';
-import { useQuery } from '@tanstack/react-query';
-import { enqueueSnackbar } from 'notistack';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { colors } from 'constants/colors';
 import StockSearchBar from 'pages/portfolio/create/stocksearch/StockSearchBar';
 
@@ -37,11 +36,31 @@ const PortfolioCreatePage = () => {
 	const [showContraint, setShowConstraint] = useState(false);
 	const [activeStep, setActiveStep] = useState(0);
 
-	const { assets, updateAsset, updateTotalCash } = useAssetStore(state => ({
-		assets: state.assets,
-		updateAsset: state.updateAsset,
-		updateTotalCash: state.updateTotalCash,
-	}));
+	const queryClient = useQueryClient();
+	const recommendedAsset = queryClient.getQueryData('selectedAsset');
+
+	const fetchRecommended = asset => {
+		if (asset) {
+			console.log('자산추천 받았다네', asset);
+			setIsRecommended();
+			addAsset(asset);
+		}
+	};
+
+	useEffect(() => {
+		if (recommendedAsset) {
+			fetchRecommended(recommendedAsset);
+		}
+	}, [recommendedAsset]);
+
+	const { assets, updateAsset, updateTotalCash, setIsRecommended, addAsset } =
+		useAssetStore(state => ({
+			assets: state.assets,
+			updateAsset: state.updateAsset,
+			updateTotalCash: state.updateTotalCash,
+			setIsRecommended: state.setIsRecommended,
+			addAsset: state.addAsset,
+		}));
 
 	const { data: portfolioList } = useQuery({
 		queryKey: ['portfolioList'],
@@ -53,7 +72,7 @@ const PortfolioCreatePage = () => {
 	};
 
 	useEffect(() => {
-		if (portfolioList && hasPortfolio) {
+		if (portfolioList && portfolioList.hasPortfolio) {
 			setHasPortfolio(portfolioList.hasPortfolio);
 			updateTotalCash(portfolioList.recentValuation);
 			setLatestPortfolioId(portfolioList.portfolioList[0].id);
@@ -130,7 +149,7 @@ const PortfolioCreatePage = () => {
 					)}
 				</Grid>
 			</Grid>
-			{isDialogOpen && (
+			{isDialogOpen && !hasPortfolio && (
 				<>
 					<Backdrop open={isDialogOpen} style={{ zIndex: 1300 }} />
 					<Dialog
