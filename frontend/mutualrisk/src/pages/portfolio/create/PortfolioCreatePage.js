@@ -55,12 +55,12 @@ const PortfolioCreatePage = () => {
 	const recommendedAsset = queryClient.getQueryData('selectedAsset');
 	useEffect(() => {
 		setIsRecommended(true);
-		console.log('아 얘는 추천을받았단게');
+		// console.log('아 얘는 추천을받았단게');
 	}, [recommendedAsset]);
 
 	const fetchRecommended = asset => {
 		if (asset) {
-			console.log('자산추천 받았다네', asset);
+			// console.log('자산추천 받았다네', asset);
 			addAsset(asset);
 		}
 	};
@@ -69,10 +69,6 @@ const PortfolioCreatePage = () => {
 		queryKey: ['portfolioList'],
 		queryFn: fetchPortfolioList,
 	});
-
-	useEffect(() => {
-		console.log('Updated assets:', assets);
-	}, [assets]);
 
 	const onItemsConfirm = () => {
 		setShowConstraint(true);
@@ -100,10 +96,10 @@ const PortfolioCreatePage = () => {
 				if (isRecommended) {
 					updateAsset(latestPortfolio.portfolio.assets);
 					fetchRecommended(recommendedAsset);
-					console.log('추천도완');
+					// console.log('추천도완');
 				} else {
 					updateAsset(latestPortfolio.portfolio.assets);
-					console.log('업뎃완');
+					// console.log('업뎃완');
 				}
 			} else {
 				setIsDialogOpen(true);
