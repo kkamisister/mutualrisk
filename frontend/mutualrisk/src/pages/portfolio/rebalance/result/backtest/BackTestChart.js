@@ -12,6 +12,13 @@ import {
 	ResponsiveContainer,
 } from 'recharts';
 
+// 숫자를 세 자리마다 쉼표를 찍고 소수점 제거하는 함수
+const formatNumber = value => {
+	return Math.floor(value)
+		.toString()
+		.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
 const BackTestChart = ({ backtestingData }) => {
 	const [data, setData] = useState([]);
 	const [yDomain, setYDomain] = useState([0, 'auto']);
@@ -63,8 +70,10 @@ const BackTestChart = ({ backtestingData }) => {
 					margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
 					<CartesianGrid strokeDasharray="3 3" />
 					<XAxis dataKey="time" />
-					<YAxis domain={yDomain} />
-					<Tooltip />
+					{/* YAxis에 tickFormatter를 적용하여 숫자를 포맷 */}
+					<YAxis domain={yDomain} tickFormatter={formatNumber} />
+					{/* Tooltip에 formatter를 적용하여 숫자를 포맷 */}
+					<Tooltip formatter={value => formatNumber(value)} />
 					<Legend />
 					<Line
 						type="monotone"

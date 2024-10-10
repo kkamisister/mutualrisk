@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { TextField, Stack, Typography } from '@mui/material';
@@ -11,6 +11,7 @@ import CustomButton from 'components/button/BasicButton';
 import ConfirmModal from 'pages/portfolio/rebalance/result/modal/ConfirmModal';
 import { confirmPortfolio } from 'utils/apis/portfolio';
 import SuccessSnackbar from 'components/snackbar/SuccessSnackbar';
+import useAssetStore from 'stores/useAssetStore';
 
 const RebalanceResultPage = () => {
 	const navigate = useNavigate();
@@ -19,6 +20,13 @@ const RebalanceResultPage = () => {
 	const [inputContent, setInputContent] = useState('');
 	const [openSnackbar, setOpenSnackbar] = useState(false); // Snackbar visibility state
 	const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message
+
+	const { setIsRecommended } = useAssetStore(state => ({
+		setIsRecommended: state.setIsRecommended,
+	}));
+	useEffect(() => {
+		setIsRecommended(false);
+	}, []);
 
 	const {
 		rebalanceResponseData,
@@ -72,10 +80,6 @@ const RebalanceResultPage = () => {
 
 		handleModalClose(); // Close the modal
 	};
-
-	// const handleSnackbarClose = () => {
-	// 	setOpenSnackbar(false); // Close the snackbar
-	// };
 
 	return (
 		<Stack spacing={2} sx={{ backgroundColor: colors.background.pcrimary }}>

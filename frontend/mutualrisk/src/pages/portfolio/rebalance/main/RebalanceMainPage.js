@@ -248,7 +248,7 @@ const RebalanceMainPage = () => {
 					</Typography>
 				</Box>
 				<Stack
-					spacing={1}
+					spacing={3}
 					direction="row"
 					sx={{
 						width: '100%',

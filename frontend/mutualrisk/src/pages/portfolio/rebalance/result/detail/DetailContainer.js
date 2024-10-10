@@ -26,6 +26,7 @@ const DetailContainer = ({ title, children, ...props }) => {
 					borderRadius: '20px',
 					height: '300px',
 					padding: '20px',
+					overflowY: 'hidden',
 				}}>
 				{children}
 			</WidgetContainer>
