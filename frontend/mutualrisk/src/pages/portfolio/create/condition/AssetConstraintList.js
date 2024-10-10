@@ -64,6 +64,8 @@ const AssetConstraintList = ({ assets }) => {
 		console.log('asset 초기화 체크');
 		if (assets.length > 0) {
 			console.log('assets 길이에 따라 제약 조건 초기화');
+			console.log('asset.length', assets.length);
+			console.log({ initializeConstraints });
 			initializeConstraints(assets.length);
 		}
 	}, [assets]);
@@ -317,7 +319,7 @@ const AssetConstraintList = ({ assets }) => {
 											error={minErrors[index]}
 											disabled={hasPortfolio}
 											variant="outlined"
-											value={lowerBounds[index]}
+											value={lowerBounds[index] || 0}
 											defaultValue={0}
 											onChange={e =>
 												setLowerBound(index, e.target.value)
@@ -363,7 +365,7 @@ const AssetConstraintList = ({ assets }) => {
 											disabled={hasPortfolio}
 											variant="outlined"
 											defaultValue={100}
-											value={upperBounds[index]}
+											value={upperBounds[index] || 100}
 											onChange={e =>
 												setUpperBound(index, e.target.value)
 											}
@@ -408,10 +410,14 @@ const AssetConstraintList = ({ assets }) => {
 											disabled={hasPortfolio}
 											variant="outlined"
 											defaultValue=""
-											value={exactProportion[index]}
-											onChange={e =>
-												setExactProportion(index, e.target.value)
-											}
+											value={exactProportion[index] ?? ''}
+											onChange={e => {
+												const value =
+													e.target.value === ''
+														? null
+														: Number(e.target.value);
+												setExactProportion(index, value);
+											}}
 											size="small"
 											InputProps={{
 												endAdornment: (
