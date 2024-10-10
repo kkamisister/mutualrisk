@@ -43,30 +43,115 @@ const AssetConstraintList = ({ assets }) => {
 	}));
 
 	const {
-		initialization,
-		lowerBounds,
-		upperBounds,
-		exactProportion,
-		isLowerBoundExceeded,
-		isUpperBoundUnderLimit,
 		setLowerBound,
 		setUpperBound,
 		setExactProportion,
+		lowerBounds,
+		upperBounds,
+		exactProportion,
+		initializeConstraints,
 	} = useConstraintStore(state => ({
-		initialization: state.initialization,
+		setLowerBound: state.setLowerBound,
+		setUpperBound: state.setUpperBound,
+		setExactProportion: state.setExactProportion,
 		lowerBounds: state.lowerBounds,
 		upperBounds: state.upperBounds,
 		exactProportion: state.exactProportion,
-		isLowerBoundExceeded: state.isLowerBoundExceeded,
-		isUpperBoundUnderLimit: state.isUpperBoundUnderLimit,
-		setLowerBound: state.setLowerBound,
-		setUpperBound: state.upperBounds,
-		setExactProportion: state.setExactProportion,
+		initializeConstraints: state.initializeConstraints,
 	}));
 
 	useEffect(() => {
-		initialization(assets.length);
-	}, []);
+		console.log('asset 초기화 체크');
+		if (assets.length > 0) {
+			console.log('assets 길이에 따라 제약 조건 초기화');
+			initializeConstraints(assets.length);
+		}
+	}, [assets]);
+
+	// 제약 조건 관리 가보자고
+	const [minErrors, setMinErrors] = useState([]);
+	const [maxErrors, setMaxErrors] = useState([]);
+	const [proErrors, setProErrors] = useState([]);
+	const [minTooltips, setMinTooltips] = useState([]);
+	const [maxTooltips, setMaxTooltips] = useState([]);
+	const [proTooltips, setProTooltips] = useState([]);
+
+	useEffect(() => {
+		if (assets.length > 0) {
+			// assets이 빈 배열이 아닌 경우에만 초기화
+			const length = assets.length;
+
+			setMinErrors(Array(length).fill(false));
+			setMaxErrors(Array(length).fill(false));
+			setProErrors(Array(length).fill(false));
+			setMinTooltips(Array(length).fill(''));
+			setMaxTooltips(Array(length).fill(''));
+			setProTooltips(Array(length).fill(''));
+		}
+	}, [assets]);
+
+	const validateErrors = () => {
+		const minErrorsTemp = [...minErrors];
+		const maxErrorsTemp = [...maxErrors];
+		const proErrorsTemp = [...proErrors];
+		const minTooltipsTemp = [...minTooltips];
+		const maxTooltipsTemp = [...maxTooltips];
+		const proTooltipsTemp = [...proTooltips];
+
+		let minTotal = 0;
+		let maxTotal = 0;
+		let proTotal = 0;
+		let hasProportion = true;
+
+		assets.forEach((asset, index) => {
+			const lowerBound = lowerBounds[index];
+			const upperBound = upperBounds[index];
+			const proportion = exactProportion[index];
+
+			minTotal += Number(lowerBound);
+			maxTotal += Number(upperBound);
+			if (proportion !== null) proTotal += Number(proportion);
+
+			// 최솟값이 최댓값보다 큰 경우
+			if (Number(lowerBound) > Number(upperBound)) {
+				minErrorsTemp[index] = true;
+				minTooltipsTemp[index] = '최솟값이 최댓값보다 큽니다.';
+			} else {
+				minErrorsTemp[index] = false;
+				minTooltipsTemp[index] = '';
+			}
+
+			// 지정 비율이 null이 아닌 경우 합산 필요
+			if (proportion === null) {
+				hasProportion = false;
+			}
+		});
+
+		// 모든 최솟값 합이 100을 초과한 경우
+		if (minTotal > 100) {
+			minErrorsTemp.fill(true);
+			minTooltipsTemp.fill('모든 최솟값의 합이 100을 초과했습니다.');
+		}
+
+		// 모든 최댓값 합이 100 미만인 경우
+		if (maxTotal < 100) {
+			maxErrorsTemp.fill(true);
+			maxTooltipsTemp.fill('모든 최댓값의 합이 100 미만입니다.');
+		}
+
+		// 지정 비율이 null이 없고 합이 100이 아닌 경우
+		if (hasProportion && proTotal !== 100) {
+			proErrorsTemp.fill(true);
+			proTooltipsTemp.fill('지정 비율의 합이 100이 아닙니다.');
+		}
+
+		setMinErrors(minErrorsTemp);
+		setMaxErrors(maxErrorsTemp);
+		setProErrors(proErrorsTemp);
+		setMinTooltips(minTooltipsTemp);
+		setMaxTooltips(maxTooltipsTemp);
+		setProTooltips(proTooltipsTemp);
+	};
 
 	const { data } = useQuery({
 		queryKey: ['portfolioList'],
@@ -74,9 +159,8 @@ const AssetConstraintList = ({ assets }) => {
 	});
 
 	useEffect(() => {
-		// console.log('야 쿼리호 ㅜㄹ함?', data);
-		if (data.hasPortfolio || isRecommended) {
-			console.log('아 유저 포폴잇다니까');
+		if (data?.hasPortfolio || isRecommended) {
+			// console.log('아 유저 포폴잇다니까');
 			setHasPortfolio(true);
 		}
 	}, [data, isRecommended]);
@@ -84,11 +168,13 @@ const AssetConstraintList = ({ assets }) => {
 	const mutation = useMutation({
 		mutationFn: createPortfolio,
 		onSuccess: data => {
+			// setIsRecommended(false);
+			// console.log('제작완료 데이터', data);
+			// console.log(JSON.stringify(data));
 			queryClient.removeQueries('selectedAsset');
-			setIsRecommended(false);
 			// console.log('포트폴리오 제작 완료:', data);
 			navigate('/rebalance/result', {
-				state: { newPortfolioData: data },
+				state: { newPortfolioData: data.data },
 			});
 		},
 		onError: error => {
@@ -100,21 +186,32 @@ const AssetConstraintList = ({ assets }) => {
 		console.log('totalCash', totalCash);
 		console.log('lowerBounds', lowerBounds);
 		const assetIds = assets.map(asset => asset.assetId);
+
+		// null이 아닌 값만 /100으로 변환
+		const transformedLowerBounds = lowerBounds.map(value =>
+			value !== null ? value / 100 : null
+		);
+		const transformedUpperBounds = upperBounds.map(value =>
+			value !== null ? value / 100 : null
+		);
+		const transformedExactProportion = exactProportion.map(value =>
+			value !== null ? value / 100 : null
+		);
+
 		console.log('assetIds', assetIds);
-		console.log('lowerBoudns', lowerBounds);
-		console.log('비율', exactProportion);
+		console.log('변환된 lowerBounds', transformedLowerBounds);
+		console.log('변환된 upperBounds', transformedUpperBounds);
+		console.log('변환된 비율', transformedExactProportion);
+
 		mutation.mutate({
 			totalCash,
 			assetIds,
-			lowerBounds,
-			upperBounds,
-			exactProportion,
+			lowerBounds: transformedLowerBounds,
+			upperBounds: transformedUpperBounds,
+			exactProportion: transformedExactProportion,
 		});
 	};
 
-	useEffect(() => {
-		console.log(hasPortfolio);
-	}, []);
 	const handleUnlock = () => {
 		setHasPortfolio(false);
 		setOpenDialog(false);
@@ -164,23 +261,13 @@ const AssetConstraintList = ({ assets }) => {
 			<Box
 				sx={{
 					width: '100%',
-					height: 'calc(100% - 140px)',
+					height: 'calc(100% - 150px)',
 					overflowY: 'auto',
 					'&::-webkit-scrollbar': { display: 'none' },
 					msOverflowStyle: 'none',
 					scrollbarWidth: 'none',
 				}}>
 				{assets.map((asset, index) => {
-					const isPriceOverTotalCash = asset.price > totalCash;
-					const lowerBoundTooltip = isLowerBoundExceeded
-						? '최소 비율 합이 100%를 초과했습니다.'
-						: '';
-					const upperBoundTooltip = isUpperBoundUnderLimit
-						? '최대 비율 합이 100%미만입니다.'
-						: '';
-					const priceTooltip = isPriceOverTotalCash
-						? '종목 가격이 총 자산보다 높습니다'
-						: '';
 					const imageURL = `https://j11a607.p.ssafy.io${asset.imagePath}/${asset.imageName}`;
 
 					return (
@@ -223,15 +310,14 @@ const AssetConstraintList = ({ assets }) => {
 										alignItems: 'center',
 										width: '100%',
 									}}>
-									<Tooltip title={lowerBoundTooltip || priceTooltip}>
+									<Tooltip title={minTooltips[index]}>
 										<TextField
 											type="number"
 											onClick={handleTextFieldClick}
-											error={
-												isLowerBoundExceeded || isPriceOverTotalCash
-											}
+											error={minErrors[index]}
 											disabled={hasPortfolio}
 											variant="outlined"
+											value={lowerBounds[index]}
 											defaultValue={0}
 											onChange={e =>
 												setLowerBound(index, e.target.value)
@@ -244,11 +330,9 @@ const AssetConstraintList = ({ assets }) => {
 													</InputAdornment>
 												),
 												sx: {
-													backgroundColor:
-														isLowerBoundExceeded ||
-														isPriceOverTotalCash
-															? colors.background.red
-															: 'inherit',
+													backgroundColor: minErrors[index]
+														? colors.background.red
+														: 'inherit',
 													borderRadius: '4px',
 												},
 												inputProps: {
@@ -271,17 +355,15 @@ const AssetConstraintList = ({ assets }) => {
 										alignItems: 'center',
 										width: '100%',
 									}}>
-									<Tooltip title={upperBoundTooltip || priceTooltip}>
+									<Tooltip title={maxTooltips[index]}>
 										<TextField
 											type="number"
-											error={
-												isUpperBoundUnderLimit ||
-												isPriceOverTotalCash
-											}
+											error={maxErrors[index]}
 											onClick={handleTextFieldClick}
 											disabled={hasPortfolio}
 											variant="outlined"
 											defaultValue={100}
+											value={upperBounds[index]}
 											onChange={e =>
 												setUpperBound(index, e.target.value)
 											}
@@ -293,11 +375,9 @@ const AssetConstraintList = ({ assets }) => {
 													</InputAdornment>
 												),
 												sx: {
-													backgroundColor:
-														isLowerBoundExceeded ||
-														isPriceOverTotalCash
-															? colors.background.red
-															: 'inherit',
+													backgroundColor: maxErrors[index]
+														? colors.background.red
+														: 'inherit',
 													borderRadius: '4px',
 												},
 												inputProps: {
@@ -320,14 +400,15 @@ const AssetConstraintList = ({ assets }) => {
 										alignItems: 'center',
 										width: '100%',
 									}}>
-									<Tooltip title={priceTooltip}>
+									<Tooltip title={proTooltips[index]}>
 										<TextField
 											type="number"
-											error={isPriceOverTotalCash}
+											error={proErrors[index]}
 											onClick={handleTextFieldClick}
 											disabled={hasPortfolio}
 											variant="outlined"
 											defaultValue=""
+											value={exactProportion[index]}
 											onChange={e =>
 												setExactProportion(index, e.target.value)
 											}
@@ -339,11 +420,9 @@ const AssetConstraintList = ({ assets }) => {
 													</InputAdornment>
 												),
 												sx: {
-													backgroundColor:
-														isLowerBoundExceeded ||
-														isPriceOverTotalCash
-															? colors.background.red
-															: 'inherit',
+													backgroundColor: proErrors[index]
+														? colors.background.red
+														: 'inherit',
 													borderRadius: '4px',
 												},
 												inputProps: {
