@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-	Modal,
-	TextField,
-	Button,
-	Stack,
-	Box,
-	Typography,
-} from '@mui/material';
+import { Stack, Box, Typography, Button, TextField } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import TitleDivider from 'components/title/TitleDivider';
 import PortfolioPieChart from 'pages/portfolio/rebalance/main/piechart/PortfolioPieChart';
@@ -16,11 +9,11 @@ import WidgetContainer from 'components/container/WidgetConatiner';
 import CustomButton from 'components/button/BasicButton';
 import Title from 'components/title/Title';
 import PortfolioSummary from 'pages/portfolio/rebalance/main/summary/PortfolioSummary';
+import ConfirmModal from 'pages/portfolio/rebalance/result/modal/ConfirmModal';
 import {
 	fetchPortfolioList,
 	fetchPortfolioByPorfolioId,
 } from 'utils/apis/analyze';
-import ConfirmModal from 'pages/portfolio/rebalance/result/modal/ConfirmModal';
 import { colors } from 'constants/colors';
 
 const RebalanceMainPage = () => {
@@ -33,17 +26,21 @@ const RebalanceMainPage = () => {
 	const queryClient = useQueryClient();
 	let latestPortfolio = queryClient.getQueryData('latestPortfolio');
 
-	const formatDate = dateString => {
-		const date = new Date(dateString);
-		return date
+	const formatDate = dateString =>
+		new Date(dateString)
 			.toLocaleDateString('ko-KR', {
 				year: 'numeric',
 				month: '2-digit',
 				day: '2-digit',
 			})
-			.replace(/\./g, '/') // 점(.)을 슬래시(/)로 바꿈
-			.replace(/\/$/, ''); // 날짜 끝에 '/'가 붙지 않도록 제거
-	};
+			.replace(/\./g, '/')
+			.replace(/\/$/, '');
+
+	const formatCurrency = amount =>
+		`${amount.toLocaleString('ko-KR', {
+			minimumFractionDigits: 1,
+			maximumFractionDigits: 1,
+		})} 원`;
 
 	const { data: portfolioListData, isLoading: isListLoading } = useQuery({
 		queryKey: ['portfolioList'],
@@ -62,10 +59,7 @@ const RebalanceMainPage = () => {
 		},
 	});
 
-	const handleModalOpen = () => {
-		setIsModalOpen(true);
-	};
-
+	const handleModalOpen = () => setIsModalOpen(true);
 	const handleModalClose = () => {
 		setIsModalOpen(false);
 		setInputContent('');
@@ -75,14 +69,11 @@ const RebalanceMainPage = () => {
 
 	const handleInputChange = e => {
 		const value = e.target.value.replace(/,/g, '');
-		setDisplayValue(e.target.value);
-
-		if (/^\d*$/.test(value) && Number(value) >= 0) {
+		if (/^-?\d*$/.test(value)) {
+			setDisplayValue(e.target.value);
 			setInputContent(value === '' ? '' : Number(value).toLocaleString());
 			setError(false);
-		} else {
-			setError(true);
-		}
+		} else setError(true);
 	};
 
 	const handleAmountClick = amount => {
@@ -119,11 +110,13 @@ const RebalanceMainPage = () => {
 	});
 
 	const portfolio = portfolioData?.portfolio;
+	const valuation = portfolio?.performance.valuation;
 	const assets = portfolio?.assets || [];
 
-	useEffect(() => {
-		console.log('Portfolio version:', finalVersion);
-	}, [finalVersion]);
+	useEffect(
+		() => console.log('Portfolio version:', finalVersion),
+		[finalVersion]
+	);
 
 	if (isLoading || isListLoading) return <div>Loading...</div>;
 	if (isError) return <div></div>;
@@ -202,7 +195,6 @@ const RebalanceMainPage = () => {
 							/>
 						</Box>
 					</WidgetContainer>
-
 					{finalVersion ? (
 						<PortfolioSummary version={finalVersion} />
 					) : (
@@ -250,8 +242,13 @@ const RebalanceMainPage = () => {
 				handleClose={handleModalClose}
 				handleSave={handleSave}>
 				<Stack spacing={2}>
+					<Typography fontSize={13} color={colors.main.primary400}>
+						{valuation
+							? '기존 자산 : ' + formatCurrency(valuation)
+							: 'N/A'}
+					</Typography>
 					<TextField
-						label="자산 (원)"
+						label="추가할 자산을 입력해주세요 (원 단위)"
 						variant="outlined"
 						fullWidth
 						value={displayValue}
