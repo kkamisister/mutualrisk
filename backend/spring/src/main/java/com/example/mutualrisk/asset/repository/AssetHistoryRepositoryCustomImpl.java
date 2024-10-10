@@ -50,6 +50,14 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
     }
 
     @Override
+    public List<AssetHistory> findAllHistoryOfAssets(Asset asset, List<LocalDateTime> dateTimes) {
+        return selectFrom(assetHistory)
+            .where(assetHistory.asset.eq(asset)
+                .and(assetHistory.date.in(dateTimes)))
+            .fetch();
+    }
+
+    @Override
     public List<AssetHistory> findRecentHistoryOfAsset(Asset asset,Integer period,Integer offset) {
         return selectFrom(assetHistory)
             .join(assetHistory.asset, QAsset.asset).fetchJoin()

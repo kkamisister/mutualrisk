@@ -335,7 +335,11 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 1. userId를 이용해서, mongoDB에서 데이터를 검색해 가져온다
         Portfolio portfolio = getMyPortfolioById(userId, portfolioId);
 
+        // 1-1. 환율 가져오기
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
         // 2. AssetList 구하기
+        // asset_id 순으로 정렬되어 있음이 보장되어 있음
         List<PortfolioAsset> portfolioAssetList = portfolio.getAsset();
 
         List<Integer> assetIdList = portfolioAssetList.stream()
@@ -343,6 +347,9 @@ public class PortfolioServiceImpl implements PortfolioService{
             .toList();
 
         List<Asset> assetList = assetRepository.findAllById(assetIdList);
+        Asset sp500 = assetRepository.findById(SP500_ASSET_ID)
+            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
+        List<Asset> benchMarkSP500 = List.of(sp500);
 
         List<Integer> purchaseQuantityList = portfolioAssetList.stream()
             .map(PortfolioAsset::getTotalPurchaseQuantity)
@@ -351,70 +358,22 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 3. 포트폴리오 백테스팅 결과 저장
         LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
 
-        // 이제 자산별로 해당 날짜에 해당하는 valuation을 누적해야한다
-        Map<LocalDateTime,Double> valuationPerDate = new HashMap<>();
-
         List<Performance> performances = new ArrayList<>();
-        for(int idx = 0;idx < assetList.size();idx++){
-            Asset asset = assetList.get(idx);
+        List<Double> portfolioBacktestValuation = getPortfolioBacktestValuation(timeInterval, assetList, purchaseQuantityList, recentDate, recentExchangeRate);
 
-            Double purchaseQuantity = Double.valueOf(purchaseQuantityList.get(idx)); // 구매한 주식 수
-            calculateBackTestValuation(timeInterval, asset, recentDate, purchaseQuantity, valuationPerDate);
+        Integer[] purchaseNum = new Integer[30];
+        Arrays.fill(purchaseNum, 1);
+        List<Integer> purchaseNumOfSP500 = List.of(purchaseNum);
+        List<Double> sp500BacktestValuation = getPortfolioBacktestValuation(timeInterval, benchMarkSP500, purchaseNumOfSP500, recentDate, recentExchangeRate);
+        double ratio = portfolioBacktestValuation.get(0) / sp500BacktestValuation.get(0);
+
+        for (int idx=0; idx<30; idx++) {
+            performances.add(Performance.builder()
+                .time(dateUtil.getPastDate(recentDate, timeInterval, 30 - idx))
+                .valuation(portfolioBacktestValuation.get(idx))
+                .sp500Valuation(sp500BacktestValuation.get(idx) * ratio)
+                .build());
         }
-
-        // 날짜에 해당하는 현재 포트폴리오의 누적 valuation을 맵에 기록하였다
-        // 이제 동일 기간에 해당하는 sp500의 valuation 또한 기록한다
-        // 현재 포트폴리오의 첫 시작 시점의 valuation을 해당시점의 sp500의 가치로 나누어서 나온 주식 수(소수점)
-        // 를 날짜별로 끌고갔을 때 그 시점의 가치를 계산한다
-
-        // sp500자산
-        Asset sp500 = assetRepository.findById(SP500_ASSET_ID)
-            .orElseThrow(() -> new MutualRiskException(ErrorCode.SP_NOT_FOUND));
-
-        // 포트폴리오의 첫 targetDate 가지고온다
-        LocalDateTime firstDate = dateUtil.getPastDate(recentDate,timeInterval,30);
-
-        // 그 date의 valuation을 가지고 온다
-        Double firstValuation = valuationPerDate.get(firstDate);
-
-        log.warn("firstValuation : {}",firstValuation);
-
-        AssetHistory historyOfSP500;
-        List<LocalDateTime> validDate = assetHistoryService.getValidDate(sp500, firstDate, 1);
-        if(validDate.isEmpty()){ // 유효한 날짜가 없는 경우, 그 자산의 가장 오래된 가격을 가지는 assetHistory생성
-            historyOfSP500 = AssetHistory.builder()
-                .asset(sp500)
-                .price(sp500.getOldestPrice())
-                .date(firstDate)
-                .build();
-        }else{
-            LocalDateTime dateTime = validDate.get(0);
-            historyOfSP500 = assetHistoryRepository.findRecentHistoryOfAsset(sp500, dateTime)
-                .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
-        }
-
-        // 그 날 기준 sp500을 몇 개 살 수 있었는지 찾는다
-        Double quantityOfSP500 = firstValuation / historyOfSP500.getPrice();
-        Map<LocalDateTime,Double> sp500ValuationMap = new HashMap<>();
-
-        // valuation을 계산한다
-        calculateBackTestValuation(timeInterval,sp500,recentDate,quantityOfSP500,sp500ValuationMap);
-
-        // 이제 map을 돌면서 performance 객체를 만들어서 리스트에 넣는다
-        valuationPerDate.entrySet().stream()
-            .sorted(Map.Entry.comparingByKey())  // LocalDateTime 기준으로 오름차순 정렬
-            .forEach(entry -> {
-                LocalDateTime targetDate = entry.getKey();
-                Double valuation = entry.getValue();
-                Double sp500Valuation = sp500ValuationMap.get(targetDate);
-                performances.add(Performance.builder()
-                    .time(targetDate)
-                    .valuation(valuation)
-                    .sp500Valuation(sp500Valuation)
-                    .build());
-
-
-            });
 
         PortfolioValuationDto data = PortfolioValuationDto.builder()
             .portfolioId(portfolio.getId())
@@ -424,6 +383,69 @@ public class PortfolioServiceImpl implements PortfolioService{
             .build();
 
         return new ResponseWithData<>(HttpStatus.OK.value(), "백테스팅 결과 조회 성공", data);
+    }
+
+    private List<Double> getPortfolioBacktestValuation(TimeInterval timeInterval, List<Asset> assetList, List<Integer> purchaseQuantityList, LocalDateTime recentDate, Double recentExchangeRate) {
+        Double[] valuations = new Double[30];
+        for (int idx = 0; idx < 30; idx ++) {
+            valuations[idx] = (double) 0;
+        }
+        for (int idx = 0; idx < assetList.size(); idx++) {
+            Asset asset = assetList.get(idx);
+            Integer purchaseQuantity = purchaseQuantityList.get(idx);
+
+            List<LocalDateTime> validDates = getCashedValidDatesOfAsset(asset, timeInterval, recentDate);
+
+            List<Double> backTestValuationsOfAsset = getBackTestValuationOfAsset(asset, purchaseQuantity, validDates, recentExchangeRate);
+//            System.out.println("backTestValuationsOfAsset.size() = " + backTestValuationsOfAsset.size());
+//            System.out.println("backTestValuationsOfAsset = " + backTestValuationsOfAsset);
+            for (int subIdx=0; subIdx<30; subIdx++) {
+                valuations[subIdx] += backTestValuationsOfAsset.get(subIdx);
+            }
+        }
+
+        return List.of(valuations);
+    }
+
+    private List<Double> getBackTestValuationOfAsset(Asset asset, Integer purchaseQuantity, List<LocalDateTime> validDates, Double recentExchangeRate) {
+        List<AssetHistory> allHistoryOfAssets = assetHistoryRepository.findAllHistoryOfAssets(asset, validDates);
+
+        List<Double> backTestValuations = new ArrayList<>();
+        for (int dDate = 30; dDate >= 1; dDate--) {
+            int idx = allHistoryOfAssets.size() - dDate;
+            if (idx < 0) {
+                backTestValuations.add(asset.getOldestPrice(recentExchangeRate) * purchaseQuantity);
+            }
+            else {
+                Double price = allHistoryOfAssets.get(idx).getPrice();
+                if (asset.getRegion().equals(Region.US)) price *= recentExchangeRate;
+                backTestValuations.add(price * purchaseQuantity);
+            }
+        }
+
+        return backTestValuations;
+    }
+
+    private List<LocalDateTime> getCashedValidDatesOfAsset(Asset asset, TimeInterval timeInterval, LocalDateTime recentDate) {
+        List<LocalDateTime> cachedValidDates = redisHashRepository.getCachedValidDates(asset.getCode(), timeInterval.toString());
+        if(ObjectUtils.isEmpty(cachedValidDates)){ // 캐싱된 결과가 없는 경우, 직접 찾아야 한다
+            cachedValidDates = new ArrayList<>();
+            for (int dDate = 30; dDate >= 1; dDate--) {
+
+                LocalDateTime curDateTime = dateUtil.getPastDate(recentDate, timeInterval, dDate);
+                List<LocalDateTime> validDate = assetHistoryService.getValidDate(asset, curDateTime, 1);
+                cachedValidDates.add(validDate.get(0));
+
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime midNight = now.toLocalDate().atTime(LocalTime.MIDNIGHT).plusDays(1);
+
+            Duration durationUntilMidnight = Duration.between(now,midNight);
+            long ttlInSeconds = durationUntilMidnight.getSeconds();
+            redisHashRepository.cacheValidDates(asset.getCode(), timeInterval.toString(),cachedValidDates,ttlInSeconds);
+        }
+        return cachedValidDates;
     }
 
     private void calculateBackTestValuation(TimeInterval timeInterval, Asset asset, LocalDateTime recentDate,
@@ -826,8 +848,8 @@ public class PortfolioServiceImpl implements PortfolioService{
             String category = entry.getKey();
             List<Asset> assets = entry.getValue();
 
-            System.out.println("category = " + category);
-            System.out.println("assets = " + assets);
+//            System.out.println("category = " + category);
+//            System.out.println("assets = " + assets);
 
             RiskRatio riskRatio = calculateSharpeRatioRanking(assets, sharpeRatio);
 
@@ -2129,27 +2151,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         return myPortfolioList.get(0);
     }
 
-    // 백테스팅 그래프를 위한 메서드
-    /**
-     *
-     * @param purchaseQuantityList : 자산 구매량 정보를 담고 있는 list
-     * @param assetList : 자산 Entity를 담고 있는 list
-     * @param targetDate : valuation 를 구하기 원하는 날짜
-     * @return : targetDate 기준 포트폴리오 valuation
-     */
-    private Double getValuation(List<Integer> purchaseQuantityList, List<Asset> assetList, LocalDateTime targetDate) {
-        // 특정 날짜의 자산 가격을 가져옴
-        List<Double> assetPrices = assetHistoryService.getAssetHistoryList(assetList, targetDate)
-            .stream()
-            .map(AssetHistory::getPrice)
-            .toList();
-
-        // PortfolioAsset의 totalPurchaseQuantity와 assetPrices를 곱한 값을 합산
-        return IntStream.range(0, assetPrices.size())
-            .mapToDouble(i -> purchaseQuantityList.get(i) * assetPrices.get(i))
-            .sum();
-    }
-    /**
+       /**
      * 오늘자 자산의 가격을 가지고온다
      * (자산코드, 자산가격) 을 반환한다
      * @param assets

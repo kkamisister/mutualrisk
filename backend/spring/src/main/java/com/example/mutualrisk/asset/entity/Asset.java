@@ -87,4 +87,9 @@ public class Asset extends BaseEntity {
 		if (this.region.equals(Region.KR)) return this.recentPrice;
 		else return this.recentPrice * exchangeRate;
 	}
+
+	public Double getOldestPrice(Double exchangeRate) {
+		if (this.region.equals(Region.KR)) return this.oldestPrice;
+		else return this.oldestPrice * exchangeRate;
+	}
 }
