@@ -82,7 +82,7 @@ const useAssetStore = create(set => ({
 
 	addTotalCash: cash =>
 		set(state => ({
-			totalCash: state.totalCash + cash,
+			totalCash: state.totalCash + Number(cash),
 		})),
 
 	updateTotalCash: cash =>
