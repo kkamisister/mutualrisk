@@ -3,7 +3,7 @@ import { PieChart, Pie, ResponsiveContainer, Cell, Sector } from 'recharts';
 import { colors } from 'constants/colors';
 
 const AssetRatioPieChart = ({ assets, onHover }) => {
-	const [activeIndex, setActiveIndex] = useState(0);
+	const [activeIndex, setActiveIndex] = useState(1);
 	const [textWidth, setTextWidth] = useState(0);
 
 	// Pie hover 시 실행되는 함수

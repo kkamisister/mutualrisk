@@ -181,7 +181,7 @@ const PortfolioSummaryList = ({ ver }) => {
 							fontWeight: 'bold',
 							color: colors.text.sub1,
 						}}>
-						{sharpeRatio.toFixed(2)}%
+						{sharpeRatio.toFixed(2)}
 					</Typography>
 				</PortfolioSummaryListItem>
 
