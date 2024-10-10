@@ -63,7 +63,7 @@ const StockAddBox = ({ recommendAssets }) => {
 				<span style={{ fontWeight: 'bold' }}>
 					{currentAsset.expectedReturn.toFixed(2)}%
 				</span>
-				{`, 안정성이 `}
+				{`, 변동성이 `}
 				<span style={{ fontWeight: 'bold' }}>
 					{currentAsset.volatilityChange.toFixed(2)}%
 				</span>
