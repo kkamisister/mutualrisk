@@ -27,13 +27,15 @@ const AssetInputModal = ({ open, handleClose, child }) => {
 
 	const handleChange = e => {
 		const value = e.target.value.replace(/,/g, ''); // 쉼표 제거한 값
-		setDisplayValue(
-			value === '' ? '' : Number(value).toLocaleString() // 쉼표 없는 숫자도 허용
-		);
 
-		// 숫자만 포함하고 0 이상인 경우에만 assetValue 업데이트
+		// 쉼표 없는 숫자 형식을 assetValue에 저장
+		setAssetValue(value);
+
+		// displayValue에는 쉼표가 포함된 형식으로 저장
+		setDisplayValue(value === '' ? '' : Number(value).toLocaleString());
+
+		// 숫자만 포함하고 0 이상인 경우에만 유효한 값으로 간주
 		if (/^\d*$/.test(value) && Number(value) >= 0) {
-			setAssetValue(value === '' ? '' : Number(value).toLocaleString());
 			setError(false);
 		} else {
 			setError(true); // 유효하지 않은 입력은 에러 표시
@@ -41,12 +43,11 @@ const AssetInputModal = ({ open, handleClose, child }) => {
 	};
 
 	const handleAmountClick = amount => {
-		const currentValue = parseInt(assetValue.replace(/,/g, ''), 10) || 0;
+		const currentValue = parseInt(assetValue, 10) || 0; // 쉼표 제거 필요 없음
 		const newValue = currentValue + amount;
-		const newValueStr = newValue.toLocaleString();
 
-		setAssetValue(newValue);
-		setDisplayValue(newValueStr);
+		setAssetValue(String(newValue)); // 쉼표 없이 저장
+		setDisplayValue(newValue.toLocaleString()); // 쉼표 포함된 형식으로 표시
 	};
 
 	const handleConfirm = () => {
