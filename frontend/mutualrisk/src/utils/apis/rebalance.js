@@ -47,3 +47,25 @@ export const receiveRecommendAsset = async ({
 		newPortfolioAssetInfoList,
 	});
 };
+
+//  * 포트폴리오 제작 시 백테스팅 결과 요청
+export const finalBackTest = async (
+	newPortfolioAssetInfoList,
+	timeInterval = 'day',
+	measure = 'profit'
+) => {
+	const params = {
+		timeInterval,
+		measure,
+	};
+
+	const response = await axiosInstance.post(
+		`/portfolio/backtest`,
+		newPortfolioAssetInfoList,
+		{
+			params,
+		}
+	);
+
+	return response.data.data;
+};
