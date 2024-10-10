@@ -3,6 +3,7 @@ import { colors } from 'constants/colors';
 import React from 'react';
 import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied';
 const ErrorPage = ({ message }) => {
+	console.log('message', message);
 	return (
 		<Stack
 			sx={{
@@ -21,7 +22,7 @@ const ErrorPage = ({ message }) => {
 					fontWeight: '600',
 					color: colors.text.white,
 				}}>
-				{message}
+				{message || '내부에서 문제가 발생했어요'}
 			</Box>
 		</Stack>
 	);

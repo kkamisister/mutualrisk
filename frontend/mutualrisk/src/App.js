@@ -1,7 +1,7 @@
 import HomePage from './pages/home/HomePage';
 import LoginPage from './pages/home/login/LoginPage';
 import LoginCallbackPage from './pages/home/login/LoginCallbackPage';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import StockDetailPage from 'pages/stock/detail/StockDetailPage';
 import StockBookmarkPage from 'pages/stock/bookmark/StockBookmarkPage';
 import FundPage from 'pages/fund/FundPage';
@@ -16,59 +16,61 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { SnackbarProvider } from 'notistack';
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorPage from 'pages/error/ErrorPage';
-import { useEffect } from 'react';
 
 const queryClient = new QueryClient();
+
 function ErrorFallback({ error }) {
-	const navigate = useNavigate();
-
-	useEffect(() => {
-		// 에러 페이지로 이동
-		navigate('/error');
-	}, [navigate]);
-
 	return <ErrorPage message={error.message} />;
 }
 
 const App = () => {
 	return (
-		<ErrorBoundary FallbackComponent={<ErrorFallback />}>
+		<ErrorBoundary FallbackComponent={ErrorFallback}>
 			<SnackbarProvider autoHideDuration={2000}>
 				<QueryClientProvider client={queryClient}>
 					<BrowserRouter>
 						<Routes>
 							<Route element={<MainLayout />}>
-								<Route path="/" element={<HomePage />}></Route>
-								<Route path="/login" element={<LoginPage />}></Route>
+								<Route path="/" element={<HomePage />} />
+								<Route path="/login" element={<LoginPage />} />
 							</Route>
 
 							<Route
 								path="/login/kakao/callback"
-								element={<LoginCallbackPage />}></Route>
+								element={<LoginCallbackPage />}
+							/>
 							<Route element={<DashboardLayout />}>
 								<Route
 									path="/portfolio/detail"
-									element={<PortfolioDetailPage />}></Route>
+									element={<PortfolioDetailPage />}
+								/>
 								<Route
 									path="/rebalance"
-									element={<RebalanceMainPage />}></Route>
+									element={<RebalanceMainPage />}
+								/>
 								<Route
 									path="/rebalance/result"
-									element={<RebalanceResultPage />}></Route>
+									element={<RebalanceResultPage />}
+								/>
 								<Route
 									path="/portfolio/create"
-									element={<PortfolioCreatePage />}></Route>
+									element={<PortfolioCreatePage />}
+								/>
 								<Route
 									path="/stock/bookmark"
-									element={<StockBookmarkPage />}></Route>
+									element={<StockBookmarkPage />}
+								/>
 								<Route
 									path="/stock/detail/:assetId"
-									element={<StockDetailPage />}></Route>
-								<Route path="/fund/list" element={<FundPage />}></Route>
+									element={<StockDetailPage />}
+								/>
+								<Route path="/fund/list" element={<FundPage />} />
 								<Route
 									path="/fund/detail/:fundId"
-									element={<FundPage />}></Route>
+									element={<FundPage />}
+								/>
 							</Route>
+
 							<Route
 								path="*"
 								element={
