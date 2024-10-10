@@ -6,6 +6,7 @@ import com.example.mutualrisk.common.enums.PerformanceMeasure;
 import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.portfolio.entity.FrontierPoint;
 import com.example.mutualrisk.portfolio.entity.Portfolio;
+import com.example.mutualrisk.portfolio.entity.PortfolioAsset;
 import com.example.mutualrisk.portfolio.entity.RecommendAsset;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -47,6 +48,7 @@ public record PortfolioResponse() {
     @Schema(name = "포트폴리오 상세 데이터", description = "실제 포트폴리오 정보를 담은 데이터")
     public record PortfolioInfo(
         String portfolioId,
+        Double totalCash,
         PortfolioPerformance performance,
         List<PortfolioAssetInfo> assets,
         List<PortfolioRecommendResultDto> recommendAssets
@@ -128,9 +130,12 @@ public record PortfolioResponse() {
         String dailyPriceChangeRate,
         String dailyPriceChange,
         Double weight,
-        Double valuation
+        Double valuation,
+        Double lowerBound,
+        Double upperBound,
+        Double exactProportion
     ) {
-        public static PortfolioAssetInfo of(AssetInfo assetInfo, Double weight, Double valuation) {
+        public static PortfolioAssetInfo of(PortfolioAsset portfolioAsset, AssetInfo assetInfo, Double weight, Double valuation) {
             return PortfolioAssetInfo.builder()
                 .assetId(assetInfo.assetId())
                 .name(assetInfo.name())
@@ -145,6 +150,9 @@ public record PortfolioResponse() {
                 .dailyPriceChange(assetInfo.dailyPriceChange())
                 .weight(weight)
                 .valuation(valuation)
+                .lowerBound(portfolioAsset.getLowerBound())
+                .upperBound(portfolioAsset.getUpperBound())
+                .exactProportion(portfolioAsset.getExactProportion())
                 .build();
         }
     }
@@ -332,6 +340,19 @@ public record PortfolioResponse() {
     ) {
         public static AssetWeightDto of(Asset asset, Double weight) { return new AssetWeightDto(asset, weight);}
     }
+
+    /**
+     * 최적 포트폴리오 계산 fastAPI 반환 dto
+     */
+    public record EfficientFrontierResponseDto(
+        List<Double> weights,
+        PortfolioPerformance fictionalPerformance,
+        List<FrontierPoint> frontierPoints
+    ) {
+
+    }
+
+
 
     /**
      * hadoop 종목 추천 api 반환 dto
