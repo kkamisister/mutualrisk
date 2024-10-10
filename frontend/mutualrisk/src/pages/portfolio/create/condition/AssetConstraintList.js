@@ -71,30 +71,42 @@ const AssetConstraintList = ({ assets }) => {
 	}, [assets]);
 
 	// 제약 조건 관리 가보자고
-	const [minErrors, setMinErrors] = useState([]);
-	const [maxErrors, setMaxErrors] = useState([]);
-	const [proErrors, setProErrors] = useState([]);
-	const [minTooltips, setMinTooltips] = useState([]);
-	const [maxTooltips, setMaxTooltips] = useState([]);
-	const [proTooltips, setProTooltips] = useState([]);
+	const [minErrors, setMinErrors] = useState(
+		new Array(assets.length).fill(false)
+	);
+	const [maxErrors, setMaxErrors] = useState(
+		new Array(assets.length).fill(false)
+	);
+	const [proErrors, setProErrors] = useState(
+		new Array(assets.length).fill(false)
+	);
+	const [minTooltips, setMinTooltips] = useState(
+		new Array(assets.length).fill('')
+	);
+	const [maxTooltips, setMaxTooltips] = useState(
+		new Array(assets.length).fill('')
+	);
+	const [proTooltips, setProTooltips] = useState(
+		new Array(assets.length).fill('')
+	);
 
 	useEffect(() => {
 		if (assets.length > 0) {
 			// assets이 빈 배열이 아닌 경우에만 초기화
 			const length = assets.length;
 
-			setMinErrors(Array(length).fill(false));
-			setMaxErrors(Array(length).fill(false));
-			setProErrors(Array(length).fill(false));
-			setMinTooltips(Array(length).fill(''));
-			setMaxTooltips(Array(length).fill(''));
-			setProTooltips(Array(length).fill(''));
+			// setMinErrors(Array(length).fill(false));
+			// setMaxErrors(Array(length).fill(false));
+			// setProErrors(Array(length).fill(false));
+			// setMinTooltips(Array(length).fill(''));
+			// setMaxTooltips(Array(length).fill(''));
+			// setProTooltips(Array(length).fill(''));
 		}
 	}, [assets]);
 
 	const validateErrors = () => {
 		const minErrorsTemp = [...minErrors];
-		const maxErrorsTemp = [...maxErrors];
+		const maxErrorsTemp = Array.from(maxErrors);
 		const proErrorsTemp = [...proErrors];
 		const minTooltipsTemp = [...minTooltips];
 		const maxTooltipsTemp = [...maxTooltips];
@@ -128,23 +140,28 @@ const AssetConstraintList = ({ assets }) => {
 				hasProportion = false;
 			}
 		});
-
 		// 모든 최솟값 합이 100을 초과한 경우
 		if (minTotal > 100) {
-			minErrorsTemp.fill(true);
+			minErrorsTemp.fill(true, 0, assets.length);
 			minTooltipsTemp.fill('모든 최솟값의 합이 100을 초과했습니다.');
 		}
 
-		// 모든 최댓값 합이 100 미만인 경우
+		// maxTotal이 100보다 작으면 에러를 표시하고, 그렇지 않으면 초기화
 		if (maxTotal < 100) {
 			maxErrorsTemp.fill(true);
 			maxTooltipsTemp.fill('모든 최댓값의 합이 100 미만입니다.');
+		} else {
+			maxErrorsTemp.fill(false);
+			maxTooltipsTemp.fill('');
 		}
 
 		// 지정 비율이 null이 없고 합이 100이 아닌 경우
 		if (hasProportion && proTotal !== 100) {
 			proErrorsTemp.fill(true);
 			proTooltipsTemp.fill('지정 비율의 합이 100이 아닙니다.');
+		} else {
+			proErrorsTemp.fill(false);
+			proTooltipsTemp.fill('');
 		}
 
 		setMinErrors(minErrorsTemp);
@@ -154,6 +171,11 @@ const AssetConstraintList = ({ assets }) => {
 		setMaxTooltips(maxTooltipsTemp);
 		setProTooltips(proTooltipsTemp);
 	};
+
+	useEffect(() => {
+		validateErrors();
+		// console.log(maxErrors);
+	}, [lowerBounds, upperBounds, exactProportion]);
 
 	const { data } = useQuery({
 		queryKey: ['portfolioList'],
@@ -176,7 +198,7 @@ const AssetConstraintList = ({ assets }) => {
 			queryClient.removeQueries('selectedAsset');
 			// console.log('포트폴리오 제작 완료:', data);
 			navigate('/rebalance/result', {
-				state: { newPortfolioData: data.data },
+				state: { rebalanceResponseData: data.data },
 			});
 		},
 		onError: error => {
@@ -327,15 +349,15 @@ const AssetConstraintList = ({ assets }) => {
 											error={minErrors[index]}
 											disabled={hasPortfolio}
 											variant="outlined"
-											value={lowerBounds[index] || 0}
-											defaultValue={0}
+											value={lowerBounds[index]}
 											onChange={e => {
 												const value =
 													e.target.value === ''
 														? null
 														: parseFloat(e.target.value);
+												console.log(e);
 												setLowerBound(index, value);
-												validateErrors();
+												// validateErrors();
 											}}
 											size="small"
 											InputProps={{
@@ -377,15 +399,14 @@ const AssetConstraintList = ({ assets }) => {
 											onClick={handleTextFieldClick}
 											disabled={hasPortfolio}
 											variant="outlined"
-											defaultValue={100}
-											value={upperBounds[index] || 100}
+											value={upperBounds[index]}
 											onChange={e => {
 												const value =
 													e.target.value === ''
 														? null
 														: parseFloat(e.target.value);
 												setUpperBound(index, value);
-												validateErrors();
+												// validateErrors();
 											}}
 											size="small"
 											InputProps={{
@@ -435,7 +456,7 @@ const AssetConstraintList = ({ assets }) => {
 														? null
 														: parseFloat(e.target.value);
 												setExactProportion(index, value);
-												validateErrors();
+												// validateErrors();
 											}}
 											size="small"
 											InputProps={{
