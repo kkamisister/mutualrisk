@@ -15,12 +15,17 @@ const RebalanceResultPage = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [inputContent, setInputContent] = useState('');
 
-	const { rebalanceResponseData, recommendResponseData, newPortfolioData } =
-		location.state || {};
+	const {
+		rebalanceResponseData,
+		recommendResponseData,
+		newPortfolioData,
+		backTestResponseData,
+	} = location.state || {};
 
 	console.log('리밸런싱 결과:', rebalanceResponseData);
 	console.log('추천 자산 결과:', recommendResponseData);
 	console.log('포트폴리오 제작 결과:', newPortfolioData);
+	console.log('백테스팅 결과 :', backTestResponseData);
 
 	const handleInputChange = e => {
 		setInputContent(e.target.value);
@@ -49,7 +54,7 @@ const RebalanceResultPage = () => {
 				<StockChangeList rebalanceData={rebalanceResponseData} />
 			</Stack>
 			<Stack spacing={1}>
-				<BackTestChart />
+				<BackTestChart backtestingData={backTestResponseData} />
 			</Stack>
 			<Stack
 				direction="row"

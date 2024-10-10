@@ -48,11 +48,24 @@ export const receiveRecommendAsset = async ({
 	});
 };
 
-/**
- * 리밸런싱 포트폴리오 확정
- * @param {Object}  - API 문서 참조
- * @returns {Promise} - API 문서 참조
- */
-export const confirmRebalancePortfolio = async ({ assets, cash }) => {
-	return axiosInstance.post('/rebalance/final', { assets, cash });
+//  * 포트폴리오 제작 시 백테스팅 결과 요청
+export const finalBackTest = async (
+	newPortfolioAssetInfoList,
+	timeInterval = 'day',
+	measure = 'profit'
+) => {
+	const params = {
+		timeInterval,
+		measure,
+	};
+
+	const response = await axiosInstance.post(
+		`/portfolio/backtest`,
+		newPortfolioAssetInfoList,
+		{
+			params,
+		}
+	);
+
+	return response.data.data;
 };
