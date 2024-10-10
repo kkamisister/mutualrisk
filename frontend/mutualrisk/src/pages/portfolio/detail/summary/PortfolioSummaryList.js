@@ -103,7 +103,7 @@ const PortfolioSummaryList = ({ ver }) => {
 				<PortfolioSummaryListItem title="평가 금액">
 					<Typography
 						sx={{
-							fontSize: '18px',
+							fontSize: '20px',
 							fontWeight: 'bold',
 							color: colors.text.sub1,
 						}}>
@@ -116,7 +116,7 @@ const PortfolioSummaryList = ({ ver }) => {
 					<Typography sx={{ lineHeight: '1.2' }}>
 						{lastValuation !== null && (
 							<>
-								<span style={{ fontSize: '8px', color: 'gray' }}>
+								<span style={{ fontSize: '10px', color: 'gray' }}>
 									현재 가치 기준
 								</span>
 								<br />
@@ -124,7 +124,7 @@ const PortfolioSummaryList = ({ ver }) => {
 						)}
 						<span
 							style={{
-								fontSize: '15px',
+								fontSize: '18px',
 								fontWeight: 'bold',
 								color:
 									curValuation - initValuation > 0 ? 'red' : 'blue',
@@ -146,13 +146,13 @@ const PortfolioSummaryList = ({ ver }) => {
 				{lastValuation !== null && (
 					<PortfolioSummaryListItem title="예상 수익률">
 						<Typography sx={{ lineHeight: '1.2' }}>
-							<span style={{ fontSize: '8px', color: 'gray' }}>
+							<span style={{ fontSize: '10px', color: 'gray' }}>
 								매도 가치 기준
 							</span>
 							<br />
 							<span
 								style={{
-									fontSize: '15px',
+									fontSize: '18px',
 									fontWeight: 'bold',
 									color:
 										lastValuation - initValuation > 0
@@ -177,7 +177,7 @@ const PortfolioSummaryList = ({ ver }) => {
 				<PortfolioSummaryListItem title="위험률 대비 수익률">
 					<Typography
 						sx={{
-							fontSize: '18px',
+							fontSize: '20px',
 							fontWeight: 'bold',
 							color: colors.text.sub1,
 						}}>

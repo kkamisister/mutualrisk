@@ -12,7 +12,7 @@ const PortfolioAssetList = ({ assets, hoveredIndex }) => {
 					flexDirection: 'column',
 					justifyContent: 'space-between',
 					overflowY: 'auto',
-					padding: '20px 0',
+					// padding: '20px 0',
 				}}>
 				<Box sx={{ flex: 1 }}>
 					{assets.map((asset, index) => (

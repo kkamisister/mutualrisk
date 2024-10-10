@@ -12,6 +12,14 @@ import {
 import { colors } from 'constants/colors';
 import PortfolioAssetList from '../../main/piechart/PortfolioAssetList';
 
+// 길이가 긴 문자열을 자르고 말줄임표 붙이는 함수
+const truncateString = (str, maxLength) => {
+	if (str.length > maxLength) {
+		return `${str.slice(0, maxLength)}...`;
+	}
+	return str;
+};
+
 const RebalanceAfter = ({ rebalanceData }) => {
 	const [highlightedStockIndex, setHighlightedStockIndex] = useState(null);
 
@@ -48,8 +56,18 @@ const RebalanceAfter = ({ rebalanceData }) => {
 							}
 						}}>
 						<XAxis type="number" />
-						<YAxis type="category" dataKey="name" />
-						<Tooltip />
+						<YAxis
+							fontSize={12}
+							type="category"
+							dataKey="name"
+							tickFormatter={name => truncateString(name, 5)} // Y축에 표시되는 이름 자르기
+						/>
+						<Tooltip
+							formatter={(value, name) => [
+								`${value}%`,
+								truncateString(name, 20), // 툴팁에서 이름 자르기
+							]}
+						/>
 						<CartesianGrid strokeDasharray="3 3" />
 						<Bar
 							dataKey="value"

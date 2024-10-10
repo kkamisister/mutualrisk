@@ -69,7 +69,7 @@ const PortfolioPieChart = ({ assets, onHover }) => {
 				justifyContent: 'center',
 				alignItems: 'center',
 			}}>
-			<ResponsiveContainer width="100%" height={400}>
+			<ResponsiveContainer width="100%" height={450}>
 				<PieChart>
 					<Pie
 						activeIndex={activeIndex}

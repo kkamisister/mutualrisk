@@ -4,7 +4,13 @@ import PortfolioAssetListItem from 'pages/portfolio/rebalance/main/piechart/Port
 
 const PortfolioAssetList = ({ assets, hoveredIndex }) => {
 	return (
-		<Stack sx={{ height: '330px', position: 'relative' }}>
+		<Stack
+			sx={{
+				height: '400px',
+				// height: '100%',
+				position: 'relative',
+				overflow: 'hidden',
+			}}>
 			<Box
 				sx={{
 					flex: 1,
@@ -12,7 +18,6 @@ const PortfolioAssetList = ({ assets, hoveredIndex }) => {
 					flexDirection: 'column',
 					justifyContent: 'space-between',
 					overflowY: 'auto',
-					padding: '20px 0',
 					'&::-webkit-scrollbar': {
 						display: 'none',
 					},

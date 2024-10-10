@@ -14,10 +14,7 @@ import {
 import { Stack } from '@mui/material';
 import StockMenuButton from 'pages/stock/detail/StockMenuButton';
 import { colors } from 'constants/colors';
-import {
-	fetchBackTestByPortfolioId,
-	fetchPortfolioList,
-} from 'utils/apis/analyze';
+import { fetchBackTestByPortfolioId } from 'utils/apis/analyze';
 import { useQuery } from '@tanstack/react-query';
 
 const BackTesting = ({
@@ -29,14 +26,6 @@ const BackTesting = ({
 	const [tabMenu, setTabMenu] = useState(timeInterval);
 	const [error, setError] = useState(null);
 
-	const { data: portfolioListData } = useQuery({
-		queryKey: ['portfolioList'],
-		queryFn: fetchPortfolioList,
-		staleTime: 300000,
-	});
-
-	const latestPortfolioId = portfolioListData?.portfolioList?.[0]?.id;
-
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
@@ -45,53 +34,19 @@ const BackTesting = ({
 					tabMenu,
 					measure
 				);
-				let selectedPortfolioPerformances =
+				const selectedPortfolioPerformances =
 					selectedResponse.performances.map(item => ({
 						time: new Date(item.time).toISOString().split('T')[0],
 						selectedValuation: item.valuation,
 						sp500Valuation: item.sp500Valuation,
 					}));
 
-				let latestPortfolioPerformances = [];
-
-				if (latestPortfolioId && latestPortfolioId !== portfolioId) {
-					const latestResponse = await fetchBackTestByPortfolioId(
-						latestPortfolioId,
-						tabMenu,
-						measure
-					);
-					latestPortfolioPerformances = latestResponse.performances.map(
-						item => ({
-							time: new Date(item.time).toISOString().split('T')[0],
-							latestValuation: item.valuation,
-						})
-					);
-				}
-
-				if (tabMenu === 'year') {
-					selectedPortfolioPerformances =
-						selectedPortfolioPerformances.slice(-10);
-					latestPortfolioPerformances =
-						latestPortfolioPerformances.slice(-10);
-				}
-
-				const merged = selectedPortfolioPerformances.reduce(
-					(acc, selectedItem) => {
-						const matchingLatestItem = latestPortfolioPerformances.find(
-							latestItem => latestItem.time === selectedItem.time
-						);
-						acc.push({
-							time: selectedItem.time,
-							selectedValuation: selectedItem.selectedValuation,
-							sp500Valuation: selectedItem.sp500Valuation,
-							latestValuation: matchingLatestItem
-								? matchingLatestItem.latestValuation
-								: null,
-						});
-						return acc;
-					},
-					[]
-				);
+				// mergedData는 S&P 500과 선택된 포트폴리오의 평가 가치만 비교합니다.
+				const merged = selectedPortfolioPerformances.map(item => ({
+					time: item.time,
+					selectedValuation: item.selectedValuation,
+					sp500Valuation: item.sp500Valuation,
+				}));
 
 				setMergedData(merged);
 			} catch (error) {
@@ -103,7 +58,7 @@ const BackTesting = ({
 		if (portfolioId) {
 			fetchData();
 		}
-	}, [portfolioId, tabMenu, measure, latestPortfolioId]);
+	}, [portfolioId, tabMenu, measure]);
 
 	if (error) {
 		return <div>{error}</div>;
@@ -111,11 +66,11 @@ const BackTesting = ({
 
 	const minValue = Math.min(
 		...mergedData.map(item => item.selectedValuation),
-		...mergedData.map(item => item.latestValuation || Infinity)
+		...mergedData.map(item => item.sp500Valuation || Infinity)
 	);
 	const maxValue = Math.max(
 		...mergedData.map(item => item.selectedValuation),
-		...mergedData.map(item => item.latestValuation || -Infinity)
+		...mergedData.map(item => item.sp500Valuation || -Infinity)
 	);
 
 	const formatNumber = value =>
@@ -173,37 +128,18 @@ const BackTesting = ({
 					/>
 					<Tooltip formatter={value => `${formatCurrency(value)}`} />
 					<Legend />
-					{latestPortfolioId === portfolioId ? (
-						<>
-							<Line
-								type="monotone"
-								dataKey="selectedValuation"
-								name="현재 포트폴리오 평가 가치"
-								stroke="#82ca9d"
-							/>
-							<Line
-								type="monotone"
-								dataKey="sp500Valuation"
-								name="S&P 500 평가 가치"
-								stroke="#8884d8"
-							/>
-						</>
-					) : (
-						<>
-							<Line
-								type="monotone"
-								dataKey="selectedValuation"
-								name="과거 포트폴리오 평가 가치"
-								stroke="#8884d8"
-							/>
-							<Line
-								type="monotone"
-								dataKey="latestValuation"
-								name="현재 포트폴리오 평가 가치"
-								stroke="#82ca9d"
-							/>
-						</>
-					)}
+					<Line
+						type="monotone"
+						dataKey="selectedValuation"
+						name="포트폴리오 평가 가치"
+						stroke="#82ca9d"
+					/>
+					<Line
+						type="monotone"
+						dataKey="sp500Valuation"
+						name="S&P 500 평가 가치"
+						stroke="#8884d8"
+					/>
 				</LineChart>
 			</ResponsiveContainer>
 		</WidgetContainer>

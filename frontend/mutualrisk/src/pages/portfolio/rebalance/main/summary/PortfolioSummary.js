@@ -77,7 +77,7 @@ const PortfolioSummary = ({ version }) => {
 	} = data;
 
 	return (
-		<Stack sx={{ width: '750px', overflow: 'hidden' }}>
+		<Stack sx={{ maxWidth: '450px', overflow: 'hidden' }}>
 			<Box
 				sx={{
 					flex: 1,
@@ -87,14 +87,14 @@ const PortfolioSummary = ({ version }) => {
 					overflowY: 'auto',
 					scrollbarWidth: 'none',
 				}}>
-				<Grid container spacing={1} sx={{ marginTop: '20px' }}>
+				<Grid container spacing={0} sx={{ marginTop: '20px' }}>
 					<Grid item xs={6}>
 						<PortfolioSummaryListItem
 							title="평가 금액"
 							sx={{ height: '85px' }}>
 							<Typography
 								sx={{
-									fontSize: '18px',
+									fontSize: '20px',
 									fontWeight: 'bold',
 									color: colors.text.sub1,
 								}}>
@@ -109,7 +109,7 @@ const PortfolioSummary = ({ version }) => {
 							<Typography
 								sx={{
 									lineHeight: '1.2',
-									fontSize: '15px',
+									fontSize: '18px',
 									fontWeight: 'bold',
 									color:
 										curValuation - initValuation > 0 ? 'red' : 'blue',
@@ -131,7 +131,7 @@ const PortfolioSummary = ({ version }) => {
 							sx={{ height: '85px' }}>
 							<Typography
 								sx={{
-									fontSize: '18px',
+									fontSize: '20px',
 									fontWeight: 'bold',
 									color: colors.text.sub1,
 								}}>
