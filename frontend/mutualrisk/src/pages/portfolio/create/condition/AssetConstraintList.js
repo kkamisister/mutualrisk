@@ -95,23 +95,26 @@ const AssetConstraintList = ({ assets }) => {
 			// assets이 빈 배열이 아닌 경우에만 초기화
 			const length = assets.length;
 
-			// setMinErrors(Array(length).fill(false));
-			// setMaxErrors(Array(length).fill(false));
-			// setProErrors(Array(length).fill(false));
-			// setMinTooltips(Array(length).fill(''));
-			// setMaxTooltips(Array(length).fill(''));
-			// setProTooltips(Array(length).fill(''));
+			setMinErrors(new Array(length).fill(false));
+			setMaxErrors(new Array(length).fill(false));
+			setProErrors(new Array(length).fill(false));
+			setMinTooltips(new Array(length).fill(''));
+			setMaxTooltips(new Array(length).fill(''));
+			setProTooltips(new Array(length).fill(''));
 		}
 	}, [assets]);
 
 	const validateErrors = () => {
+		if (assets.length <= 0) {
+			return;
+		}
 		const minErrorsTemp = [...minErrors];
-		const maxErrorsTemp = Array.from(maxErrors);
+		const maxErrorsTemp = [...maxErrors];
 		const proErrorsTemp = [...proErrors];
 		const minTooltipsTemp = [...minTooltips];
 		const maxTooltipsTemp = [...maxTooltips];
 		const proTooltipsTemp = [...proTooltips];
-
+		console.log(maxErrors);
 		let minTotal = 0;
 		let maxTotal = 0;
 		let proTotal = 0;
@@ -150,6 +153,7 @@ const AssetConstraintList = ({ assets }) => {
 		if (maxTotal < 100) {
 			maxErrorsTemp.fill(true);
 			maxTooltipsTemp.fill('모든 최댓값의 합이 100 미만입니다.');
+			console.log(maxErrors);
 		} else {
 			maxErrorsTemp.fill(false);
 			maxTooltipsTemp.fill('');
