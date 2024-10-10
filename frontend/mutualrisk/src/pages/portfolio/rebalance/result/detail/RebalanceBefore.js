@@ -27,18 +27,23 @@ const RebalanceBefore = ({ rebalanceData }) => {
 	const oldAssets =
 		rebalanceData?.data?.oldPortfolioAssetInfoList?.map(asset => ({
 			name: asset.name,
-			value: asset.weight * 100,
+			value: asset.weight * 100, // 퍼센트로 변환
 			code: asset.code,
 			market: asset.market,
 			weight: asset.weight,
 		})) || [];
+
+	// weight 기준으로 내림차순 정렬
+	const sortedOldAssets = oldAssets
+		.slice()
+		.sort((a, b) => b.weight - a.weight);
 
 	return (
 		<DetailContainer title={'기존 포트폴리오'}>
 			<div style={{ display: 'flex', justifyContent: 'space-between' }}>
 				<ResponsiveContainer width="60%" height={300}>
 					<BarChart
-						data={oldAssets}
+						data={sortedOldAssets} // 정렬된 데이터 전달
 						layout="vertical"
 						margin={{
 							top: 5,
@@ -79,7 +84,7 @@ const RebalanceBefore = ({ rebalanceData }) => {
 				</ResponsiveContainer>
 
 				<PortfolioAssetList
-					assets={oldAssets}
+					assets={sortedOldAssets} // 정렬된 데이터를 전달
 					hoveredIndex={highlightedStockIndex} // 강조될 항목의 인덱스 전달
 				/>
 			</div>

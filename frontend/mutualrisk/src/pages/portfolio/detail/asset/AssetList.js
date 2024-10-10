@@ -3,6 +3,11 @@ import { Box, Stack } from '@mui/material';
 import AssetListItem from 'pages/portfolio/detail/asset/AssetListItem';
 
 const AssetList = ({ assets, hoveredIndex }) => {
+	const sortedAssets = assets
+		.map((asset, index) => ({ ...asset, originalIndex: index }))
+		.slice()
+		.sort((a, b) => b.weight - a.weight);
+
 	return (
 		<Stack
 			sx={{
@@ -22,11 +27,11 @@ const AssetList = ({ assets, hoveredIndex }) => {
 					flex: 1,
 				}}>
 				<Box sx={{ flex: 1 }}>
-					{assets.map((asset, index) => (
+					{sortedAssets.map((asset, index) => (
 						<AssetListItem
 							key={index}
 							asset={asset}
-							highlight={hoveredIndex === index}
+							highlight={hoveredIndex === asset.originalIndex}
 						/>
 					))}
 				</Box>

@@ -33,12 +33,17 @@ const RebalanceAfter = ({ rebalanceData }) => {
 			weight: asset.weight,
 		})) || [];
 
+	// weight 기준으로 내림차순 정렬
+	const sortedNewAssets = newAssets
+		.slice()
+		.sort((a, b) => b.weight - a.weight);
+
 	return (
 		<DetailContainer title={'리밸런싱 후 포트폴리오'}>
 			<div style={{ display: 'flex', justifyContent: 'space-between' }}>
 				<ResponsiveContainer width="60%" height={300}>
 					<BarChart
-						data={newAssets}
+						data={sortedNewAssets} // 정렬된 데이터 전달
 						layout="vertical"
 						margin={{
 							top: 5,
@@ -80,7 +85,7 @@ const RebalanceAfter = ({ rebalanceData }) => {
 
 				{/* PortfolioAssetList로 UI 대체 */}
 				<PortfolioAssetList
-					assets={newAssets}
+					assets={sortedNewAssets} // 정렬된 데이터 전달
 					hoveredIndex={highlightedStockIndex} // 강조될 항목의 인덱스 전달
 				/>
 			</div>
