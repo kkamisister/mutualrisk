@@ -94,7 +94,7 @@ const PortfolioCreatePage = () => {
 		queryFn: () => {
 			return fetchPortfolioByPorfolioId(latestPortfolioId);
 		},
-		enabled: !!latestPortfolioId && !assets.length,
+		enabled: !!latestPortfolioId,
 	});
 
 	useEffect(() => {
