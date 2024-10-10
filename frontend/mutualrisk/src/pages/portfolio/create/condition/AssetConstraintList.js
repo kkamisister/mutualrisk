@@ -22,6 +22,7 @@ import useConstraintStore from 'stores/useConstraintStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPortfolio } from 'utils/apis/portfolio';
 import { useNavigate } from 'react-router-dom';
+import { receiveRecommendAsset, finalBackTest } from 'utils/apis/rebalance';
 
 const AssetConstraintList = ({ assets }) => {
 	const queryClient = useQueryClient();
@@ -193,23 +194,6 @@ const AssetConstraintList = ({ assets }) => {
 		}
 	}, [data, isRecommended]);
 
-	const mutation = useMutation({
-		mutationFn: createPortfolio,
-		onSuccess: data => {
-			// setIsRecommended(false);
-			// console.log('제작완료 데이터', data);
-			// console.log(JSON.stringify(data));
-			queryClient.removeQueries('selectedAsset');
-			// console.log('포트폴리오 제작 완료:', data);
-			navigate('/rebalance/result', {
-				state: { rebalanceResponseData: data.data },
-			});
-		},
-		onError: error => {
-			console.error('에러 발생:', error);
-		},
-	});
-
 	const hasErrors = useMemo(
 		() =>
 			minErrors.some(Boolean) ||
@@ -218,34 +202,69 @@ const AssetConstraintList = ({ assets }) => {
 		[minErrors, maxErrors, proErrors]
 	);
 
-	const handleCreatePortfolio = () => {
-		console.log('totalCash', totalCash);
-		console.log('lowerBounds', lowerBounds);
-		const assetIds = assets.map(asset => asset.assetId);
+	const handleCreatePortfolio = async () => {
+		try {
+			console.log('totalCash', totalCash);
+			console.log('lowerBounds', lowerBounds);
+			const assetIds = assets.map(asset => asset.assetId);
 
-		// null이 아닌 값만 /100으로 변환
-		const transformedLowerBounds = lowerBounds.map(value =>
-			value !== null ? value / 100 : null
-		);
-		const transformedUpperBounds = upperBounds.map(value =>
-			value !== null ? value / 100 : null
-		);
-		const transformedExactProportion = exactProportion.map(value =>
-			value !== null ? value / 100 : null
-		);
+			// null이 아닌 값만 /100으로 변환
+			const transformedLowerBounds = lowerBounds.map(value =>
+				value !== null ? value / 100 : null
+			);
+			const transformedUpperBounds = upperBounds.map(value =>
+				value !== null ? value / 100 : null
+			);
+			const transformedExactProportion = exactProportion.map(value =>
+				value !== null ? value / 100 : null
+			);
 
-		console.log('assetIds', assetIds);
-		console.log('변환된 lowerBounds', transformedLowerBounds);
-		console.log('변환된 upperBounds', transformedUpperBounds);
-		console.log('변환된 비율', transformedExactProportion);
+			console.log('assetIds', assetIds);
+			console.log('변환된 lowerBounds', transformedLowerBounds);
+			console.log('변환된 upperBounds', transformedUpperBounds);
+			console.log('변환된 비율', transformedExactProportion);
 
-		mutation.mutate({
-			totalCash,
-			assetIds,
-			lowerBounds: transformedLowerBounds,
-			upperBounds: transformedUpperBounds,
-			exactProportion: transformedExactProportion,
-		});
+			const createProps = {
+				totalCash,
+				assetIds,
+				lowerBounds: transformedLowerBounds,
+				upperBounds: transformedUpperBounds,
+				exactProportion: transformedExactProportion,
+			};
+
+			const response = await createPortfolio(createProps);
+			const rebalanceResponseData = await response.data.data;
+			console.log('호출성공', rebalanceResponseData);
+			const newPortfolioAssetInfoList =
+				rebalanceResponseData.newPortfolioAssetInfoList;
+			const recommendProps = {
+				...createProps,
+				newPortfolioAssetInfoList,
+			};
+
+			const recommendResponse = await receiveRecommendAsset(recommendProps);
+			console.log('추천 자산 요청 성공:', recommendResponse);
+
+			console.log(
+				'이게 newportfolioassetinfolist',
+				newPortfolioAssetInfoList
+			);
+			const backTestResponse = await finalBackTest(
+				newPortfolioAssetInfoList
+			);
+
+			navigate('/rebalance/result', {
+				state: {
+					rebalanceResponseData: { data: rebalanceResponseData },
+					recommendResponseData: { data: recommendResponse.data },
+					backTestResponseData: { data: backTestResponse },
+				},
+			});
+
+			console.log('백테스팅 요청 성공:', backTestResponse);
+		} catch (err) {
+			console.log(err);
+		}
 	};
 
 	const handleUnlock = () => {

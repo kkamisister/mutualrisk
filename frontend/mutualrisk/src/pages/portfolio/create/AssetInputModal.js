@@ -27,6 +27,9 @@ const AssetInputModal = ({ open, handleClose, child }) => {
 
 	const handleChange = e => {
 		const value = e.target.value.replace(/,/g, ''); // 쉼표 제거한 값
+		console.log(typeof displayValue);
+		console.log('val', typeof value);
+		console.log('assetva', typeof assetValue);
 
 		// 쉼표 없는 숫자 형식을 assetValue에 저장
 		setAssetValue(value);
