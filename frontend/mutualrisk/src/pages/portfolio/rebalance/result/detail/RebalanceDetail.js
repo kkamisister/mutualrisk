@@ -5,7 +5,7 @@ import { DoubleArrowRounded } from '@mui/icons-material';
 import { Box, Stack } from '@mui/material';
 import { colors } from 'constants/colors';
 
-const RebalanceDetail = () => {
+const RebalanceDetail = ({ rebalanceData }) => {
 	return (
 		<Stack
 			spacing={1}
@@ -16,7 +16,7 @@ const RebalanceDetail = () => {
 				alignItems: 'center',
 				height: '100%',
 			}}>
-			<RebalanceBefore sx={{ flex: 1 }} />
+			<RebalanceBefore sx={{ flex: 1 }} rebalanceData={rebalanceData} />
 			<Stack
 				spacing={0}
 				direction={'row'}
@@ -30,7 +30,7 @@ const RebalanceDetail = () => {
 				<DoubleArrowRounded sx={{ color: colors.main.primary200 }} />
 			</Stack>
 
-			<RebalanceAfter sx={{ flex: 1 }} />
+			<RebalanceAfter sx={{ flex: 1 }} rebalanceData={rebalanceData} />
 		</Stack>
 	);
 };

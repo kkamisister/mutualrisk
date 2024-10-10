@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Stack, Box, Typography, Button, TextField } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import TitleDivider from 'components/title/TitleDivider';
@@ -14,6 +14,10 @@ import {
 	fetchPortfolioList,
 	fetchPortfolioByPorfolioId,
 } from 'utils/apis/analyze';
+import {
+	createRebalancePortfolio,
+	receiveRecommendAsset,
+} from 'utils/apis/rebalance';
 import { colors } from 'constants/colors';
 
 const RebalanceMainPage = () => {
@@ -59,6 +63,18 @@ const RebalanceMainPage = () => {
 		},
 	});
 
+	const { mutateAsync: rebalancePortfolio, isLoading: isRebalancing } =
+		useMutation({
+			mutationFn: extraCash => createRebalancePortfolio({ extraCash }), // 첫 번째 API 호출
+		});
+
+	const { mutateAsync: recommendAsset } = useMutation({
+		mutationFn: recommendData => receiveRecommendAsset(recommendData), // 두 번째 API 호출
+		onError: error => {
+			console.error('추천 자산 요청 실패:', error);
+		},
+	});
+
 	const handleModalOpen = () => setIsModalOpen(true);
 	const handleModalClose = () => {
 		setIsModalOpen(false);
@@ -83,9 +99,65 @@ const RebalanceMainPage = () => {
 		setDisplayValue(newValue.toLocaleString());
 	};
 
-	const handleSave = name => {
-		console.log('추가한 자산:', name);
-		navigate('/rebalance/result');
+	// '리밸런싱 진행' 버튼 클릭 시 호출되는 함수
+	const handleRebalance = async () => {
+		try {
+			const extraCashAmount = displayValue
+				? parseInt(displayValue.replace(/,/g, ''), 10)
+				: 0;
+
+			// 첫 번째 API 호출
+			const rebalanceData = await rebalancePortfolio(extraCashAmount);
+			console.log('리밸런싱 성공:', rebalanceData);
+
+			// 응답 데이터에서 original이 있는지 확인
+			const originalData = rebalanceData?.data?.data?.original;
+			console.log('originalData:', originalData);
+			if (!originalData) {
+				throw new Error('리밸런싱 데이터에 original 정보가 없습니다.');
+			}
+
+			const {
+				totalCash,
+				lowerBounds,
+				upperBounds,
+				exactProportion,
+				assets: newPortfolioAssetInfoList,
+			} = originalData;
+
+			const requestData = {
+				totalCash,
+				lowerBounds,
+				upperBounds,
+				exactProportion,
+				newPortfolioAssetInfoList,
+			};
+
+			console.log('추천 자산 요청에 전달되는 body 데이터:', requestData);
+
+			// 두 번째 API 호출
+			const recommendResponse = await recommendAsset(requestData);
+
+			console.log('추천 자산 요청 성공:', recommendResponse);
+
+			// 직렬화할 수 없는 데이터를 제외하고 navigate로 전달
+			const rebalanceResponseData = {
+				status: rebalanceData.status,
+				data: rebalanceData.data?.data, // 필요한 부분만 전달
+			};
+
+			const recommendResponseData = {
+				status: recommendResponse.status,
+				data: recommendResponse.data?.data, // 필요한 부분만 전달
+			};
+
+			// navigate로 직렬화 가능한 데이터만 전달
+			navigate('/rebalance/result', {
+				state: { rebalanceResponseData, recommendResponseData },
+			});
+		} catch (error) {
+			console.error('리밸런싱 또는 추천 자산 요청 실패:', error);
+		}
 	};
 
 	const finalPortfolioId =
@@ -240,7 +312,7 @@ const RebalanceMainPage = () => {
 				nextButton="리밸런싱 진행"
 				open={isModalOpen}
 				handleClose={handleModalClose}
-				handleSave={handleSave}>
+				handleSave={handleRebalance}>
 				<Stack spacing={2}>
 					<Typography fontSize={13} color={colors.main.primary400}>
 						{valuation
