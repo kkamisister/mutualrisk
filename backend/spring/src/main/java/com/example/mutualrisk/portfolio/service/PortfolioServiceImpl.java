@@ -1413,57 +1413,64 @@ public class PortfolioServiceImpl implements PortfolioService{
     @Override
     public ResponseWithData<PortfolioBackTestDto> getBackTestOfCreatedPortfolio(Integer userId, List<RecommendAssetInfo> recommendAssetInfoList, TimeInterval timeInterval, PerformanceMeasure measure) {
 
-        // 1. 유저의 가장 최근 포트폴리오의 성과 지표를 반환(benchMark)
+        // 0. 환율 가져오기
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+        LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
+
+        // 1. s&p500 지수의 성과 지표 얻기
+        // 1주를 들고 있었을 때 기준임
+        Asset sp500 = assetRepository.findById(SP500_ASSET_ID)
+            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
+        List<Asset> benchMarkSP500 = List.of(sp500);
+        Integer[] purchaseNum = new Integer[30];
+        Arrays.fill(purchaseNum, 1);
+        List<Integer> purchaseNumOfSP500 = List.of(purchaseNum);
+        List<Double> sp500BacktestValuation = getPortfolioBacktestValuation(timeInterval, benchMarkSP500, purchaseNumOfSP500, recentDate, recentExchangeRate);
+
+        // 유저의 최근 포트폴리오의 성과를 반환할 dto
         PortfolioValuationDto benchMark = null;
-        // 1-1. 유저의 전체 포트폴리오 가져오기
+
+        // 2. 유저의 과거 포트폴리오 내역이 존재할 경우, benchMark를 업데이트한다
         List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
 
-        // 유저의 과거 포트폴리오 내역이 존재할 경우, benchMark를 업데이트한다
-        Map<LocalDateTime,Double> BeforeValuationPerDate = new HashMap<>();
+        // 존재할 경우
         if (!myPortfolioList.isEmpty()) {
+            // 2-1. 기본 변수 업데이트
             Portfolio latestPortfolio = myPortfolioList.get(0);
-            // 1-2. AssetList 구하기
+
             List<PortfolioAsset> portfolioAssetList = latestPortfolio.getAsset();
 
             List<Integer> assetIdList = portfolioAssetList.stream()
                 .map(PortfolioAsset::getAssetId)
                 .toList();
 
-
+            // assetList 구하기
             List<Asset> assetList = assetRepository.findAllById(assetIdList);
 
-            // 1-3. 유저가 각 자산에 대해 산 수량 리스트(purchaseQuantityList)를 구하기
+            // 유저가 각 자산에 대해 산 수량 리스트(purchaseQuantityList)를 구하기
             List<Integer> purchaseQuantityList = portfolioAssetList.stream()
                 .map(PortfolioAsset::getTotalPurchaseQuantity)
                 .toList();
 
-            // 1-4. 포트폴리오 백테스팅 결과 저장
-            LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
+
+            // 2-2. 포트폴리오 백테스팅 결과 저장
             // 포트폴리오의 성과 지표를 저장하는 list
             List<Performance> performances = new ArrayList<>();
 
+            List<Double> portfolioBacktestValuation = getPortfolioBacktestValuation(timeInterval, assetList, purchaseQuantityList, recentDate, recentExchangeRate);
 
-            // 이제 자산별로 해당 날짜에 해당하는 valuation을 누적해야한다
-            for(int idx = 0;idx < assetList.size();idx++){
-                Asset asset = assetList.get(idx);
-                Double purchaseQuantity = Double.valueOf(purchaseQuantityList.get(idx));
+            // 가장 오래 전 날짜 기준, 포트폴리오의 valuation과 s&p500 valuation을 맞추기 위한 비율 차이 계산
+            sp500BacktestValuation = getPortfolioBacktestValuation(timeInterval, benchMarkSP500, purchaseNumOfSP500, recentDate, recentExchangeRate);
+            double ratio = portfolioBacktestValuation.get(0) / sp500BacktestValuation.get(0);
 
-                calculateBackTestValuation(timeInterval,asset,recentDate,purchaseQuantity,BeforeValuationPerDate);
+            for (int idx=0; idx<30; idx++) {
+                performances.add(Performance.builder()
+                    .time(dateUtil.getPastDate(recentDate, timeInterval, 30 - idx))
+                    .valuation(portfolioBacktestValuation.get(idx))
+                    .sp500Valuation(sp500BacktestValuation.get(idx) * ratio)
+                    .build());
             }
 
-            // 이제 map을 돌면서 performance 객체를 만들어서 리스트에 넣는다
-            BeforeValuationPerDate.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())  // LocalDateTime 기준으로 오름차순 정렬
-                .forEach(entry -> {
-                    LocalDateTime targetDate = entry.getKey();
-                    Double valuation = entry.getValue();
-                    performances.add(Performance.builder()
-                        .time(targetDate)
-                        .valuation(valuation)
-                        .build());
-
-
-                });
             benchMark = PortfolioValuationDto.builder()
                 .portfolioId(latestPortfolio.getId())
                 .timeInterval(timeInterval)
@@ -1490,47 +1497,24 @@ public class PortfolioServiceImpl implements PortfolioService{
             .toList();
 
         // 2-4. 포트폴리오 백테스팅 결과 저장
-        LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
-
-
-
         List<Performance> performances = new ArrayList<>();
-        Map<LocalDateTime,Double> RecentValuationPerDate = new HashMap<>();
-        for(int idx = 0;idx < assetList.size();idx++){
-            Asset asset = assetList.get(idx);
-            Double purchaseQuantity = Double.valueOf(purchaseQuantityList.get(idx));
-            calculateBackTestValuation(timeInterval,asset,recentDate,purchaseQuantity,RecentValuationPerDate);
+        List<Double> portfolioBacktestValuation = getPortfolioBacktestValuation(timeInterval, assetList, purchaseQuantityList, recentDate, recentExchangeRate);
+
+        double ratio = portfolioBacktestValuation.get(0) / sp500BacktestValuation.get(0);
+        for (int idx=0; idx<30; idx++) {
+            performances.add(Performance.builder()
+                .time(dateUtil.getPastDate(recentDate, timeInterval, 30 - idx))
+                .valuation(portfolioBacktestValuation.get(idx))
+                .sp500Valuation(sp500BacktestValuation.get(idx) * ratio)
+                .build());
         }
 
-        // 이제 map을 돌면서 performance 객체를 만들어서 리스트에 넣는다
-        // 포트폴리오의 첫 targetDate 가지고온다
-        LocalDateTime firstDate = dateUtil.getPastDate(recentDate,timeInterval,30);
-
-        // 그 date의 valuation을 가지고 온다
-        Double firstValuation = BeforeValuationPerDate.get(firstDate);
-        Double RecentfirstValuation = RecentValuationPerDate.get(firstDate);
-
-        Double initialRatio = firstValuation / RecentfirstValuation;
-
-        RecentValuationPerDate.entrySet().stream()
-            .sorted(Map.Entry.comparingByKey())  // LocalDateTime 기준으로 오름차순 정렬
-            .forEach(entry -> {
-                LocalDateTime targetDate = entry.getKey();
-				Double valuation = entry.getValue() * initialRatio;
-                performances.add(Performance.builder()
-                    .time(targetDate)
-                    .valuation(valuation)
-                    .build());
-            });
-
         PortfolioValuationDto portfolioValuation = PortfolioValuationDto.builder()
-            .portfolioId("new portfolio")
             .timeInterval(timeInterval)
             .measure(measure)
             .performances(performances)
             .build();
 
-        // 3. benchMark와 portfolioValuation을 객체에 담아 반환
         PortfolioBackTestDto portfolioBackTestDto = PortfolioBackTestDto.builder()
             .benchMark(benchMark)
             .portfolioValuation(portfolioValuation)
