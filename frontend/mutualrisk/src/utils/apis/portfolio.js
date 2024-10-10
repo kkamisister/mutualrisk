@@ -50,6 +50,20 @@ export const createPortfolio = async ({
  * @param {portfolioConfirmConfig}
  * @returns {Object} - API 문서 참조
  */
-export const confirmPortfolio = async ({ assets, cash }) => {
-	return axiosInstance.post('/portfolio/final', { assets, cash });
+export const confirmPortfolio = async ({
+	name,
+	totalCash,
+	assetIds,
+	lower_bounds,
+	upper_bounds,
+	exact_proportion,
+}) => {
+	return axiosInstance.post('/portfolio/final', {
+		name,
+		totalCash,
+		assetIds,
+		lower_bounds,
+		upper_bounds,
+		exact_proportion,
+	});
 };
