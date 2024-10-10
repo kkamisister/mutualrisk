@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import com.example.mutualrisk.common.entity.BaseEntity;
 import com.example.mutualrisk.portfolio.entity.PortfolioAsset;
 
-@Table(name = "asset_history")
+@Table(name = "asset_history_real")
 @Entity
 @Getter
 @Builder
