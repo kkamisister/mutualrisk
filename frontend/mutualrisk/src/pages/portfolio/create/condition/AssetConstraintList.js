@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
 	Box,
 	TextField,
@@ -64,6 +64,8 @@ const AssetConstraintList = ({ assets }) => {
 		console.log('asset 초기화 체크');
 		if (assets.length > 0) {
 			console.log('assets 길이에 따라 제약 조건 초기화');
+			console.log('asset.length', assets.length);
+			console.log({ initializeConstraints });
 			initializeConstraints(assets.length);
 		}
 	}, [assets]);
@@ -181,6 +183,14 @@ const AssetConstraintList = ({ assets }) => {
 			console.error('에러 발생:', error);
 		},
 	});
+
+	const hasErrors = useMemo(
+		() =>
+			minErrors.some(Boolean) ||
+			maxErrors.some(Boolean) ||
+			proErrors.some(Boolean),
+		[minErrors, maxErrors, proErrors]
+	);
 
 	const handleCreatePortfolio = () => {
 		console.log('totalCash', totalCash);
@@ -317,11 +327,16 @@ const AssetConstraintList = ({ assets }) => {
 											error={minErrors[index]}
 											disabled={hasPortfolio}
 											variant="outlined"
-											value={lowerBounds[index]}
+											value={lowerBounds[index] || 0}
 											defaultValue={0}
-											onChange={e =>
-												setLowerBound(index, e.target.value)
-											}
+											onChange={e => {
+												const value =
+													e.target.value === ''
+														? null
+														: parseFloat(e.target.value);
+												setLowerBound(index, value);
+												validateErrors();
+											}}
 											size="small"
 											InputProps={{
 												endAdornment: (
@@ -339,7 +354,7 @@ const AssetConstraintList = ({ assets }) => {
 													min: 0,
 													max: 100,
 													step: 1,
-													onClick: handleTextFieldClick,
+													onFocus: handleTextFieldClick,
 												},
 											}}
 										/>
@@ -363,10 +378,15 @@ const AssetConstraintList = ({ assets }) => {
 											disabled={hasPortfolio}
 											variant="outlined"
 											defaultValue={100}
-											value={upperBounds[index]}
-											onChange={e =>
-												setUpperBound(index, e.target.value)
-											}
+											value={upperBounds[index] || 100}
+											onChange={e => {
+												const value =
+													e.target.value === ''
+														? null
+														: parseFloat(e.target.value);
+												setUpperBound(index, value);
+												validateErrors();
+											}}
 											size="small"
 											InputProps={{
 												endAdornment: (
@@ -384,7 +404,7 @@ const AssetConstraintList = ({ assets }) => {
 													min: 0,
 													max: 100,
 													step: 1,
-													onClick: handleTextFieldClick,
+													onFocus: handleTextFieldClick,
 												},
 											}}
 										/>
@@ -408,10 +428,15 @@ const AssetConstraintList = ({ assets }) => {
 											disabled={hasPortfolio}
 											variant="outlined"
 											defaultValue=""
-											value={exactProportion[index]}
-											onChange={e =>
-												setExactProportion(index, e.target.value)
-											}
+											value={exactProportion[index] ?? ''}
+											onChange={e => {
+												const value =
+													e.target.value === ''
+														? null
+														: parseFloat(e.target.value);
+												setExactProportion(index, value);
+												validateErrors();
+											}}
 											size="small"
 											InputProps={{
 												endAdornment: (
@@ -429,7 +454,7 @@ const AssetConstraintList = ({ assets }) => {
 													min: 0,
 													max: 100,
 													step: 1,
-													onClick: handleTextFieldClick,
+													onFocus: handleTextFieldClick,
 												},
 											}}
 										/>
@@ -451,7 +476,13 @@ const AssetConstraintList = ({ assets }) => {
 					<TextField
 						label="총자산"
 						value={totalCash}
-						onChange={e => updateTotalCash(Number(e.target.value))}
+						onChange={e => {
+							const value =
+								e.target.value === ''
+									? null
+									: parseFloat(e.target.value);
+							updateTotalCash(value);
+						}}
 						type="number"
 						size="small"
 						InputProps={{
@@ -486,7 +517,11 @@ const AssetConstraintList = ({ assets }) => {
 				))}
 
 				<Grid item xs={12} display="flex" justifyContent="center">
-					<BasicButton text="포트폴리오 제작하기" onClick={handleSubmit} />
+					<BasicButton
+						text="포트폴리오 제작하기"
+						onClick={handleSubmit}
+						disabled={hasErrors}
+					/>{' '}
 				</Grid>
 			</Grid>
 		</Grid>
