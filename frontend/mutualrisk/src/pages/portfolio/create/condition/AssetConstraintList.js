@@ -65,14 +65,8 @@ const AssetConstraintList = ({ assets }) => {
 	}));
 
 	useEffect(() => {
-		console.log('asset 초기화 체크');
-		if (assets.length > 0) {
-			console.log('assets 길이에 따라 제약 조건 초기화');
-			console.log('asset.length', assets.length);
-			console.log({ initializeConstraints });
-			initializeConstraints(assets.length);
-		}
-	}, [assets]);
+		validateErrors();
+	}, [assets, lowerBounds, upperBounds, exactProportion]);
 
 	// 제약 조건 관리 가보자고
 	const [minErrors, setMinErrors] = useState(
@@ -112,13 +106,14 @@ const AssetConstraintList = ({ assets }) => {
 		if (assets.length <= 0) {
 			return;
 		}
-		const minErrorsTemp = [...minErrors];
-		const maxErrorsTemp = [...maxErrors];
-		const proErrorsTemp = [...proErrors];
+		const minErrorsTemp = Array(assets.length).fill(false);
+		const maxErrorsTemp = Array(assets.length).fill(false);
+		const proErrorsTemp = Array(assets.length).fill(false);
+
 		const minTooltipsTemp = [...minTooltips];
 		const maxTooltipsTemp = [...maxTooltips];
 		const proTooltipsTemp = [...proTooltips];
-		console.log(maxErrors);
+
 		let minTotal = 0;
 		let maxTotal = 0;
 		let proTotal = 0;
@@ -157,7 +152,7 @@ const AssetConstraintList = ({ assets }) => {
 		if (maxTotal < 100) {
 			maxErrorsTemp.fill(true);
 			maxTooltipsTemp.fill('모든 최댓값의 합이 100 미만입니다.');
-			console.log(maxErrors);
+			console.log('이거 max', maxErrors);
 		} else {
 			maxErrorsTemp.fill(false);
 			maxTooltipsTemp.fill('');
@@ -181,8 +176,13 @@ const AssetConstraintList = ({ assets }) => {
 	};
 
 	useEffect(() => {
+		if (assets.length > 0) {
+			initializeConstraints(assets.length, assets);
+		}
+	}, [assets]);
+
+	useEffect(() => {
 		validateErrors();
-		// console.log(maxErrors);
 	}, [lowerBounds, upperBounds, exactProportion]);
 
 	const { data } = useQuery({
@@ -192,7 +192,6 @@ const AssetConstraintList = ({ assets }) => {
 
 	useEffect(() => {
 		if (data?.hasPortfolio || isRecommended) {
-			// console.log('아 유저 포폴잇다니까');
 			setHasPortfolio(true);
 		}
 	}, [data, isRecommended]);
@@ -208,8 +207,7 @@ const AssetConstraintList = ({ assets }) => {
 	const handleCreatePortfolio = async () => {
 		try {
 			setIsLoading(true);
-			// 	console.log('totalCash', totalCash);
-			// 	console.log('lowerBounds', lowerBounds);
+
 			const assetIds = assets.map(asset => asset.assetId);
 
 			// null이 아닌 값만 /100으로 변환
@@ -222,12 +220,6 @@ const AssetConstraintList = ({ assets }) => {
 			const transformedExactProportion = exactProportion.map(value =>
 				value !== null ? value / 100 : null
 			);
-
-			// console.log('assetIds', assetIds);
-			// console.log('변환된 lowerBounds', transformedLowerBounds);
-			// console.log('변환된 upperBounds', transformedUpperBounds);
-			// console.log('변환된 비율', transformedExactProportion);
-
 			const createProps = {
 				totalCash,
 				assetIds,
@@ -235,6 +227,8 @@ const AssetConstraintList = ({ assets }) => {
 				upperBounds: transformedUpperBounds,
 				exactProportion: transformedExactProportion,
 			};
+
+			console.log('제약조건 설정 이렇게됐다!', createProps);
 
 			const response = await createPortfolio(createProps);
 			const rebalanceResponseData = await response.data.data;
@@ -247,12 +241,7 @@ const AssetConstraintList = ({ assets }) => {
 			};
 
 			const recommendResponse = await receiveRecommendAsset(recommendProps);
-			// console.log('추천 자산 요청 성공:', recommendResponse);
 
-			// console.log(
-			// 	'이게 newportfolioassetinfolist',
-			// 	newPortfolioAssetInfoList
-			// );
 			const backTestResponse = await finalBackTest(
 				newPortfolioAssetInfoList
 			);
@@ -264,8 +253,6 @@ const AssetConstraintList = ({ assets }) => {
 					backTestResponseData: { data: backTestResponse },
 				},
 			});
-
-			console.log('백테스팅 요청 성공:', backTestResponse);
 		} catch (err) {
 			console.log(err);
 		} finally {
@@ -281,11 +268,8 @@ const AssetConstraintList = ({ assets }) => {
 	const handleDialogClose = () => setOpenDialog(false);
 
 	const handleTextFieldClick = () => {
-		console.log('handletextfield');
 		if (hasPortfolio) {
-			// console.log('hasPortfolio true고 handle해볼게', hasPortfolio);
 			setOpenDialog(true);
-			console.log('opendialog', openDialog);
 		}
 	};
 
@@ -378,13 +362,13 @@ const AssetConstraintList = ({ assets }) => {
 											error={minErrors[index]}
 											disabled={hasPortfolio}
 											variant="outlined"
+											defaultValue={0}
 											value={lowerBounds[index]}
 											onChange={e => {
 												const value =
 													e.target.value === ''
 														? null
 														: parseFloat(e.target.value);
-												console.log(e);
 												setLowerBound(index, value);
 												// validateErrors();
 											}}
@@ -428,6 +412,7 @@ const AssetConstraintList = ({ assets }) => {
 											onClick={handleTextFieldClick}
 											disabled={hasPortfolio}
 											variant="outlined"
+											defaultValue={100}
 											value={upperBounds[index]}
 											onChange={e => {
 												const value =

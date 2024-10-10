@@ -5,16 +5,27 @@ const useConstraintStore = create(set => ({
 	upperBounds: [],
 	exactProportion: [],
 
-	// 자산 길이에 따라 초기 제약 조건 설정
 	initializeConstraints: length =>
 		set(state => {
 			console.log('Initializing constraints with length:', length);
-			const newState = {
-				lowerBounds: Array(length).fill(0),
-				upperBounds: Array(length).fill(100),
-				exactProportion: Array(length).fill(null),
-			};
-			console.log('New State:', newState);
+
+			const lowerBounds = [...state.lowerBounds.slice(0, length)];
+			const upperBounds = [...state.upperBounds.slice(0, length)];
+			const exactProportion = [...state.exactProportion.slice(0, length)];
+
+			// 기존 값을 유지하고 필요한 만큼만 기본값 추가
+			while (lowerBounds.length < length) {
+				lowerBounds.push(0); // 또는 필요한 기본값
+			}
+			while (upperBounds.length < length) {
+				upperBounds.push(100); // 또는 필요한 기본값
+			}
+			while (exactProportion.length < length) {
+				exactProportion.push(null);
+			}
+
+			const newState = { lowerBounds, upperBounds, exactProportion };
+			console.log('Updated State:', newState);
 			return newState;
 		}),
 
