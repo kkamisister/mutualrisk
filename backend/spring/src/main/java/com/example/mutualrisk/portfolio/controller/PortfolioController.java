@@ -111,6 +111,8 @@ public class PortfolioController {
     @PostMapping("/final")
     public ResponseEntity<ResponseWithData<String>> confirmUserPortfolio(@RequestBody PortfolioInitDto initInfo, HttpServletRequest request) {
 
+        log.warn("initInfo: {}", initInfo);
+
         String id = (String)request.getAttribute("userId");
         Integer userId = Integer.valueOf(id);
 
