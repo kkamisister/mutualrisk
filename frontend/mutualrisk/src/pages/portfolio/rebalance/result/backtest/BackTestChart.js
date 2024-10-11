@@ -22,6 +22,7 @@ const formatNumber = value => {
 const BackTestChart = ({ backtestingData }) => {
 	const [data, setData] = useState([]);
 	const [yDomain, setYDomain] = useState([0, 'auto']);
+	const [hasBenchmarkData, setHasBenchmarkData] = useState(false);
 
 	useEffect(() => {
 		if (backtestingData) {
@@ -29,6 +30,12 @@ const BackTestChart = ({ backtestingData }) => {
 				backtestingData.data.benchMark.performances || [];
 			const portfolioPerformances =
 				backtestingData.data.portfolioValuation.performances || [];
+
+			// 벤치마크 데이터가 하나라도 있으면 hasBenchmarkData를 true로 설정
+			const hasValidBenchmark = benchmarkPerformances.some(
+				item => item.valuation !== null
+			);
+			setHasBenchmarkData(hasValidBenchmark);
 
 			const mergedData = benchmarkPerformances
 				.map((benchmarkItem, index) => {
@@ -81,12 +88,15 @@ const BackTestChart = ({ backtestingData }) => {
 						name="리밸런싱 포트폴리오 평가가치"
 						stroke="#8884d8"
 					/>
-					<Line
-						type="monotone"
-						dataKey="benchmark"
-						name="기존 포트폴리오 평가가치"
-						stroke="#82ca9d"
-					/>
+					{/* benchmark 데이터가 있을 때만 렌더링 */}
+					{hasBenchmarkData && (
+						<Line
+							type="monotone"
+							dataKey="benchmark"
+							name="기존 포트폴리오 평가가치"
+							stroke="#82ca9d"
+						/>
+					)}
 				</LineChart>
 			</ResponsiveContainer>
 		</WidgetContainer>
