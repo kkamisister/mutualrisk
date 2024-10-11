@@ -73,6 +73,7 @@ public class AssetHistoryRepositoryCustomImpl extends Querydsl4RepositorySupport
         return selectFrom(assetHistory)
             .where(assetHistory.asset.eq(asset)
                 .and(assetHistory.date.between(pastDate, targetDate)))
+            .orderBy(assetHistory.date.asc())
             .fetch();
     }
 
