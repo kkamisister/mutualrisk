@@ -1,5 +1,8 @@
 package com.example.mutualrisk.asset.entity;
 
+
+import org.hibernate.annotations.BatchSize;
+
 import com.example.mutualrisk.common.entity.BaseEntity;
 
 import jakarta.persistence.*;
@@ -23,4 +26,5 @@ public class AssetNews extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "asset_id")
     private Asset asset;
+
 }

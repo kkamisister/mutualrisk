@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import com.example.mutualrisk.common.dto.CommonResponse;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
 import com.example.mutualrisk.common.oauth.dto.AuthToken;
+import com.example.mutualrisk.common.oauth.dto.LoginInfo;
 import com.example.mutualrisk.common.oauth.dto.OauthUserInfo;
 import com.example.mutualrisk.common.oauth.util.OauthProvider;
 import com.example.mutualrisk.common.oauth.util.TokenProvider;
@@ -23,7 +24,6 @@ public class OauthLoginService {
 
 	private final UserRepository userRepository;
 	private final RedisHashRepository redisHashRepository;
-	// private final AuthTokenGenerator authTokenGenerator;
 	private final TokenProvider tokenProvider;
 	private final RequestOauthInfoService requestOAuthInfoService;
 	private final AuthCodeRequestUrlProviderComposite authCodeRequestUrlProviderComposite;
@@ -33,11 +33,15 @@ public class OauthLoginService {
 	}
 
 
-	public AuthToken login(OauthProvider provider, String code){
+	public LoginInfo login(OauthProvider provider, String code){
 		OauthUserInfo userInfo = requestOAuthInfoService.request(provider,code);
 		Integer userId = findOrCreateUser(userInfo);
 
-		return tokenProvider.generate(userId);
+		AuthToken authToken = tokenProvider.generate(userId);
+		String nickName = userInfo.getNickName();
+
+		LoginInfo loginInfo = LoginInfo.of(authToken, nickName);
+		return loginInfo;
 	}
 
 	/**

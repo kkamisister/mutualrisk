@@ -3,7 +3,83 @@ plugins {
     id 'org.springframework.boot' version '3.3.3'
     id 'io.spring.dependency-management' version '1.1.6'
     id "org.sonarqube" version "5.1.0.4882"
+    id 'jacoco'
 }
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        html.required = true
+        xml.required = true
+    }
+
+    def QDomains = []
+
+    for (qPattern in '**/QA'..'**/QZ') {
+        QDomains.add(qPattern + "*")
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(
+                files(classDirectories.files.collect {
+                    fileTree(dir: it, exclude: [
+                            "com/example/mutualrisk/MutualriskApplication*",
+                            "com/example/mutualrisk/**/dto/*",
+                            "com/example/mutualrisk/**/entity/*",
+                            "com/example/mutualrisk/**/controller/*",
+                            "com/example/mutualrisk/common/**/*"
+                    ] + QDomains)
+                })
+        )
+    }
+
+    finalizedBy jacocoTestCoverageVerification
+}
+
+jacocoTestCoverageVerification {
+    def QDomains = []
+
+    for (qPattern in '**/QA'..'**/QZ') {
+        QDomains.add(qPattern + "*")
+    }
+
+    violationRules {
+        rule {
+            enabled = true
+            element = 'CLASS'
+
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.00
+                excludes = [
+                        "com.example.mutualrisk",
+                        "com.example.mutualrisk.asset.dto.*",
+                        "com.example.mutualrisk.asset.entity.*",
+                        "com.example.mutualrisk.asset.controller.*",
+                        "com.example.mutualrisk.common.*",
+                        "com.example.mutualrisk.fund.dto.*",
+                        "com.example.mutualrisk.fund.entity.*",
+                        "com.example.mutualrisk.fund.controller.*",
+                        "com.example.mutualrisk.user.dto.*",
+                        "com.example.mutualrisk.user.entity.*",
+                        "com.example.mutualrisk.user.controller.*",
+                        "com.example.mutualrisk.portfolio.controller.*",
+                        "com.example.mutualrisk.portfolio.dto.*",
+                        "com.example.mutualrisk.portfolio.entity.*",
+                        "com.example.mutualrisk.industry.controller.*",
+
+                ] + QDomains
+            }
+
+        }
+    }
+}
+
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
@@ -61,8 +137,17 @@ dependencies {
 
     // mongoDB 추가
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
-    // 쿼리 파라미터 로그 남기기
+//     쿼리 파라미터 로그 남기기
 //    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
+
+    // 이메일 발송을 위한 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver
+    testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.12.0'
+
+    // WebClient 의존성 추가
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 }
 
 tasks.withType(JavaCompile){
@@ -71,5 +156,8 @@ tasks.withType(JavaCompile){
 
 tasks.named('test') {
     useJUnitPlatform()
+
+    finalizedBy jacocoTestReport
 }
 
+jacocoTestReport.sourceEncoding = 'UTF-8'

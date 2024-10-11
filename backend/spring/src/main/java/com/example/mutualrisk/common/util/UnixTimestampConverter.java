@@ -9,18 +9,18 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 // @Converter(autoApply = true)
-@Slf4j
-public class UnixTimestampConverter implements AttributeConverter<LocalDateTime, Integer> {
-
-	@Override
-	public Integer convertToDatabaseColumn(LocalDateTime attribute) {
-		// LocalDateTime을 int로 변환 (UNIX timestamp)
-		return (attribute == null) ? null : (int) attribute.atZone(ZoneId.systemDefault()).toEpochSecond();
-	}
-
-	@Override
-	public LocalDateTime convertToEntityAttribute(Integer dbData) {
-		// int (UNIX timestamp)를 LocalDateTime으로 변환
-		return (dbData == null) ? null : LocalDateTime.ofInstant(Instant.ofEpochSecond(dbData), ZoneId.systemDefault());
-	}
-}
+// @Slf4j
+// public class UnixTimestampConverter implements AttributeConverter<LocalDateTime, Integer> {
+//
+// 	@Override
+// 	public Integer convertToDatabaseColumn(LocalDateTime attribute) {
+// 		// LocalDateTime을 int로 변환 (UNIX timestamp)
+// 		return (attribute == null) ? null : (int) attribute.atZone(ZoneId.systemDefault()).toEpochSecond();
+// 	}
+//
+// 	@Override
+// 	public LocalDateTime convertToEntityAttribute(Integer dbData) {
+// 		// int (UNIX timestamp)를 LocalDateTime으로 변환
+// 		return (dbData == null) ? null : LocalDateTime.ofInstant(Instant.ofEpochSecond(dbData), ZoneId.systemDefault());
+// 	}
+// }
