@@ -12,6 +12,13 @@ spring:
     username: ssafy
     password: zeroticket607
     driver-class-name: com.mysql.cj.jdbc.Driver
+    maximum-pool-size: 150
+    minimum-idle: 60
+    connection-timeout: 10000
+    connection-init-sql: SELECT 1
+    idle-timeout: 600000
+    max-lifetime: 1800000
+    auto-commit: true
 
   jpa:
     hibernate:
