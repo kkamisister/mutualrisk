@@ -1,61 +1,141 @@
-import React, { useState } from 'react';
-import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import RenderActiveShape from 'pages/portfolio/detail/asset/RenderActiveShape'; // RenderActiveShape 함수 import
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { PieChart, Pie, ResponsiveContainer, Cell, Sector } from 'recharts';
+import { colors } from 'constants/colors';
 
-// 샘플 데이터
-const data = [
-	{ name: 'Group A', value: 400, color: '#ff4d4f' },
-	{ name: 'Group B', value: 300, color: '#4e73df' },
-	{ name: 'Group C', value: 300, color: '#28a745' },
-	{ name: 'Group D', value: 200, color: '#ffa500' },
-];
+const AssetRatioPieChart = ({ assets, onHover }) => {
+	const [activeIndex, setActiveIndex] = useState(1);
+	const [textWidth, setTextWidth] = useState(0);
 
-const AssetRatioPieChart = () => {
-	const [activeIndex, setActiveIndex] = useState(0);
+	// Pie hover 시 실행되는 함수
+	const onPieEnter = useCallback(
+		(_, index) => {
+			setActiveIndex(index);
+			// 상위 컴포넌트에 현재 hover 중인 인덱스 전달
+			onHover(index);
+		},
+		[onHover]
+	);
 
-	const onPieEnter = (_, index) => {
-		setActiveIndex(index);
-	};
+	// assets 데이터를 PieChart용 데이터로 변환
+	const chartData = useMemo(
+		() =>
+			assets.map((asset, index) => ({
+				name: asset.name,
+				value: asset.weight * 100,
+				color:
+					asset.color || colors.piechart[index % colors.piechart.length],
+			})),
+		[assets]
+	);
 
-	// const totalValue = data.reduce((acc, item) => acc + item.value, 0);
+	// 텍스트 너비 측정 함수
+	const getTextWidth = useCallback((text, font) => {
+		const canvas = document.createElement('canvas');
+		const context = canvas.getContext('2d');
+		context.font = font;
+		const metrics = context.measureText(text);
+		return metrics.width;
+	}, []);
+
+	// 활성화된 섹터가 변경될 때마다 텍스트 너비를 업데이트
+	useEffect(() => {
+		if (chartData[activeIndex]) {
+			const font = '20px Arial';
+			const width = getTextWidth(chartData[activeIndex].name, font);
+			setTextWidth(width);
+		}
+	}, [activeIndex, chartData, getTextWidth]);
+
+	const renderActiveShape = useCallback(
+		props => {
+			const {
+				cx,
+				cy,
+				innerRadius,
+				outerRadius,
+				startAngle,
+				endAngle,
+				fill,
+				payload,
+			} = props;
+
+			const hoverInnerRadius = innerRadius - 5;
+			const hoverOuterRadius = outerRadius + 10;
+
+			return (
+				<g>
+					<Sector
+						cx={cx}
+						cy={cy}
+						innerRadius={hoverInnerRadius}
+						outerRadius={hoverOuterRadius}
+						startAngle={startAngle}
+						endAngle={endAngle}
+						fill={fill}
+					/>
+					<rect
+						x={cx - textWidth / 2 - 10}
+						y={cy - 32}
+						width={textWidth + 20}
+						height={64}
+						fill="white"
+						opacity={0.8}
+						rx={10}
+						ry={10}
+					/>
+					<text
+						x={cx}
+						y={cy - 10}
+						textAnchor="middle"
+						fill={fill}
+						fontSize="22px">
+						{payload.name}
+					</text>
+					<text
+						x={cx}
+						y={cy + 18}
+						textAnchor="middle"
+						fill="#333"
+						fontSize="25px"
+						fontWeight="bold">
+						{`${payload.value.toFixed(1)}%`}
+					</text>
+				</g>
+			);
+		},
+		[textWidth]
+	);
 
 	return (
 		<div
 			style={{
-				width: '100%',
-				minWidth: '350px', // 최소 너비 설정
+				minWidth: '400px',
 				height: '100%',
-				// minHeight: '400px',
-				flex: 1,
 				position: 'relative',
 				display: 'flex',
 				justifyContent: 'center',
 				alignItems: 'center',
 				outline: 'none',
-			}}
-			tabIndex={-1} // 포커스가 갈 필요가 없는 요소에 대해 tabindex 설정
-		>
+			}}>
 			<ResponsiveContainer width="100%" height={400}>
 				<PieChart>
 					<Pie
 						activeIndex={activeIndex}
-						activeShape={RenderActiveShape} // RenderActiveShape 함수 사용
-						data={data}
+						activeShape={renderActiveShape}
+						data={chartData}
 						dataKey="value"
 						nameKey="name"
 						cx="50%"
 						cy="50%"
-						innerRadius={70}
-						outerRadius={130}
+						innerRadius={120}
+						outerRadius={180}
 						fill="#8884d8"
-						onMouseEnter={onPieEnter} // 마우스 엔터 이벤트
-						stroke="none" // 테두리 제거
-					>
-						{data.map((entry, index) => (
+						onMouseEnter={onPieEnter}
+						stroke="none">
+						{chartData.map((entry, index) => (
 							<Cell key={`cell-${index}`} fill={entry.color} />
 						))}
 					</Pie>
-					<Tooltip />
 				</PieChart>
 			</ResponsiveContainer>
 		</div>

@@ -3,20 +3,6 @@ import { Stack, LinearProgress, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import SubTitle from 'components/title/SubTitle';
 
-const sampleData = [
-	{ rank: 1, title: '기술 하드웨어, 스토리지 및 주변 기기', value: 31.5 },
-	{ rank: 1, title: '기술 하드웨어, 스토리지 및 주변 기기', value: 31.5 },
-	{ rank: 1, title: '기술 하드웨어, 스토리지 및 주변 기기', value: 31.5 },
-	{ rank: 1, title: '기술 하드웨어, 스토리지 및 주변 기기', value: 31.5 },
-	{ rank: 1, title: '기술 하드웨어, 스토리지 및 주변 기기', value: 31.5 },
-	{ rank: 1, title: '기술 하드웨어, 스토리지 및 주변 기기', value: 31.5 },
-	{ rank: 1, title: '기술 하드웨어, 스토리지 및 주변 기기', value: 31.5 },
-	{ rank: 1, title: '기술 하드웨어, 스토리지 및 주변 기기', value: 31.5 },
-	{ rank: 1, title: '기술 하드웨어, 스토리지 및 주변 기기', value: 31.5 },
-	{ rank: 1, title: '기술 하드웨어, 스토리지 및 주변 기기', value: 31.5 },
-	{ rank: 1, title: '기술 하드웨어, 스토리지 및 주변 기기', value: 31.5 },
-];
-
 const DataBox = ({ rank, title, value }) => {
 	return (
 		<Stack
@@ -26,11 +12,15 @@ const DataBox = ({ rank, title, value }) => {
 				alignItems: 'center',
 				justifyContent: 'center',
 			}}>
-			<Typography sx={{ fontSize: '20px' }}>{rank}</Typography>
+			<Typography sx={{ fontSize: '20px' }}>
+				{String(rank).padStart(2, '0')}
+			</Typography>
 			<Stack direction="column" sx={{ width: '100%' }}>
 				<Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
 					<Typography color={colors.text.main}>{title}</Typography>
-					<Typography color={colors.text.sub2}>({value})%</Typography>
+					<Typography color={colors.text.sub2}>
+						({value.toPrecision(2)}%)
+					</Typography>
 				</Stack>
 				<LinearProgress
 					sx={{
@@ -50,6 +40,7 @@ const DataBox = ({ rank, title, value }) => {
 };
 
 const SectorBias = ({ title, data }) => {
+	const sectors = data.sectors.sort((a, b) => b.weight - a.weight);
 	return (
 		<Stack
 			spacing={2}
@@ -61,11 +52,11 @@ const SectorBias = ({ title, data }) => {
 			}}>
 			<SubTitle text={title} />
 			<Stack spacing={2}>
-				{sampleData.map(sector => (
+				{sectors.map((sector, idx) => (
 					<DataBox
-						rank={sector.rank}
-						title={sector.title}
-						value={sector.value}
+						rank={idx + 1}
+						title={sector.name}
+						value={sector.weight}
 					/>
 				))}
 			</Stack>

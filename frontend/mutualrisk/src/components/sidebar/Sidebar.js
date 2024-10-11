@@ -21,8 +21,8 @@ const SidebarItemInfoArray = [
 	{
 		title: '리밸런싱',
 		icon: InsightsIcon,
-		move: '/portfolio/rebalance',
-		sub: ['/portfolio/rebalance'],
+		move: '/rebalance',
+		sub: ['/rebalance'],
 		clicked: false,
 	},
 	{
@@ -70,13 +70,12 @@ const Sidebar = ({ onHoverChange }) => {
 				left: 0,
 				borderRight: 'solid 1px',
 				borderColor: `${colors.point.stroke}`,
-				backgroundColor: colors.background.primary,
 				justifyContent: 'flex-start',
 				transition: 'width 0.3s ease',
 				alignItems: 'center',
 				width: hover ? '200px' : '73px', // hover 시 Sidebar의 너비 변경
 				height: '100%',
-				zIndex: '1',
+				zIndex: '5',
 			}}
 			onMouseEnter={handleMouseEnter}
 			onMouseLeave={handleMouseLeave}>
@@ -85,7 +84,6 @@ const Sidebar = ({ onHoverChange }) => {
 					padding: '10px',
 				}}>
 				{SidebarItemInfoArray.map(info => {
-					console.log(location.pathname, info.move);
 					return (
 						<SidebarItem
 							title={info.title}

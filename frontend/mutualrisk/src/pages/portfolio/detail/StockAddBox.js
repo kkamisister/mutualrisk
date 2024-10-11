@@ -1,37 +1,28 @@
-import React from 'react';
-import { Avatar, Box, Stack, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { Avatar, Box, Typography } from '@mui/material';
 import { colors } from 'constants/colors';
 import CustomButton from 'components/button/BasicButton';
 import ChangeCircleOutlinedIcon from '@mui/icons-material/ChangeCircleOutlined';
+import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 
-const stockInfoSample = {
-	title: '엔비디아',
-	market: 'NASDAQ',
-	symbol: 'NVDA',
-	holding: 1000000,
-	imageURL:
-		'https://thumb.tossinvest.com/image/resized/96x0/https%3A%2F%2Fstatic.toss.im%2Fpng-icons%2Fsecurities%2Ficn-sec-fill-NAS00208X-E0.png',
-	returnRate: '2',
-	stabilityRate: '0.2',
-};
+const StockAddBox = ({ recommendAssets }) => {
+	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+	const [currentIndex, setCurrentIndex] = useState(0);
 
-// 받침 유무 판별
-const hasJongseong = word => {
-	const lastChar = word[word.length - 1];
-	const charCode = lastChar.charCodeAt(0);
+	const currentAsset = recommendAssets[currentIndex];
 
-	if (charCode >= 0xac00 && charCode <= 0xd7a3) {
-		// 한글 여부 판별 (가~힣)
-		const jongseong = (charCode - 0xac00) % 28; // 28개의 종성 중 0번째는 종성이 없는 경우
-		return jongseong !== 0; // 받침이 있으면 true, 없으면 false
-	}
-	return false;
-};
+	const handleNextAsset = () => {
+		setCurrentIndex(prevIndex => (prevIndex + 1) % recommendAssets.length);
+	};
 
-// 을 or 를 판별
-const getParticle = word => (hasJongseong(word) ? '을' : '를');
+	const handleAddAsset = () => {
+		queryClient.setQueryData('selectedAsset', currentAsset);
+		navigate('/portfolio/create');
+		console.log('추천받은 종목 정보: ', currentAsset);
+	};
 
-const StockAddBox = () => {
 	return (
 		<Box
 			sx={{
@@ -40,10 +31,11 @@ const StockAddBox = () => {
 				alignItems: 'center',
 				position: 'relative',
 				padding: '14px 20px',
-				backgroundColor: colors.background.box,
+				backgroundColor: colors.background.white,
+				border: '1px solid',
+				borderColor: colors.background.box,
 				borderRadius: '20px',
 				minWidth: `900px`,
-				width: `100% - 40px`,
 				gap: '10px',
 			}}>
 			<Avatar
@@ -52,13 +44,12 @@ const StockAddBox = () => {
 					height: '48px',
 				}}
 				alt="종목 이미지"
-				src={stockInfoSample.imageURL}
+				src={`https://j11a607.p.ssafy.io/stockImage/${currentAsset.code}.png`}
 			/>
 			<Typography
 				sx={{
-					fontSize: '14px',
-					color: colors.text.sub2,
-					// flexGrow: 1,
+					fontSize: '16px',
+					color: colors.text.main,
 					minWidth: '330px',
 				}}>
 				<span
@@ -66,28 +57,19 @@ const StockAddBox = () => {
 						fontWeight: 'bold',
 						fontSize: '16px',
 					}}>
-					{stockInfoSample.title}({stockInfoSample.symbol})
+					{currentAsset.name}({currentAsset.code})
 				</span>
-				{/* {getParticle(stockInfoSample.title)} 포트폴리오에 추가하면 <br /> */}
-				{getParticle(stockInfoSample.title)} 포트폴리오에 추가하면 예상
-				수익룰이{' '}
-				<span
-					style={{
-						fontWeight: 'bold',
-					}}>
-					{stockInfoSample.returnRate}%
+				{`을(를) 포트폴리오에 추가하면 예상 수익률이 `}
+				<span style={{ fontWeight: 'bold' }}>
+					{currentAsset.expectedReturn.toFixed(2)}%
 				</span>
-				, 안정성이{' '}
-				<span
-					style={{
-						fontWeight: 'bold',
-					}}>
-					{stockInfoSample.stabilityRate}%
-				</span>{' '}
-				증가해요
+				{`, 변동성이 `}
+				<span style={{ fontWeight: 'bold' }}>
+					{currentAsset.volatilityChange.toFixed(2)}%
+				</span>
+				{` 증가해요.`}
 			</Typography>
 			<CustomButton
-				// variant="contained"
 				sx={{
 					marginLeft: '20px',
 					minWidth: '140px',
@@ -101,17 +83,21 @@ const StockAddBox = () => {
 					'&:hover': {
 						backgroundColor: colors.main.primary200,
 					},
-				}}>
-				종목 추가하기
-			</CustomButton>
+				}}
+				text={'종목 추가하기'}
+				onClick={handleAddAsset}
+			/>
 			<ChangeCircleOutlinedIcon
-				onClick={() => console.log('icon Clicked')}
+				onClick={handleNextAsset}
 				sx={{
 					position: 'absolute',
-					right: '20px',
-					color: colors.text.sub2,
+					right: '40px',
+					color: colors.text.sub1,
 					cursor: 'pointer',
-					marginLeft: '10px',
+					fontSize: '30px',
+					'&:hover': {
+						color: colors.text.sub2,
+					},
 				}}
 			/>
 		</Box>

@@ -1,61 +1,34 @@
 import React from 'react';
-import { Box, Typography, Avatar, Stack } from '@mui/material';
+import { Box, Typography, Stack } from '@mui/material';
 import { colors } from 'constants/colors';
+import StockItemCard from 'components/card/StockItemCard';
 
-const AssetListItem = ({ asset }) => {
+const AssetListItem = ({ asset, highlight }) => {
 	return (
 		<Stack
-			spacing={1}
 			direction="row"
 			sx={{
-				width: '700px',
+				width: highlight ? '520px' : '500px',
+				height: highlight ? '80px' : '70px',
 				maxWidth: '100%',
 				display: 'flex',
 				justifyContent: 'space-between',
-				alignItems: 'center',
-				marginBottom: '18px',
+				alignItems: 'stretch',
+				marginBottom: '9px',
+				borderRadius: '10px',
+				transition: 'background-color 0.3s ease, border 0.3s ease', // 부드러운 스타일 전환
 			}}>
-			<Box
+			{/* StockItemCard 컴포넌트에 API 데이터를 전달 */}
+			<StockItemCard
+				code={asset.code}
+				name={asset.name}
+				market={asset.market}
+				image={`https://j11a607.p.ssafy.io/stockImage/${asset.code}.png`}
 				sx={{
-					display: 'flex',
-					justifyContent: 'space-between',
-					alignItems: 'center',
-					backgroundColor: colors.background.box,
-					borderRadius: '20px',
-					padding: '15px',
-					marginBottom: '15px',
-					boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-					flex: 1, // 부모 높이를 차지하게 설정
-					height: '80px',
-					minHeight: '0', // 부모 높이에 따라 높이 제한
-					maxWidth: '75%',
+					backgroundColor: highlight
+						? colors.background.box
+						: colors.background.primary,
 				}}>
-				{/* 좌측 아이콘 및 정보 */}
-				<Box
-					sx={{
-						display: 'flex',
-					}}>
-					<Avatar
-						src={asset.imagePath}
-						alt={asset.name}
-						sx={{ width: '56px', height: '56px', marginRight: '15px' }}
-					/>
-					<Box
-						sx={{
-							display: 'flex',
-							flexDirection: 'column',
-							justifyContent: 'space-evenly',
-						}}>
-						<Typography sx={{ fontSize: '20px', fontWeight: 'bold' }}>
-							{asset.name}
-						</Typography>
-						<Typography
-							sx={{ fontSize: '16px', color: colors.text.sub2 }}>
-							{asset.ticker}({asset.market})
-						</Typography>
-					</Box>
-				</Box>
-				{/* 중간 금액 정보 */}
 				<Box
 					sx={{
 						height: '100%',
@@ -63,33 +36,45 @@ const AssetListItem = ({ asset }) => {
 						flexDirection: 'column',
 						justifyContent: 'space-evenly',
 						textAlign: 'right',
-						marginRight: '20px',
 					}}>
 					<Typography
-						sx={{ color: 'red', fontWeight: 'bold', fontSize: '18px' }}>
-						+{asset.changeAmount}원 ({asset.changeRate}%)
+						sx={{
+							color: asset.dailyPriceChange > 0 ? 'red' : 'blue',
+							fontWeight: 'bold',
+							fontSize: '16px',
+						}}>
+						{/* 일일 가격 변화 표시 */}
+						{asset.dailyPriceChange.toLocaleString()}원 (
+						{asset.dailyPriceChangeRate}%)
 					</Typography>
-					<Typography sx={{ fontSize: '18px', color: colors.text.sub2 }}>
-						{asset.currentPrice}원
+					{/* 현재 가격 표시 */}
+					<Typography sx={{ fontSize: '13px', color: colors.text.sub2 }}>
+						{asset.price.toLocaleString()}원
 					</Typography>
 				</Box>
-			</Box>
+			</StockItemCard>
+
+			{/* 자산 비율 정보 */}
 			<Box
 				sx={{
-					backgroundColor: '#101C4E',
-					borderRadius: '20px',
+					backgroundColor: highlight
+						? colors.main.primary400
+						: colors.main.primary200,
+					padding: '10px',
+					borderRadius: '10px',
 					color: '#FFFFFF',
-					padding: '15px',
 					minWidth: '60px',
 					textAlign: 'center',
-					fontSize: '24px',
+					fontSize: '20px',
 					fontWeight: 'bold',
-					height: '80px',
-					minHeight: '0', // 부모 높이에 따라 높이 제한
-					maxWidth: '30%',
-					alignContent: 'center',
+					marginLeft: '9px',
+					display: 'flex',
+					justifyContent: 'center',
+					alignItems: 'center',
+					flex: 1,
 				}}>
-				{asset.ratio}%
+				{/* 비율은 100을 곱해 퍼센트로 표시 */}
+				{(asset.weight * 100).toFixed(1)}%
 			</Box>
 		</Stack>
 	);

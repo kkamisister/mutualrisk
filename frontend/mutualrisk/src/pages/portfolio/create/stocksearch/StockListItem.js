@@ -1,46 +1,24 @@
-import React, { useState } from 'react';
-import { Stack, Box, Avatar } from '@mui/material';
+import React from 'react';
+import ScrollItem from 'components/scroll/ScrollItem';
 import { colors } from 'constants/colors';
 
-const StockListItem = ({ name, imagePath, clicked, onClick }) => {
+const StockListItem = ({ name, imagePath, imageName, clicked, onClick }) => {
+	const imageURL = `https://j11a607.p.ssafy.io${imagePath}/${imageName}`;
 	return (
-		<Stack
+		<ScrollItem
+			name={name}
+			imagePath={imageURL}
+			clicked={clicked}
 			onClick={onClick}
 			sx={{
-				width: '100px',
-				height: '140px',
-				borderRadius: '20px',
-				marginRight: '5px',
-				cursor: 'pointer',
-				fontWeight: 'bold',
-				alignItems: 'center',
-				color: clicked ? colors.text.main : colors.text.sub1,
-				backgroundColor: clicked
-					? colors.background.box
-					: colors.background.white,
-				userSelect: 'none',
-				transition:
-					'background-color 0.3s ease, color 0.3s ease, width 0.3s ease',
-
+				border: 'none',
+				overflow: 'hidden',
 				'&:hover': {
+					overflow: 'visible',
 					backgroundColor: colors.background.box,
 				},
-				border: `solid 1px ${colors.point.stroke}`,
-				justifyContent: 'space-between',
-				textAlign: 'center',
-			}}>
-			<Avatar
-				sx={{
-					width: '64px',
-					height: '64px',
-					marginTop: '10px',
-				}}
-				spacing={0.75}
-				alt={name}
-				src={imagePath}
-			/>
-			<Box sx={{ fontSize: '14px', marginBottom: '30px' }}>{name}</Box>
-		</Stack>
+			}}
+		/>
 	);
 };
 
