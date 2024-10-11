@@ -69,37 +69,39 @@ const BackTestChart = ({ backtestingData }) => {
 	}, [backtestingData]);
 
 	return (
-		<WidgetContainer>
-			<Title text={'백테스팅 결과'} />
-			<ResponsiveContainer width="100%" height={400}>
-				<LineChart
-					data={data}
-					margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-					<CartesianGrid strokeDasharray="3 3" />
-					<XAxis dataKey="time" />
-					{/* YAxis에 tickFormatter를 적용하여 숫자를 포맷 */}
-					<YAxis domain={yDomain} tickFormatter={formatNumber} />
-					{/* Tooltip에 formatter를 적용하여 숫자를 포맷 */}
-					<Tooltip formatter={value => formatNumber(value)} />
-					<Legend />
-					<Line
-						type="monotone"
-						dataKey="portfolioValuation"
-						name="리밸런싱 포트폴리오 평가가치"
-						stroke="#8884d8"
-					/>
-					{/* benchmark 데이터가 있을 때만 렌더링 */}
-					{hasBenchmarkData && (
-						<Line
-							type="monotone"
-							dataKey="benchmark"
-							name="기존 포트폴리오 평가가치"
-							stroke="#82ca9d"
-						/>
-					)}
-				</LineChart>
-			</ResponsiveContainer>
-		</WidgetContainer>
+		<>
+			{hasBenchmarkData && (
+				<WidgetContainer>
+					<Title text={'백테스팅 결과'} />
+					<ResponsiveContainer width="100%" height={400}>
+						<LineChart
+							data={data}
+							margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+							<CartesianGrid strokeDasharray="3 3" />
+							<XAxis dataKey="time" />
+							{/* YAxis에 tickFormatter를 적용하여 숫자를 포맷 */}
+							<YAxis domain={yDomain} tickFormatter={formatNumber} />
+							{/* Tooltip에 formatter를 적용하여 숫자를 포맷 */}
+							<Tooltip formatter={value => formatNumber(value)} />
+							<Legend />
+							<Line
+								type="monotone"
+								dataKey="portfolioValuation"
+								name="리밸런싱 포트폴리오 평가가치"
+								stroke="#8884d8"
+							/>
+							{/* benchmark 데이터가 있을 때만 렌더링 */}
+							<Line
+								type="monotone"
+								dataKey="benchmark"
+								name="기존 포트폴리오 평가가치"
+								stroke="#82ca9d"
+							/>
+						</LineChart>
+					</ResponsiveContainer>
+				</WidgetContainer>
+			)}
+		</>
 	);
 };
 
