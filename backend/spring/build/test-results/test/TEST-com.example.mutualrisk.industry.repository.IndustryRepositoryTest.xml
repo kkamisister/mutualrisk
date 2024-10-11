@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.mutualrisk.industry.repository.IndustryRepositoryTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2024-09-24T05:50:50" hostname="DESKTOP-MMCQPV1" time="0.209">
+  <properties/>
+  <testcase name="testBaseEntity()" classname="com.example.mutualrisk.industry.repository.IndustryRepositoryTest" time="0.122"/>
+  <testcase name="testQueryDsl()" classname="com.example.mutualrisk.industry.repository.IndustryRepositoryTest" time="0.086"/>
+  <system-out><![CDATA[2024-09-24T14:50:50.600+09:00  INFO 22860 --- [mutualrisk] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.mutualrisk.industry.repository.IndustryRepositoryTest]: IndustryRepositoryTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2024-09-24T14:50:50.620+09:00  INFO 22860 --- [mutualrisk] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.mutualrisk.MutualriskApplication for test class com.example.mutualrisk.industry.repository.IndustryRepositoryTest
+someIndustry1.getStatus() = true
+someIndustry1.getCreatedAt() = 2024-09-24T14:50:50.711959
+someIndustry1.getUpdatedAt() = 2024-09-24T14:50:50.711959
+someIndustry1.getId() = 3
+someIndustry1.getName() = someIndustry1
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
