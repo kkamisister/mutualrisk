@@ -573,7 +573,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             // 포트폴리오에서 해당 자산을 찾고, 수량 * 최근 가격을 계산
             for (PortfolioAsset pAsset : myPortfolio.getAsset()) {
                 if (pAsset.getAssetId().equals(asset.getId())) {
-                    if(asset.getRegion().equals("US")){
+                    if(asset.getRegion().equals(Region.US)){
                         totalValue += pAsset.getTotalPurchaseQuantity() * asset.getRecentPrice() * recentExchangeRate; // 수량 * 최근 가격 * 환율
                     }
                     else{
@@ -769,6 +769,8 @@ public class PortfolioServiceImpl implements PortfolioService{
     @Override
     @Transactional(readOnly = true)
     public ResponseWithData<PortfolioStatusSummary> userPortfolioSummary(Integer userId, Integer version) {
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
 
         // 유저를 조회한다
         User user = userRepository.findById(userId)
@@ -791,7 +793,7 @@ public class PortfolioServiceImpl implements PortfolioService{
         for (PortfolioAsset pAsset : pAssets) {
             Asset asset = assetMap.get(pAsset.getAssetId());
             if (!ObjectUtils.isEmpty(asset)) {
-                curValuation += asset.getRecentPrice() * pAsset.getTotalPurchaseQuantity();
+                curValuation += asset.getRecentPrice(recentExchangeRate) * pAsset.getTotalPurchaseQuantity();
             }
         }
 
@@ -801,12 +803,12 @@ public class PortfolioServiceImpl implements PortfolioService{
             lastValuation = null;
         } else {
             LocalDateTime targetDate = userPortfolio.getDeletedAt();
-            lastValuation = calculateValuation(pAssets, findAssets, targetDate);
+            lastValuation = calculateValuation(pAssets, findAssets, targetDate, recentExchangeRate);
         }
 
         // 3. 생성일 기준 valuation
         LocalDateTime targetDate = userPortfolio.getCreatedAt();
-        Double createValuation = calculateValuation(pAssets, findAssets, targetDate);
+        Double createValuation = calculateValuation(pAssets, findAssets, targetDate, recentExchangeRate);
 
         // 4. 위험률 대비 수익률 : sharpe_ratio
         Double sharpeRatio = userPortfolio.getFictionalPerformance().sharpeRatio();
@@ -1953,7 +1955,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     }
 
-    private Double calculateValuation(List<PortfolioAsset> pAssets, List<Asset> findAssets, LocalDateTime targetDate) {
+    private Double calculateValuation(List<PortfolioAsset> pAssets, List<Asset> findAssets, LocalDateTime targetDate, Double recentExchangeRate) {
         Double valuation = 0.0;
 
         // 특정 날짜의 자산 가격을 가져옴
@@ -1968,7 +1970,11 @@ public class PortfolioServiceImpl implements PortfolioService{
                 .orElse(null);
 
             if (assetHistory != null) {
-                Double price = assetHistory.getPrice();
+                Asset asset = assetRepository.findById(pAsset.getAssetId())
+                    .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
+
+                Double price = assetHistory.getPrice() ;
+                if (asset.getRegion().equals(Region.US)) price *= recentExchangeRate;
                 valuation += price * pAsset.getTotalPurchaseQuantity();
             }
         }
