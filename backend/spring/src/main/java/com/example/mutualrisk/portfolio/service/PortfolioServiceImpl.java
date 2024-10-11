@@ -908,7 +908,8 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         PortfolioRequestDto portfolioRequestDto = getPortfolioRequestDto(findAssets, initInfo);
 
-        System.out.println("portfolioRequestDto = " + portfolioRequestDto);
+        log.info("initPortfolio 실행");
+        log.info("portfolioRequestDto : {}", portfolioRequestDto);
         EfficientFrontierResponseDto efficientFrontierResponseDto;
         try {
             efficientFrontierResponseDto = mutualRiskClient.post("https://j11a607.p.ssafy.io/fastapi/v1/portfolio", portfolioRequestDto)
