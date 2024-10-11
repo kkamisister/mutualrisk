@@ -1377,6 +1377,9 @@ public class PortfolioServiceImpl implements PortfolioService{
             portfolioRepository.savePortfolio(recentPortfolio);
 
             portfolio = getNewPortfolioFrom(efficientFrontierResponseDto, initInfo, userId, recentPortfolio.getVersion()+1, findAssets, recentPortfolio);
+
+            log.warn("뉴 포트폴리오는 잘 되나요");
+            log.warn("portfolio: {}", portfolio);
         }
 
         List<RecommendAsset> recommendAssets = new ArrayList<>();
