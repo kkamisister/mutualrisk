@@ -119,7 +119,7 @@ const RebalanceBefore = ({ rebalanceData }) => {
 							alignItems: 'center',
 							justifyContent: 'center',
 						}}>
-						<CloseIcon width="250px" height="250px" />
+						<CloseIcon sx={{ fontSize: '60px' }} />
 						<Typography color={colors.text.sub1}>
 							비교할 포트폴리오가 없습니다.
 						</Typography>
