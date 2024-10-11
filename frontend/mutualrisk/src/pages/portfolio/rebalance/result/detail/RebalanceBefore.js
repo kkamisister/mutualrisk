@@ -15,7 +15,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useQuery } from '@tanstack/react-query';
 import { fetchPortfolioList } from 'utils/apis/analyze';
 import { Close } from '@mui/icons-material';
-import { Typography } from '@mui/material';
+import { Typography, Stack } from '@mui/material';
 
 // 길이가 긴 문자열을 자르고 말줄임표 붙이는 함수
 const truncateString = (str, maxLength) => {
@@ -112,10 +112,18 @@ const RebalanceBefore = ({ rebalanceData }) => {
 			)}
 			{isNewUser && (
 				<DetailContainer title={'기존 포트폴리오'}>
-					<CloseIcon fontSize="400px" />
-					<Typography color={colors.text.sub1}>
-						비교할 포트폴리오가 없습니다.
-					</Typography>
+					<Stack
+						sx={{
+							width: '100%',
+							height: '100%',
+							alignItems: 'center',
+							justifyContent: 'center',
+						}}>
+						<CloseIcon sx={{ fontSize: '60px' }} />
+						<Typography color={colors.text.sub1}>
+							비교할 포트폴리오가 없습니다.
+						</Typography>
+					</Stack>
 				</DetailContainer>
 			)}
 		</>
