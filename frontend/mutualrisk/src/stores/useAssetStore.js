@@ -82,12 +82,12 @@ const useAssetStore = create(set => ({
 
 	addTotalCash: cash =>
 		set(state => ({
-			totalCash: Math.ceil(state.totalCash + Number(cash)).toLocaleString(),
+			totalCash: Math.ceil(state.totalCash + Number(cash)),
 		})),
 
 	updateTotalCash: cash =>
 		set(() => ({
-			totalCash: Math.ceil(cash).toLocaleString(),
+			totalCash: Math.ceil(cash),
 		})),
 }));
 
