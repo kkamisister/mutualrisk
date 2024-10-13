@@ -60,48 +60,65 @@ const RebalanceBefore = ({ rebalanceData }) => {
 			{!isNewUser && (
 				<DetailContainer title={'기존 포트폴리오'}>
 					<div
-						style={{ display: 'flex', justifyContent: 'space-between' }}>
-						<ResponsiveContainer width="60%" height={300}>
-							<BarChart
-								data={sortedOldAssets} // 정렬된 데이터 전달
-								layout="vertical"
-								margin={{
-									top: 5,
-									right: 30,
-									left: 20,
-									bottom: 5,
-								}}
-								barSize={20}
-								onMouseMove={state => {
-									if (state.isTooltipActive) {
-										const index = state.activeTooltipIndex;
-										setHighlightedStockIndex(index);
-									} else {
-										setHighlightedStockIndex(null);
-									}
-								}}>
-								<XAxis type="number" />
-								<YAxis
-									fontSize={12}
-									type="category"
-									dataKey="name"
-									tickFormatter={name => truncateString(name, 5)} // Y축에 표시되는 이름 자르기
-								/>
-								<Tooltip
-									formatter={(value, name) => [
-										`${value}%`,
-										truncateString(name, 20), // 툴팁에서 이름 자르기
-									]}
-								/>
-								<CartesianGrid strokeDasharray="3 3" />
-								<Bar
-									dataKey="value"
-									name="비율"
-									fill={colors.main.primary500}
-									background={{ fill: '#eee' }}
-								/>
-							</BarChart>
-						</ResponsiveContainer>
+						style={{
+							display: 'flex',
+							justifyContent: 'space-between',
+							overflow: 'auto',
+							'&::-webkit-scrollbar': { display: 'none' }, // 스크롤바 숨기기
+							msOverflowStyle: 'none', // IE 및 Edge에서 스크롤바 숨기기
+							scrollbarWidth: 'none', // Firefox에서 스크롤바 숨기기
+						}}>
+						<div
+							style={{
+								position: 'sticky',
+								top: 0,
+								flexShrink: 0,
+								width: '50%',
+							}}>
+							<ResponsiveContainer
+								// width="60%"
+								height={300}>
+								<BarChart
+									data={sortedOldAssets} // 정렬된 데이터 전달
+									layout="vertical"
+									margin={{
+										top: 5,
+										right: 30,
+										left: 20,
+										bottom: 5,
+									}}
+									barSize={20}
+									onMouseMove={state => {
+										if (state.isTooltipActive) {
+											const index = state.activeTooltipIndex;
+											setHighlightedStockIndex(index);
+										} else {
+											setHighlightedStockIndex(null);
+										}
+									}}>
+									<XAxis type="number" />
+									<YAxis
+										fontSize={12}
+										type="category"
+										dataKey="name"
+										tickFormatter={name => truncateString(name, 5)} // Y축에 표시되는 이름 자르기
+									/>
+									<Tooltip
+										formatter={(value, name) => [
+											`${value}%`,
+											truncateString(name, 20), // 툴팁에서 이름 자르기
+										]}
+									/>
+									<CartesianGrid strokeDasharray="3 3" />
+									<Bar
+										dataKey="value"
+										name="비율"
+										fill={colors.main.primary500}
+										background={{ fill: '#eee' }}
+									/>
+								</BarChart>
+							</ResponsiveContainer>
+						</div>
 
 						<PortfolioAssetList
 							assets={sortedOldAssets} // 정렬된 데이터를 전달
