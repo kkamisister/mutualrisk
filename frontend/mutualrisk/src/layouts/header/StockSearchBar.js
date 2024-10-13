@@ -78,6 +78,7 @@ const StockSearchBar = () => {
 						}}>
 						<Avatar
 							sx={{ width: 36, height: 36 }}
+							alt={option.name}
 							src={`https://j11a607.p.ssafy.io/stockImage/${option.code}.png`}
 						/>
 						<Box sx={{ fontWeight: 'bold', fontSize: '14px' }}>

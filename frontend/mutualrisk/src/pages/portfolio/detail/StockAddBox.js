@@ -43,7 +43,7 @@ const StockAddBox = ({ recommendAssets }) => {
 					width: '48px',
 					height: '48px',
 				}}
-				alt="종목 이미지"
+				alt={currentAsset.name}
 				src={`https://j11a607.p.ssafy.io/stockImage/${currentAsset.code}.png`}
 			/>
 			<Typography

@@ -3,7 +3,7 @@ import axios from 'axios';
 const axiosInstance = axios.create({
 	baseURL: 'https://j11a607.p.ssafy.io/api/v1',
 	// timeout: 1000,
-	timeout: 20000,
+	timeout: 600000,
 	// headers: {
 	// 	Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
 	// },
