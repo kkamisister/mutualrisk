@@ -74,8 +74,8 @@ public class TokenProvider {
 	public boolean validateToken(String token){
 
 		Claims claims = parseClaims(token);
-		log.warn("현재 토큰 : {}",token);
-		log.warn("토큰 만료시간 : {}",claims.getExpiration());
+//		log.warn("현재 토큰 : {}",token);
+//		log.warn("토큰 만료시간 : {}",claims.getExpiration());
 		return claims.getExpiration().after(new Date());
 	}
 

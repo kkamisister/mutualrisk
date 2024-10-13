@@ -49,11 +49,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 		// 	return;
 		// }
 
-		log.warn("요청 메서드 : {}",request.getMethod());
+//		log.warn("요청 메서드 : {}",request.getMethod());
 
 		String accessToken = resolveToken(request);
 
-		log.warn("accessToken : {}", accessToken);
+//		log.warn("accessToken : {}", accessToken);
 
 		if(StringUtils.isEmpty(accessToken)){
 			response.sendError(HttpServletResponse.SC_UNAUTHORIZED,"유효하지 않은 구성의 JWT 토큰입니다.");
