@@ -107,7 +107,7 @@ const PortfolioSummaryList = ({ ver }) => {
 							fontWeight: 'bold',
 							color: colors.text.sub1,
 						}}>
-						{curValuation.toLocaleString()}원
+						{Math.trunc(curValuation).toLocaleString()}원
 					</Typography>
 				</PortfolioSummaryListItem>
 
@@ -131,8 +131,8 @@ const PortfolioSummaryList = ({ ver }) => {
 								marginRight: '3px',
 							}}>
 							{curValuation - initValuation > 0 ? '+' : ''}
-							{(curValuation - initValuation).toLocaleString()}원 (
-							{curValuation - initValuation > 0 ? '+' : ''}
+							{Math.trunc(curValuation - initValuation).toLocaleString()}
+							원 ({curValuation - initValuation > 0 ? '+' : ''}
 							{(
 								((curValuation - initValuation) / initValuation) *
 								100

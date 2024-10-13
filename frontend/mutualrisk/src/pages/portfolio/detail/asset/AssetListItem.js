@@ -44,12 +44,12 @@ const AssetListItem = ({ asset, highlight }) => {
 							fontSize: '16px',
 						}}>
 						{/* 일일 가격 변화 표시 */}
-						{asset.dailyPriceChange.toLocaleString()}원 (
+						{Math.trunc(asset.dailyPriceChange).toLocaleString()}원 (
 						{asset.dailyPriceChangeRate}%)
 					</Typography>
 					{/* 현재 가격 표시 */}
 					<Typography sx={{ fontSize: '13px', color: colors.text.sub2 }}>
-						{asset.price.toLocaleString()}원
+						{Math.trunc(asset.price).toLocaleString()}원
 					</Typography>
 				</Box>
 			</StockItemCard>
