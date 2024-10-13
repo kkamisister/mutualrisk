@@ -192,7 +192,7 @@ public class PortfolioController {
         @ApiResponse(responseCode = "200", description = "백테스팅 결과 조회 성공")
     })
     @PostMapping("/backtest")
-    public ResponseEntity<ResponseWithData<PortfolioBackTestDto>> getBackTestOfCreatedPortfolio(@RequestBody List<RecommendAssetInfo> recommendAssetInfoList, @RequestParam(value = "timeInterval", required = false, defaultValue = "DAY") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
+    public ResponseEntity<ResponseWithData<PortfolioBackTestDto>> getBackTestOfCreatedPortfolio(@RequestBody List<RecommendAssetInfo> recommendAssetInfoList, @RequestParam(value = "timeInterval", required = false, defaultValue = "MONTH") String timeIntervalString, @RequestParam(value = "measure", required = false, defaultValue = "PROFIT") String measureString, HttpServletRequest request) {
 
         String id = (String)request.getAttribute("userId");
         Integer userId = Integer.valueOf(id);

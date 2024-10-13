@@ -455,85 +455,6 @@ public class PortfolioServiceImpl implements PortfolioService{
         return cachedValidDates;
     }
 
-    private void calculateBackTestValuation(TimeInterval timeInterval, Asset asset, LocalDateTime recentDate,
-        Double purchaseQuantity, Map<LocalDateTime, Double> valuationPerDate) {
-
-        List<LocalDateTime> cachedValidDates = redisHashRepository.getCachedValidDates(asset.getCode(), timeInterval.toString());
-        if(ObjectUtils.isEmpty(cachedValidDates)){ // 캐싱된 결과가 없는 경우, 직접 찾아야 한다
-            List<LocalDateTime> validDates = new ArrayList<>();
-            for(int dDate = 30;dDate>=1;dDate--){
-                LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval,dDate);
-                // 자산에 대해서 유효한 영업일을 찾는다
-                List<LocalDateTime> validDate = assetHistoryService.getValidDate(asset, targetDate, 1);
-
-                AssetHistory assetHistory;
-                if(validDate.isEmpty()){ // 유효한 날짜가 없는 경우, 그 자산의 가장 오래된 가격을 가지는 assetHistory생성
-                    assetHistory = AssetHistory.builder()
-                        .asset(asset)
-                        .price(asset.getOldestPrice())
-                        .date(targetDate)
-                        .build();
-
-                    validDates.add(null);
-                }
-                else{ // 유효한 날짜가 있는 경우, 해당 날짜로 가격 기록을 가지고온다
-                    LocalDateTime dateTime = validDate.get(0);
-                    assetHistory = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime)
-                        .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
-
-                    validDates.add(dateTime);
-                }
-
-                // 자산의 valuation을 계산한다
-                double valuation = assetHistory.getPrice() * purchaseQuantity;
-
-                if(!valuationPerDate.containsKey(targetDate)){
-                    valuationPerDate.put(targetDate,valuation);
-                }
-                else{
-                    valuationPerDate.merge(targetDate,valuation,Double::sum);
-                }
-            }
-
-            // redis 캐싱에 추가
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime midNight = now.toLocalDate().atTime(LocalTime.MIDNIGHT).plusDays(1);
-
-            Duration durationUntilMidnight = Duration.between(now,midNight);
-            long ttlInSeconds = durationUntilMidnight.getSeconds();
-            redisHashRepository.cacheValidDates(asset.getCode(), timeInterval.toString(),validDates,ttlInSeconds);
-
-        }
-        else{ // 이미 캐싱된 결과가 있는 경우 -> 그 자산에 대해 해당 날짜 단위로 이미 유효한 영업일을 가지고 있다는 것
-            for (int dDate = 30; dDate >= 1; dDate--) {
-                LocalDateTime targetDate = dateUtil.getPastDate(recentDate, timeInterval, dDate);
-                LocalDateTime dateTime = cachedValidDates.get(30 - dDate); // 캐시된 유효 날짜 가져오기
-
-                AssetHistory assetHistory;
-                if(ObjectUtils.isEmpty(dateTime)) { // dateTime이 null인 경우 -> 가장 오래된 값 반환
-                    assetHistory = AssetHistory.builder()
-                        .asset(asset)
-                        .price(asset.getOldestPrice())
-                        .date(targetDate)
-                        .build();
-                }else{
-                    assetHistory = assetHistoryRepository.findRecentHistoryOfAsset(asset, dateTime)
-                        .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_HISTORY_NOT_FOUND));
-
-                    // 자산의 valuation을 계산한다
-                    double valuation = assetHistory.getPrice() * purchaseQuantity;
-
-                    if(!valuationPerDate.containsKey(targetDate)){
-                        valuationPerDate.put(targetDate,valuation);
-                    }
-                    else{
-                        valuationPerDate.merge(targetDate,valuation,Double::sum);
-                    }
-                }
-            }
-        }
-    }
-
     /**
      * 유저의 포트폴리오가 가진 섹터 비중을 반환하는 메서드
      *
@@ -1171,7 +1092,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 3. RecommendAssetInfo 리스트 반환
         return IntStream.range(0, assetList.size())
-            .mapToObj(i -> RecommendAssetInfo.of(assetList.get(i), weights.get(i), purchaseNumList.get(i)))
+            .mapToObj(i -> RecommendAssetInfo.of(assetList.get(i), weights.get(i), purchaseNumList.get(i), recentExchangeRate))
             .toList();
     }
 
@@ -1224,12 +1145,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
             // 구매량을 결정해야한다
             // 구매량은, (전체 현금 보유량 * 자산 비중 / 해당 자산의 가격) 을 반올림 한 값으로 한다
-            int purchaseNum;
-            if (asset.getRegion() == Region.KR) {
-                purchaseNum = (int)Math.round(totalCash * fictionalWeight / asset.getRecentPrice());
-            } else {
-                purchaseNum = (int)Math.round(totalCash * fictionalWeight / (asset.getRecentPrice() * exchangeRate));
-            }
+            int purchaseNum = (int)Math.round(totalCash * fictionalWeight / asset.getRecentPrice(exchangeRate));
 
             purchaseNumList.add(purchaseNum);
             idx++;
@@ -1255,7 +1171,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
 
         List<RecommendAssetInfo> recommendAssetInfos = IntStream.range(0, findAssets.size())
-            .mapToObj(i -> RecommendAssetInfo.of(findAssets.get(i), realWeights.get(i), purchaseNumList.get(i)))
+            .mapToObj(i -> RecommendAssetInfo.of(findAssets.get(i), realWeights.get(i), purchaseNumList.get(i), exchangeRate))
             .toList();
 
         // 기존 포트폴리오로 측정한 퍼포먼스와 추천자산 비중을 반환한다

@@ -286,7 +286,7 @@ public record PortfolioResponse() {
         Double weight,
         Integer purchaseNum
     ){
-        public static RecommendAssetInfo of(Asset asset,Double weight,Integer purchaseNum){
+        public static RecommendAssetInfo of(Asset asset,Double weight,Integer purchaseNum, Double exchangeRate){
 
             String imageName = asset.getCode()+".png";
 
@@ -296,7 +296,7 @@ public record PortfolioResponse() {
                 .code(asset.getCode())
                 .imagePath(asset.getImagePath())
                 .imageName(imageName)
-                .price(asset.getRecentPrice())
+                .price(asset.getRecentPrice(exchangeRate))
                 .region(asset.getRegion().toString())
                 .market(asset.getMarket().name())
                 .weight(weight)
