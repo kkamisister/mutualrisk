@@ -520,8 +520,8 @@ const AssetConstraintList = ({ assets }) => {
 						onChange={e => {
 							const value =
 								e.target.value === ''
-									? null
-									: parseFloat(e.target.value);
+									? 0
+									: parseFloat(e.target.value.replace(/,/g, '')); // 쉼표 제거
 							updateTotalCash(value);
 						}}
 						type="number"
