@@ -45,8 +45,8 @@ const RebalanceMainPage = () => {
 
 	const formatCurrency = amount =>
 		`${amount.toLocaleString('ko-KR', {
-			minimumFractionDigits: 1,
-			maximumFractionDigits: 1,
+			minimumFractionDigits: 0,
+			maximumFractionDigits: 0,
 		})} 원`;
 
 	const { data: portfolioListData, isLoading: isListLoading } = useQuery({
