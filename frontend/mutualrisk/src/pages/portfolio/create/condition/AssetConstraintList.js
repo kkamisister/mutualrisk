@@ -516,7 +516,7 @@ const AssetConstraintList = ({ assets }) => {
 				<Grid item xs={6}>
 					<TextField
 						label="총자산"
-						value={totalCash}
+						value={totalCash.toLocaleString()}
 						onChange={e => {
 							const value =
 								e.target.value === ''
