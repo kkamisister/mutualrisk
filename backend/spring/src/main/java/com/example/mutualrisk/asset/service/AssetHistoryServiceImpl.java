@@ -12,6 +12,7 @@ import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithData;
 import com.example.mutualrisk.common.dto.CommonResponse.ResponseWithMessage;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
+import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +32,7 @@ public class AssetHistoryServiceImpl implements AssetHistoryService {
 
     private final AssetHistoryRepository assetHistoryRepository;
     private final AssetRepository assetRepository;
+    private final ExchangeRatesRepository exchangeRatesRepository;
 
     // 주어진 날짜에 해당하는 asset의 종가 데이터를 구하는 함수
     // 현재 날 기준으로 과거 5일간의 데이터를 가져온다. 이 중 가장 마지막 데이터를 선택
@@ -50,14 +52,14 @@ public class AssetHistoryServiceImpl implements AssetHistoryService {
 
     @Override
     public List<AssetHistory> getAssetHistoryList(List<Asset> assetList, LocalDateTime targetDate) {
-
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
         List<AssetHistory> assetHistories = new ArrayList<>();
         for (Asset asset : assetList) {
             List<LocalDateTime> validDateList = getValidDate(asset, targetDate, 1);
             if (validDateList.isEmpty()) {
                 assetHistories.add(AssetHistory.builder()
                     .asset(asset)
-                    .price(asset.getOldestPrice())
+                    .price(asset.getOldestPrice(recentExchangeRate))
                     .date(targetDate)
                     .build());
             }
