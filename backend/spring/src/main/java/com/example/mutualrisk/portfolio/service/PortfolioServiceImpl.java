@@ -393,12 +393,12 @@ public class PortfolioServiceImpl implements PortfolioService{
         for (int idx = 0; idx < assetList.size(); idx++) {
             Asset asset = assetList.get(idx);
             Integer purchaseQuantity = purchaseQuantityList.get(idx);
-
             List<LocalDateTime> validDates = getCashedValidDatesOfAsset(asset, timeInterval, recentDate);
 
             List<Double> backTestValuationsOfAsset = getBackTestValuationOfAsset(asset, purchaseQuantity, validDates, recentExchangeRate);
-//            System.out.println("backTestValuationsOfAsset.size() = " + backTestValuationsOfAsset.size());
-//            System.out.println("backTestValuationsOfAsset = " + backTestValuationsOfAsset);
+
+            //            System.out.println("backTestValuationsOfAsset.size() = " + backTestValuationsOfAsset.size());
+//           System.out.println("backTestValuationsOfAsset = " + backTestValuationsOfAsset);
             for (int subIdx=0; subIdx<30; subIdx++) {
                 valuations[subIdx] += backTestValuationsOfAsset.get(subIdx);
             }
@@ -408,16 +408,23 @@ public class PortfolioServiceImpl implements PortfolioService{
     }
 
     private List<Double> getBackTestValuationOfAsset(Asset asset, Integer purchaseQuantity, List<LocalDateTime> validDates, Double recentExchangeRate) {
+
+        // 이 <날짜,가격> 의 맵
         List<AssetHistory> allHistoryOfAssets = assetHistoryRepository.findAllHistoryOfAssets(asset, validDates);
+        HashMap<LocalDateTime, Double> valuationMap = new HashMap<>();
+
+        for (AssetHistory assetHistory : allHistoryOfAssets) {
+            valuationMap.put(assetHistory.getDate(), assetHistory.getPrice());
+        }
 
         List<Double> backTestValuations = new ArrayList<>();
         for (int dDate = 30; dDate >= 1; dDate--) {
-            int idx = allHistoryOfAssets.size() - dDate;
+            int idx = validDates.size() - dDate;
             if (idx < 0) {
                 backTestValuations.add(asset.getOldestPrice(recentExchangeRate) * purchaseQuantity);
             }
             else {
-                Double price = allHistoryOfAssets.get(idx).getPrice();
+                Double price = valuationMap.get(validDates.get(idx));
                 if (asset.getRegion().equals(Region.US)) price *= recentExchangeRate;
                 backTestValuations.add(price * purchaseQuantity);
             }
