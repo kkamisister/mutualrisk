@@ -40,7 +40,15 @@ const RebalanceAfter = ({ rebalanceData }) => {
 
 	return (
 		<DetailContainer title={'리밸런싱 후 포트폴리오'}>
-			<div style={{ display: 'flex', justifyContent: 'space-between' }}>
+			<div
+				style={{
+					display: 'flex',
+					justifyContent: 'space-between',
+					overflow: 'auto',
+					'&::-webkit-scrollbar': { display: 'none' }, // 스크롤바 숨기기
+					msOverflowStyle: 'none', // IE 및 Edge에서 스크롤바 숨기기
+					scrollbarWidth: 'none', // Firefox에서 스크롤바 숨기기
+				}}>
 				<ResponsiveContainer width="60%" height={300}>
 					<BarChart
 						data={sortedNewAssets} // 정렬된 데이터 전달

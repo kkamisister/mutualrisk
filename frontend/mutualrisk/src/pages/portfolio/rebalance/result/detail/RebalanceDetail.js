@@ -16,7 +16,7 @@ const RebalanceDetail = ({ rebalanceData }) => {
 				alignItems: 'center',
 				height: '100%',
 			}}>
-			<RebalanceBefore sx={{ flex: 1 }} rebalanceData={rebalanceData} />
+			<RebalanceBefore rebalanceData={rebalanceData} />
 			<Stack
 				spacing={0}
 				direction={'row'}
@@ -30,7 +30,7 @@ const RebalanceDetail = ({ rebalanceData }) => {
 				<DoubleArrowRounded sx={{ color: colors.main.primary200 }} />
 			</Stack>
 
-			<RebalanceAfter sx={{ flex: 1 }} rebalanceData={rebalanceData} />
+			<RebalanceAfter rebalanceData={rebalanceData} />
 		</Stack>
 	);
 };

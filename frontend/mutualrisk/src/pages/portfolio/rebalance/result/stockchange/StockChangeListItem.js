@@ -50,7 +50,7 @@ const StockChangeListItem = ({ stock }) => {
 							fontWeight: 'bold',
 							marginRight: '10px',
 						}}>
-						{stock.currentPrice.toLocaleString()}원
+						{Math.ceil(stock.currentPrice).toLocaleString()}원
 					</Typography>
 					<Typography sx={{ fontSize: '20px', fontWeight: 'bold' }}>
 						{stock.currentShares.toLocaleString()}주
@@ -81,7 +81,7 @@ const StockChangeListItem = ({ stock }) => {
 							fontWeight: 'bold',
 							marginRight: '10px',
 						}}>
-						{stock.rebalancedPrice.toLocaleString()}원
+						{Math.ceil(stock.rebalancedPrice).toLocaleString()}원
 					</Typography>
 					<Typography
 						sx={{
@@ -114,7 +114,7 @@ const StockChangeListItem = ({ stock }) => {
 						color: colors.text.sub1,
 						marginRight: '10px',
 					}}>
-					{stock.rebalancedPrice.toLocaleString()}원
+					{Math.ceil(stock.rebalancedPrice).toLocaleString()}원
 				</Typography>
 				<Typography
 					sx={{
