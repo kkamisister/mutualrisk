@@ -68,8 +68,16 @@ const RebalanceBefore = ({ rebalanceData }) => {
 							msOverflowStyle: 'none', // IE 및 Edge에서 스크롤바 숨기기
 							scrollbarWidth: 'none', // Firefox에서 스크롤바 숨기기
 						}}>
-						<div style={{ position: 'sticky', top: 0, flexShrink: 0 }}>
-							<ResponsiveContainer width="60%" height={300}>
+						<div
+							style={{
+								position: 'sticky',
+								top: 0,
+								flexShrink: 0,
+								width: '50%',
+							}}>
+							<ResponsiveContainer
+								// width="60%"
+								height={300}>
 								<BarChart
 									data={sortedOldAssets} // 정렬된 데이터 전달
 									layout="vertical"
