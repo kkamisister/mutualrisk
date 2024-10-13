@@ -1,11 +1,27 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import PortfolioSummaryListItem from 'pages/portfolio/detail/summary/PortfolioSummaryListItem';
-import { Stack, Typography, Box } from '@mui/material';
+import { Stack, Typography, Box, Tooltip } from '@mui/material';
 import { colors } from 'constants/colors';
 import HorizontalScrollContainer from 'components/scroll/HorizontalScrollContainer';
 import { fetchPortfolioSummaryByVer } from 'utils/apis/analyze';
+import { InfoOutlined } from '@mui/icons-material';
 import { useEffect } from 'react';
+
+const DescriptionTooltip = ({ title, description }) => {
+	return (
+		<Box>
+			<Stack spacing={0.5}>
+				<Typography color={colors.text.main} fontSize="14px">
+					{title}
+				</Typography>
+				<Typography color={colors.text.sub1} fontSize="12px">
+					{description}
+				</Typography>
+			</Stack>
+		</Box>
+	);
+};
 
 // 위험도 박스를 렌더링하는 함수
 const renderRiskBox = (rank, total, title) => {
@@ -107,7 +123,7 @@ const PortfolioSummaryList = ({ ver }) => {
 							fontWeight: 'bold',
 							color: colors.text.sub1,
 						}}>
-						{curValuation.toLocaleString()}원
+						{Math.trunc(curValuation).toLocaleString()}원
 					</Typography>
 				</PortfolioSummaryListItem>
 
@@ -131,8 +147,8 @@ const PortfolioSummaryList = ({ ver }) => {
 								marginRight: '3px',
 							}}>
 							{curValuation - initValuation > 0 ? '+' : ''}
-							{(curValuation - initValuation).toLocaleString()}원 (
-							{curValuation - initValuation > 0 ? '+' : ''}
+							{Math.trunc(curValuation - initValuation).toLocaleString()}
+							원 ({curValuation - initValuation > 0 ? '+' : ''}
 							{(
 								((curValuation - initValuation) / initValuation) *
 								100
@@ -174,14 +190,42 @@ const PortfolioSummaryList = ({ ver }) => {
 				)}
 
 				{/* 위험률 대비 수익률 박스 */}
-				<PortfolioSummaryListItem title="위험률 대비 수익률">
+				<PortfolioSummaryListItem title="샤프 비율">
 					<Typography
 						sx={{
 							fontSize: '20px',
 							fontWeight: 'bold',
 							color: colors.text.sub1,
+							display: 'flex',
+							alignItems: 'center',
 						}}>
-						{sharpeRatio.toFixed(2)}
+						{sharpeRatio.toFixed(2)}{' '}
+						<Tooltip
+							componentsProps={{
+								tooltip: {
+									sx: {
+										padding: '15px',
+										backgroundColor: colors.background.white,
+										boxShadow:
+											'0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
+										fontSize: 14,
+										color: colors.text.sub1,
+									},
+								},
+							}}
+							title={
+								<DescriptionTooltip
+									title="샤프 비율"
+									description="기대 수익률을 수익률의 표준편차로 나눈 값을 의미해요. 샤프 비율이 높을수록, 같은 위험 하에서 더 높은 수익률을 기대할 수 있어요."
+								/>
+							}>
+							<InfoOutlined
+								sx={{
+									fontSize: '16px',
+									marginLeft: '5px',
+								}}
+							/>
+						</Tooltip>
 					</Typography>
 				</PortfolioSummaryListItem>
 
