@@ -14,8 +14,8 @@ export const fetchLoginInfoByCode = async code => {
 		`/oauth/kakao/callback?code=${code}`
 	);
 	const data = response.data;
-	sessionStorage.setItem('accessToken', data.authToken.accessToken);
-	sessionStorage.setItem('name', data.userName);
+	localStorage.setItem('accessToken', data.authToken.accessToken);
+	localStorage.setItem('name', data.userName);
 
 	// 받은 API Key로 axios instance에 Authorization 설정
 	axiosInstance.defaults.headers.common[

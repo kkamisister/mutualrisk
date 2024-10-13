@@ -8,11 +8,11 @@ import { enqueueSnackbar } from 'notistack';
 import logoImage from 'assets/images/logo.png';
 
 const HeaderLayout = ({ sx }) => {
-	const userName = sessionStorage.getItem('name');
+	const userName = localStorage.getItem('name');
 	const navigate = useNavigate();
 	const handleLogout = () => {
 		logoutUser();
-		sessionStorage.clear();
+		localStorage.clear();
 		navigate('/');
 		enqueueSnackbar('정상적으로 로그아웃되었어요!', { variant: 'success' });
 	};
