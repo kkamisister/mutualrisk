@@ -160,6 +160,7 @@ public record PortfolioResponse() {
     @Builder
     @Schema(name = "포트폴리오 백테스팅 결과 조회 데이터")
     public record PortfolioBackTestDto(
+        Boolean hasBeforePortfolio,
         PortfolioValuationDto benchMark,
         PortfolioValuationDto portfolioValuation
     ) {

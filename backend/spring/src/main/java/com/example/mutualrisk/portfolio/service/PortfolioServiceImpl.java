@@ -1342,71 +1342,9 @@ public class PortfolioServiceImpl implements PortfolioService{
     @Override
     public ResponseWithData<PortfolioBackTestDto> getBackTestOfCreatedPortfolio(Integer userId, List<RecommendAssetInfo> recommendAssetInfoList, TimeInterval timeInterval, PerformanceMeasure measure) {
 
-        // 0. 환율 가져오기
+        // 1. 환율 가져오기
         Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
         LocalDateTime recentDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);;
-
-        // 1. s&p500 지수의 성과 지표 얻기
-        // 1주를 들고 있었을 때 기준임
-        Asset sp500 = assetRepository.findById(SP500_ASSET_ID)
-            .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
-        List<Asset> benchMarkSP500 = List.of(sp500);
-        Integer[] purchaseNum = new Integer[30];
-        Arrays.fill(purchaseNum, 1);
-        List<Integer> purchaseNumOfSP500 = List.of(purchaseNum);
-        List<Double> sp500BacktestValuation = getPortfolioBacktestValuation(timeInterval, benchMarkSP500, purchaseNumOfSP500, recentDate, recentExchangeRate);
-
-        // 유저의 최근 포트폴리오의 성과를 반환할 dto
-        PortfolioValuationDto benchMark = null;
-
-        // 2. 유저의 과거 포트폴리오 내역이 존재할 경우, benchMark를 업데이트한다
-        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
-
-        // 존재할 경우
-        if (!myPortfolioList.isEmpty()) {
-            // 2-1. 기본 변수 업데이트
-            Portfolio latestPortfolio = myPortfolioList.get(0);
-
-            List<PortfolioAsset> portfolioAssetList = latestPortfolio.getAsset();
-
-            List<Integer> assetIdList = portfolioAssetList.stream()
-                .map(PortfolioAsset::getAssetId)
-                .toList();
-
-            // assetList 구하기
-            List<Asset> assetList = assetRepository.findAllById(assetIdList);
-
-            // 유저가 각 자산에 대해 산 수량 리스트(purchaseQuantityList)를 구하기
-            List<Integer> purchaseQuantityList = portfolioAssetList.stream()
-                .map(PortfolioAsset::getTotalPurchaseQuantity)
-                .toList();
-
-
-            // 2-2. 포트폴리오 백테스팅 결과 저장
-            // 포트폴리오의 성과 지표를 저장하는 list
-            List<Performance> performances = new ArrayList<>();
-
-            List<Double> portfolioBacktestValuation = getPortfolioBacktestValuation(timeInterval, assetList, purchaseQuantityList, recentDate, recentExchangeRate);
-
-            // 가장 오래 전 날짜 기준, 포트폴리오의 valuation과 s&p500 valuation을 맞추기 위한 비율 차이 계산
-            sp500BacktestValuation = getPortfolioBacktestValuation(timeInterval, benchMarkSP500, purchaseNumOfSP500, recentDate, recentExchangeRate);
-            double ratio = portfolioBacktestValuation.get(0) / sp500BacktestValuation.get(0);
-
-            for (int idx=0; idx<30; idx++) {
-                performances.add(Performance.builder()
-                    .time(dateUtil.getPastDate(recentDate, timeInterval, 30 - idx))
-                    .valuation(portfolioBacktestValuation.get(idx))
-                    .sp500Valuation(sp500BacktestValuation.get(idx) * ratio)
-                    .build());
-            }
-
-            benchMark = PortfolioValuationDto.builder()
-                .portfolioId(latestPortfolio.getId())
-                .timeInterval(timeInterval)
-                .measure(measure)
-                .performances(performances)
-                .build();
-        }
 
         // 2. 현재 추천해 준 포트폴리오의 자산을 바탕으로, 백테스팅 데이터 구하기
         // 2-1. assetId 순으로 정렬
@@ -1429,12 +1367,10 @@ public class PortfolioServiceImpl implements PortfolioService{
         List<Performance> performances = new ArrayList<>();
         List<Double> portfolioBacktestValuation = getPortfolioBacktestValuation(timeInterval, assetList, purchaseQuantityList, recentDate, recentExchangeRate);
 
-        double ratio = portfolioBacktestValuation.get(0) / sp500BacktestValuation.get(0);
         for (int idx=0; idx<30; idx++) {
             performances.add(Performance.builder()
                 .time(dateUtil.getPastDate(recentDate, timeInterval, 30 - idx))
                 .valuation(portfolioBacktestValuation.get(idx))
-                .sp500Valuation(sp500BacktestValuation.get(idx) * ratio)
                 .build());
         }
 
@@ -1444,7 +1380,71 @@ public class PortfolioServiceImpl implements PortfolioService{
             .performances(performances)
             .build();
 
+        // 3. benchMark 계산
+        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
+        List<Double> portfolioBenchMarkValuation;
+        Boolean hasBeforePortfolio;
+        // 3-1. 유저의 과거 포트폴리오가 존재할 경우 - 유저의 최신 포트폴리오가 benchMark가 된다
+        if (!myPortfolioList.isEmpty()) {
+            hasBeforePortfolio = Boolean.TRUE;
+
+            // 3-1-1. 기본 변수 업데이트
+            Portfolio latestPortfolio = myPortfolioList.get(0);
+            List<PortfolioAsset> portfolioAssetList = latestPortfolio.getAsset();
+
+            assetIdList = portfolioAssetList.stream()
+                .map(PortfolioAsset::getAssetId)
+                .toList();
+
+            // assetList 구하기
+            assetList = assetRepository.findAllById(assetIdList);
+
+            // 유저가 각 자산에 대해 산 수량 리스트(purchaseQuantityList)를 구하기
+            purchaseQuantityList = portfolioAssetList.stream()
+                .map(PortfolioAsset::getTotalPurchaseQuantity)
+                .toList();
+
+            // 3-1-2. 포트폴리오 백테스팅 결과 저장
+            // 포트폴리오의 성과 지표를 저장하는 list
+            portfolioBenchMarkValuation = getPortfolioBacktestValuation(timeInterval, assetList, purchaseQuantityList, recentDate, recentExchangeRate);
+        }
+        // 3-2. 유저의 포트폴리오가 없을 경우 -> S&P 500이 benchMark가 된다
+        else {
+            hasBeforePortfolio = Boolean.FALSE;
+
+            // 3-2-1. s&p500 지수의 성과 지표 얻기
+            // 1주를 들고 있었을 때 기준임
+            Asset sp500 = assetRepository.findById(SP500_ASSET_ID)
+                .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
+            List<Asset> benchMarkSP500 = List.of(sp500);
+            Integer[] purchaseNum = new Integer[30];
+            Arrays.fill(purchaseNum, 1);
+            List<Integer> purchaseNumOfSP500 = List.of(purchaseNum);
+            portfolioBenchMarkValuation = getPortfolioBacktestValuation(timeInterval, benchMarkSP500, purchaseNumOfSP500, recentDate, recentExchangeRate);
+        }
+
+        // 4. 둘의 시작을 맞춰 준다
+        double ratio = portfolioBacktestValuation.get(0) / portfolioBenchMarkValuation.get(0);
+
+        // 4-1. BenchMark에 사용될 performance 구하기
+        // 위에서 구한 ratio를 이용함
+        performances = new ArrayList<>();
+        for (int idx=0; idx<30; idx++) {
+            performances.add(Performance.builder()
+                .time(dateUtil.getPastDate(recentDate, timeInterval, 30 - idx))
+                .valuation(portfolioBenchMarkValuation.get(idx) * ratio)
+                .build());
+        }
+
+        PortfolioValuationDto benchMark = PortfolioValuationDto.builder()
+            .timeInterval(timeInterval)
+            .measure(measure)
+            .performances(performances)
+            .build();
+
+        // benchMark와 portfolioValuation를 담아서 반환
         PortfolioBackTestDto portfolioBackTestDto = PortfolioBackTestDto.builder()
+            .hasBeforePortfolio(hasBeforePortfolio)
             .benchMark(benchMark)
             .portfolioValuation(portfolioValuation)
             .build();
