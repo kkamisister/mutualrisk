@@ -26,4 +26,8 @@ public class AssetCovariance extends BaseEntity {
 
     @Column(name = "covariance")
     Double covariance;
+
+    public Double getCovariance() {
+        return covariance / 10000;
+    }
 }
