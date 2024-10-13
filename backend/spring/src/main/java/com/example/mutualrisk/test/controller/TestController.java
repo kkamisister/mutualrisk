@@ -17,6 +17,7 @@ import com.example.mutualrisk.common.email.dto.EmailMessage;
 import com.example.mutualrisk.common.email.service.EmailService;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
+import com.example.mutualrisk.common.fastapi.SseService;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.fund.service.FundService;
 
@@ -27,10 +28,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * 테스트용 컨트롤러
@@ -45,6 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     private final FundService fundService;
+    private final SseService sseService;
     private final AssetRepository assetRepository;
     private final AssetHistoryRepository assetHistoryRepository;
     private final ExchangeRatesRepository exchangeRatesRepository;
@@ -111,5 +115,11 @@ public class TestController {
         Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
         return AssetInfo.of(asset, recentAssetHistoryList, recentExchangeRate);
+    }
+
+    @GetMapping("/subscribe/{userId}")
+    public SseEmitter subscribe(@PathVariable String userId) {
+        // SSE 연결을 시작하고 SseEmitter 반환
+        return sseService.subscribe(userId);
     }
 }

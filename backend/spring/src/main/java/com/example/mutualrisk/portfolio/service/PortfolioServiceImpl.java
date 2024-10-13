@@ -24,6 +24,7 @@ import com.example.mutualrisk.common.enums.TimeInterval;
 import com.example.mutualrisk.common.exception.ErrorCode;
 import com.example.mutualrisk.common.exception.MutualRiskException;
 import com.example.mutualrisk.common.fastapi.FastApiService;
+import com.example.mutualrisk.common.fastapi.MessagePublisher;
 import com.example.mutualrisk.common.redis.repository.RedisHashRepository;
 import com.example.mutualrisk.common.repository.ExchangeRatesRepository;
 import com.example.mutualrisk.common.util.DateUtil;
@@ -71,6 +72,7 @@ public class PortfolioServiceImpl implements PortfolioService{
     private final UserRepository userRepository;
     private final AssetCovarianceRepository assetCovarianceRepository;
     private final RedisHashRepository redisHashRepository;
+    private final MessagePublisher messagePublisher;
 
     private final FastApiService fastApiService;
 
@@ -897,7 +899,7 @@ public class PortfolioServiceImpl implements PortfolioService{
      * @return
      */
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public ResponseWithData<CalculatedPortfolio> initPortfolio(Integer userId, PortfolioInitDto initInfo) {
         // 1-1. 유저가 입력한 dto를 받아서, api에 던질 dto 형식으로 고친다
         // PortfolioInitDto -> PortfolioRequestDto로 변환
@@ -914,9 +916,13 @@ public class PortfolioServiceImpl implements PortfolioService{
         log.info("portfolioRequestDto : {}", portfolioRequestDto);
         EfficientFrontierResponseDto efficientFrontierResponseDto;
         try {
+            messagePublisher.publish("requestQueue",portfolioRequestDto);
             efficientFrontierResponseDto = mutualRiskClient.post("https://j11a607.p.ssafy.io/fastapi/v1/portfolio", portfolioRequestDto)
                 .bodyToMono(EfficientFrontierResponseDto.class)
                 .block();
+
+            // efficientFrontierResponseDto = null;
+
         } catch (Exception e) {
             log.warn("fastAPI 호출시 에러 발생 : {}", e.getMessage());
             throw new MutualRiskException(ErrorCode.EFFICIENT_PORTFOLIO_API_ERROR);
