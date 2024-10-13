@@ -5,11 +5,18 @@ import Sidebar from 'components/sidebar/Sidebar';
 import { colors } from 'constants/colors';
 import { Outlet } from 'react-router-dom';
 import HeaderLayout from './header/HeaderLayout';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { enqueueSnackbar } from 'notistack';
 const DashboardLayout = () => {
 	const [isSidebarHovered, setIsSidebarHovered] = useState(false);
 	const location = useLocation();
-	return (
+	const navigate = useNavigate();
+	if (!localStorage.getItem('accessToken')) {
+		enqueueSnackbar('로그인을 해주세요', { variant: 'error' });
+	}
+	return !localStorage.getItem('accessToken') ? (
+		<Navigate to="/" />
+	) : (
 		<Stack
 			direction="row"
 			sx={{
