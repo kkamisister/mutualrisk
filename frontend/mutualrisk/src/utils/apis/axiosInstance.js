@@ -5,14 +5,14 @@ const axiosInstance = axios.create({
 	// timeout: 1000,
 	timeout: 20000,
 	// headers: {
-	// 	Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`,
+	// 	Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
 	// },
 	withCredentials: true,
 });
-if (sessionStorage.getItem('accessToken')) {
+if (localStorage.getItem('accessToken')) {
 	axiosInstance.defaults.headers.common[
 		'Authorization'
-	] = `Bearer ${sessionStorage.getItem('accessToken')}`;
+	] = `Bearer ${localStorage.getItem('accessToken')}`;
 }
 // AccessToken 만료시 재요청하는 Axios interceptor
 axiosInstance.interceptors.response.use(
@@ -34,7 +34,7 @@ axiosInstance.interceptors.response.use(
 				try {
 					// 새로운 토큰 저장
 					const newAccessToken = originalRequest.headers['reissue-token'];
-					sessionStorage.setItem('accessToken', newAccessToken);
+					localStorage.setItem('accessToken', newAccessToken);
 
 					// 갱신된 토큰을 사용해 원래의 요청을 다시 보냄
 					originalRequest.headers[
