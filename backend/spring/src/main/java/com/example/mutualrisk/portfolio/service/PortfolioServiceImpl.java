@@ -705,7 +705,6 @@ public class PortfolioServiceImpl implements PortfolioService{
     public ResponseWithData<PortfolioStatusSummary> userPortfolioSummary(Integer userId, Integer version) {
         Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
 
-
         // 유저를 조회한다
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new MutualRiskException(ErrorCode.USER_NOT_FOUND));
@@ -715,8 +714,8 @@ public class PortfolioServiceImpl implements PortfolioService{
             .orElseThrow(() -> new MutualRiskException(ErrorCode.PORTFOLIO_NOT_FOUND));
 
         // 1. 이 포트폴리오의 현재 기준 valuation을 계산한다
-        List<PortfolioAsset> pAssets = userPortfolio.getAsset();
-        List<Integer> assetIds = pAssets.stream().map(PortfolioAsset::getAssetId).toList();
+        List<PortfolioAsset> portfolioAssetList = userPortfolio.getAsset();
+        List<Integer> assetIds = portfolioAssetList.stream().map(PortfolioAsset::getAssetId).toList();
         List<Asset> findAssets = assetRepository.findAllById(assetIds);
 
         // 자산 ID로 매칭하여 자산 정보 찾기
@@ -724,7 +723,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             .collect(Collectors.toMap(Asset::getId, asset -> asset));
 
         Double curValuation = 0.0;
-        for (PortfolioAsset pAsset : pAssets) {
+        for (PortfolioAsset pAsset : portfolioAssetList) {
             Asset asset = assetMap.get(pAsset.getAssetId());
             if (!ObjectUtils.isEmpty(asset)) {
                 curValuation += asset.getRecentPrice(recentExchangeRate) * pAsset.getTotalPurchaseQuantity();
@@ -737,17 +736,33 @@ public class PortfolioServiceImpl implements PortfolioService{
             lastValuation = null;
         } else {
             LocalDateTime targetDate = userPortfolio.getDeletedAt();
-            lastValuation = calculateValuation(pAssets, findAssets, targetDate, recentExchangeRate);
+            lastValuation = calculateValuation(portfolioAssetList, findAssets, targetDate, recentExchangeRate);
         }
 
         // 3. 생성일 기준 valuation
         LocalDateTime targetDate = userPortfolio.getCreatedAt();
-        Double createValuation = calculateValuation(pAssets, findAssets, targetDate, recentExchangeRate);
+        Double createValuation = calculateValuation(portfolioAssetList, findAssets, targetDate, recentExchangeRate);
 
         // 4. 위험률 대비 수익률 : sharpe_ratio
-        Double sharpeRatio = userPortfolio.getFictionalPerformance().sharpeRatio();
+        // userId에 해당하는 포트폴리오가 존재할 경우
+        List<Asset> assetList = getAssetsFromPortfolio(portfolioAssetList);
+        // 자산들의 구매 금액을 저장하는 리스트
+        List<Double> assetValuationList = getAssetValuationList(portfolioAssetList, assetList);
+        // 포트폴리오에 속해 있는 자산 리스트
 
-        // 전체 시장을 가지고와서, 각 시장에 Map을 이용해서 구분해보자
+        double totalValuation = assetValuationList.stream()
+            .mapToDouble(Double::doubleValue)
+            .sum();
+
+        // 3. 각 값의 비율을 계산해서 weights 리스트에 추가
+        List<Double> weights = calculateWeights(assetValuationList, totalValuation);
+
+        // 4. buildPortfolioResponse 객체 만들기
+        // 4-1. 현재 포트폴리오의 퍼포먼스 구하기
+        PortfolioPerformance portfolioPerformance = getPortfolioPerformance(assetList, weights, totalValuation);
+        Double sharpeRatio = portfolioPerformance.sharpeRatio();
+
+            // 전체 시장을 가지고와서, 각 시장에 Map을 이용해서 구분해보자
         List<Asset> allAssets = assetRepository.findAll();
         Map<String, List<Asset>> assetsByCategory = new HashMap<>();
 
