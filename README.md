@@ -105,26 +105,25 @@ Optimistic Update를 적용하여 우선 내부에서 관리하고 있는 북마
 
 ### 서비스 아키텍쳐
 
-![Mutual Risk (1).png](https://prod-files-secure.s3.us-west-2.amazonaws.com/bfc6f5c1-6e11-4486-89dc-272c75adbcc9/543b1d4d-b4dd-4ad1-9753-4786234c9784/Mutual_Risk_(1).png)
+![Mutual_Risk](/uploads/12a9f90203945a7715a523838226a2b1/Mutual_Risk.png)
 
 ## 4. 사용 화면
 
 1. **랜딩페이지** : 최초 페이지입니다. 로그인 버튼을 눌러서 카카오 로그인을 진행할 수 있습니다
     
-    ![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/bfc6f5c1-6e11-4486-89dc-272c75adbcc9/8f85c48a-98ae-452f-a32e-2b5bb566746a/image.png)
+![image__5_](/uploads/63a3e7dd621c9184fd51ad1e83a5dd09/image__5_.png)
     
     1. **신규 유저** : 신규 유저는 로그인 직후 초기 포트폴리오를 생성할 수 있도록 포트폴리오 제작 페이지로 리다이렉트
     2. **기존 유저** : 기존 유저는 로그인 직후 보유하고 있는 포트폴리오의 성과를 분석한 포트폴리오 대시보드로 이동
 2. 포트폴리오의 효율적 포트폴리오 곡선, 섹터정보, 백테스팅 도구, Monthly Return
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/bfc6f5c1-6e11-4486-89dc-272c75adbcc9/49ea7ec1-16af-42de-995b-2ddfdc8133fe/image.png)
+![image__6_](/uploads/075ff46b8798af36db78328ffd58d136/image__6_.png)
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/bfc6f5c1-6e11-4486-89dc-272c75adbcc9/e19a6421-8ec4-46f1-a1c0-d8ffcf4bad4e/image.png)
+![image__7_](/uploads/5f9282dc23f804fa0e7a82e52b093c6b/image__7_.png)
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/bfc6f5c1-6e11-4486-89dc-272c75adbcc9/8d1a1053-4bf3-4d81-9836-8c5f25fe1575/image.png)
+![image__8_](/uploads/ec0b5ceac296d12caaabe4fe5e8af682/image__8_.png)
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/bfc6f5c1-6e11-4486-89dc-272c75adbcc9/d9a3062f-68c1-48a3-9610-8286a323c465/image.png)
-
+![image__9_](/uploads/c3c3869aaf3e718e3d723fbc56009b24/image__9_.png)
 1. 
 
 ## 5. 결론
@@ -143,7 +142,7 @@ https://embed.figma.com/design/KhElPS7BdGJQeZ7T6PgWYu/%ED%8F%AC%ED%8A%B8%ED%8F%B
 
 https://www.erdcloud.com/d/7KE5MkJjDW3cQuJ6P
 
-![Copy of 뮤탈리스크.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/bfc6f5c1-6e11-4486-89dc-272c75adbcc9/4b0abfd3-68fc-40fb-800d-5ea874ff23e0/Copy_of_%EB%AE%A4%ED%83%88%EB%A6%AC%EC%8A%A4%ED%81%AC.png)
+![Copy_of_뮤탈리스크__1_](/uploads/631665c0d734d97fc5177a91a188b388/Copy_of_뮤탈리스크__1_.png)
 
 ## MongoDB Collection
 
