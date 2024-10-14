@@ -177,8 +177,10 @@ const PortfolioSummaryList = ({ ver }) => {
 									marginRight: '3px',
 								}}>
 								{lastValuation - initValuation > 0 ? '+' : ''}
-								{(lastValuation - initValuation).toLocaleString()}원 (
-								{lastValuation - initValuation > 0 ? '+' : ''}
+								{Math.trunc(
+									lastValuation - initValuation
+								).toLocaleString()}
+								원 ({lastValuation - initValuation > 0 ? '+' : ''}
 								{(
 									((lastValuation - initValuation) / initValuation) *
 									100
