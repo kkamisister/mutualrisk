@@ -61,11 +61,14 @@ const StockAddBox = ({ recommendAssets }) => {
 				</span>
 				{`을(를) 포트폴리오에 추가하면 예상 수익률이 `}
 				<span style={{ fontWeight: 'bold' }}>
-					{currentAsset.expectedReturn.toFixed(2)}%P 증가
+					{currentAsset.expectedReturnChange.toFixed(3)}%P 증가
 				</span>
 				{`, 변동성이 `}
 				<span style={{ fontWeight: 'bold' }}>
-					{(-1 * currentAsset.volatilityChange).toFixed(2)}%P 감소
+					{currentAsset.volatilityChange >= 0 &&
+						`${currentAsset.volatilityChange.toFixed(4)}%P 증가`}
+					{currentAsset.volatilityChange < 0 &&
+						`${(-1 * currentAsset.volatilityChange).toFixed(4)}%P 감소`}
 				</span>
 				{` 해요.`}
 			</Typography>
