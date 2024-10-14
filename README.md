@@ -323,3 +323,9 @@ https://www.erdcloud.com/d/7KE5MkJjDW3cQuJ6P
 | **펀드 목록 조회** | `GET` | /api/v1/funds |  | 운용액 기준 상위 20개 펀드 조회 |  |
 | **펀드 상세 정보 조회** | `GET` | /api/v1/funds/{fundId} |  | 보유량 순으로 종목 정렬 후 반환, jwt 인증 |  |
 | **펀드 평가액 변동 기록 조회** | `GET` | /api/vi/funds/history |  | jwt 인증 |  |
+
+
+
+## UCC 링크
+
+https://youtu.be/9glI1H5ydaU
