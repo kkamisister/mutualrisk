@@ -160,6 +160,20 @@ public class PortfolioController {
     }
 
     /**
+     * 유저의 최신 포트폴리오에 있는 추천 자산(recommendAssets)들을 업데이트하는 메서드
+     * Crontab으로 매일 실행시켜야 함
+     */
+    @PostMapping("/update")
+    public ResponseEntity<ResponseWithMessage> updateUserPortfolio(HttpServletRequest request) {
+        String id = (String)request.getAttribute("userId");
+        Integer userId = Integer.valueOf(id);
+
+        ResponseWithMessage message = portfolioService.updateUserPortfolio(userId);
+
+        return ResponseEntity.status(message.status()).body(message);
+    }
+
+    /**
      * 포트폴리오 백테스팅 결과를 조회하는 api
      * 백테스팅 시점은, 현재로부터 특정 기간 동안의 과거 데이터를 기반으로 한다
      */

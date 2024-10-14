@@ -53,16 +53,4 @@ public class Portfolio {
 		// 정렬된 리스트 반환
 		return sortedList;
 	}
-
-	public List<RecommendAsset> getRecommendAssets() {
-		if (this.recommendAssets == null) {
-			return new ArrayList<>();
-		}
-
-		List<RecommendAsset> sortedList = new ArrayList<>(this.recommendAssets);
-
-		sortedList.sort(Comparator.comparingInt(RecommendAsset::getAssetId));
-
-		return sortedList;
-	}
 }

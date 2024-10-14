@@ -39,4 +39,6 @@ public interface PortfolioService {
     ResponseWithData<List<RecommendAssetResponseResultDto>> getRecommendedAssets(Integer userId, RecommendAssetRequestDto recommendAssetRequestDto);
 
     ResponseWithData<CalculatedPortfolio> initPortfolioRebalance(Integer userId, RebalancePortfolioInitDto initInfo);
+
+    ResponseWithMessage updateUserPortfolio(Integer userId);
 }

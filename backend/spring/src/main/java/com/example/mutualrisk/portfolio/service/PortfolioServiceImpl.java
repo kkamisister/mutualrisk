@@ -140,6 +140,20 @@ public class PortfolioServiceImpl implements PortfolioService{
         // 3. assetId에 해당되는 asset들을 반환
         List<Asset> assetList = assetRepository.findAllById(assetIds);
 
+        // 가정: recommendAssets 리스트에 AssetId 필드가 있음
+        List<Integer> recommendAssetIds = recommendAssets.stream()
+            .map(RecommendAsset::getAssetId)
+            .toList();
+
+
+        // AssetList를 recommendAssetIds 순서에 맞게 정렬
+        Map<Integer, Asset> assetMap = assetList.stream()
+            .collect(Collectors.toMap(Asset::getId, asset -> asset));
+
+        List<Asset> sortedAssetList = recommendAssetIds.stream()
+            .map(assetMap::get)
+            .toList();
+
         // 4. asset -> assetInfo로 변경한다
         List<AssetInfo> assetInfoList = getAssetInfosFrom(assetList);
 
@@ -174,16 +188,8 @@ public class PortfolioServiceImpl implements PortfolioService{
 
             List<PortfolioAsset> portfolioAssets = curPortfolio.getAsset();
 
-            // 오늘일자 기준 포트폴리오 자산의 (자산코드,총가격)
-            Map<String, Double> recentAssetPrice = getTodayValueOfHoldings(portfolioAssets);
-
-            // 오늘일자 기준 총 자산 가치 계산
-            Double totalRecentValueOfHolding = recentAssetPrice.values().stream()
-                .mapToDouble(Double::doubleValue)
-                .sum();
-
             // 오늘일자 기준 (종목, 비중) 계산
-            Map<String, Double> recentAssetWeights = getWeights(recentAssetPrice, totalRecentValueOfHolding);
+            Map<String, Double> recentAssetWeights = getWeights(portfolioAssets);
 
             /**
              * 구매 당시 비중과 오늘날의 비중을 비교하여
@@ -1625,6 +1631,140 @@ public class PortfolioServiceImpl implements PortfolioService{
         return initPortfolio(userId, portfolioInitDto);
     }
 
+    @Override
+    public ResponseWithMessage updateUserPortfolio(Integer userId) {
+
+        // 1. 유저의 최신 포트폴리오 가져오기
+        List<Portfolio> myPortfolioList = portfolioRepository.getMyPortfolioList(userId);
+        if (myPortfolioList.isEmpty()) {throw new MutualRiskException(ErrorCode.PORTFOLIO_NOT_FOUND);}
+
+        Portfolio recentPortfolio = myPortfolioList.get(0);
+
+        // 2. 하둡 api를 호출하기 위한 인자들 구성하기
+        // 포트폴리오를 구성하는 자산
+        // id 순으로 정렬됨이 보장되어 있음
+        List<PortfolioAsset> portfolioAssetList = recentPortfolio.getAsset();
+        List<Integer> assetIds = portfolioAssetList.stream()
+            .map(PortfolioAsset::getAssetId)
+            .toList();
+
+        List<Double> lowerBounds = portfolioAssetList.stream()
+            .map(PortfolioAsset::getLowerBound)
+            .toList();
+
+        List<Double> upperBounds = portfolioAssetList.stream()
+            .map(PortfolioAsset::getUpperBound)
+            .toList();
+
+        List<Double> extractProportion = portfolioAssetList.stream()
+            .map(PortfolioAsset::getExactProportion)
+            .toList();
+
+
+        // 2. 자산을 가지고온다
+        // 기본적으로 id 순으로 정렬
+        List<Asset> assetList = assetRepository.findAllById(assetIds);
+
+        // 3. id순으로 정렬된 각 자산의 weight를 얻는다
+        Map<String, Double> portfolioWeights = getWeights(portfolioAssetList);
+        List<Double> weight = portfolioAssetList.stream()
+            .map(portfolioAsset -> portfolioWeights.get(portfolioAsset.getCode()))
+            .toList();
+
+        // 4. sector 중, 현재 포트폴리오와 가장 공분산이 적은 섹터를 구한다
+        // 섹터의 대표 포트폴리오로 iShares U.S 섹터별 ETF를 활용
+        int minCovarianceSectorId = -1;
+        Double minCovariance = Double.MAX_VALUE;
+        for (int idx = 0; idx < SECTOR_BENCHMARK_LIST.length; idx++) {
+            BenchMark benchMark = SECTOR_BENCHMARK_LIST[idx];
+
+            double covariance = calculateCovariance(assetList, weight, benchMark.getAssetId());
+            if (covariance < minCovariance) {
+                minCovariance = covariance;
+                minCovarianceSectorId = benchMark.getSectorId();
+            }
+        }
+
+
+        // 5. Hadoop API 호출
+        // 5-1. Hadoop API RequestBody 제작
+        HadoopRecommendAssetRequestDto requestBody = getHadoopRequestBody(assetIds, lowerBounds, upperBounds, extractProportion, minCovarianceSectorId);
+        System.out.println("requestBody = " + requestBody);
+        // 5-2. Hadoop API를 날리고 요청 받아오기
+        HadoopRecommendAssetResultDto responseBody;
+        try {
+            responseBody = mutualRiskClient.post("http://j11a607a.p.ssafy.io:8000/optimize", requestBody)
+                .bodyToMono(HadoopRecommendAssetResultDto.class)
+                .block();
+        } catch (Exception e) {
+            log.warn("hadoop 종목 추천 api 호출시 에러 발생 - 에러 메시지: {}", e.getMessage());
+            throw new MutualRiskException(ErrorCode.HADOOP_RECOMMEND_ASSET_API_ERROR);
+        }
+
+        System.out.println("responseBody = " + responseBody);
+
+        // 6. 받은 응답을 가지고 유저가 실제로 투자했을 때의 성과 지표 계산
+
+        Double recentExchangeRate = exchangeRatesRepository.getRecentExchangeRate();
+
+        // 6-1. totalCash 계산
+        double totalCash = IntStream.range(0, assetList.size())
+            .mapToDouble(i -> assetList.get(i).getRecentPrice(recentExchangeRate) * portfolioAssetList.get(i).getTotalPurchaseQuantity())
+            .sum();
+
+        List<RecommendAssetResponseResultDto> realResponse = new ArrayList<>(); // 현재 api가 반환할 data
+
+        for (HadoopRecommendAssetInfo hadoopRecommendAssetInfo: responseBody.top5Assets()) {
+            Integer newAssetId = hadoopRecommendAssetInfo.newAssetId();
+
+            Asset newAsset = assetRepository.findById(newAssetId)
+                .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
+
+            ArrayList<Asset> copiedAssetList = new ArrayList<>(assetList);
+            copiedAssetList.add(newAsset);
+
+            List<Double> weights = hadoopRecommendAssetInfo.weights();
+
+            // 유저가 가지고 있는 돈(totalCash)을 고려하여, 실제 투자했을 때 몇 주씩 투자하게 될지를 계산
+            // 계산 방식 : 반올림
+            List<Integer> purchaseNumList = IntStream.range(0, weights.size())
+                .map(i -> Math.toIntExact(Math.round(totalCash * weights.get(i) / copiedAssetList.get(i).getRecentPrice(recentExchangeRate))))
+                .boxed()
+                .toList();
+
+            List<Double> priceList = copiedAssetList.stream()
+                .map(asset -> asset.getRecentPrice(recentExchangeRate))
+                .toList();
+
+            // 실제 투자 비중을 계산
+            List<Double> realWeights = calculateWeights(priceList, purchaseNumList);
+
+            // 성과 지표 계산 : expectedReturn, volatility, sharpeRatio
+            Double expectedReturn = IntStream.range(0, realWeights.size())
+                .mapToDouble(i -> copiedAssetList.get(i).getExpectedReturn() * realWeights.get(i))
+                .sum();
+
+            List<AssetCovariance> assetCovarianceList = assetCovarianceRepository.findAllCovarianceIn(copiedAssetList);
+            Double volatility = calculatePortfolioVariance(realWeights, assetCovarianceList, copiedAssetList);
+
+            Double sharpeRatio = expectedReturn / volatility;
+
+            realResponse.add(RecommendAssetResponseResultDto.of(newAsset, expectedReturn, volatility, sharpeRatio));
+        }
+
+        // sharpeRatio가 큰 순으로 정렬
+        realResponse.sort(Comparator.comparingDouble(RecommendAssetResponseResultDto::sharpeRatio).reversed());
+        List<RecommendAsset> recommendAssets = realResponse.stream()
+            .map(RecommendAsset::from)
+            .toList();
+
+
+        recentPortfolio.setRecommendAssets(recommendAssets);
+        portfolioRepository.savePortfolio(recentPortfolio);
+
+        return new ResponseWithMessage(HttpStatus.OK.value(), "성공~~~!!!!");
+    }
+
     /**
      * 포트폴리오의 현재 기준 평가액을 반환하는 함수
      */
@@ -2096,17 +2236,21 @@ public class PortfolioServiceImpl implements PortfolioService{
     }
 
     /**
-     * 자산의 비중을 반환하는 메서드
-     * (자산코드, 비중) 을 반환한다
-     * @param assetPrice
-     * @param totalValueOfHolding
-     * @return
      */
-    private static Map<String, Double> getWeights(Map<String, Double> assetPrice, Double totalValueOfHolding) {
-        return assetPrice.entrySet().stream()
+    private Map<String, Double> getWeights(List<PortfolioAsset> portfolioAssets) {
+
+        // 오늘일자 기준 포트폴리오 자산의 (자산코드,총가격)
+        Map<String, Double> recentAssetPrice = getTodayValueOfHoldings(portfolioAssets);
+
+        // 오늘일자 기준 총 자산 가치 계산
+        Double totalRecentValueOfHolding = recentAssetPrice.values().stream()
+            .mapToDouble(Double::doubleValue)
+            .sum();
+
+        return recentAssetPrice.entrySet().stream()
             .collect(Collectors.toMap(
                 Entry::getKey,
-                entry -> entry.getValue() * 100.0 / totalValueOfHolding
+                entry -> entry.getValue() * 100.0 / totalRecentValueOfHolding
             ));
     }
 
