@@ -1231,7 +1231,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             }
         }
 
-        return portfolioVariance;
+        return Math.sqrt(portfolioVariance);
     }
 
     private List<Double> calculateWeights(List<Double> priceList, List<Integer> purchaseNumList) {
