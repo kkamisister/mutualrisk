@@ -741,7 +741,7 @@ public class PortfolioServiceImpl implements PortfolioService{
 
         // 3. 생성일 기준 valuation
         LocalDateTime targetDate = userPortfolio.getCreatedAt();
-        Double createValuation = calculateValuation(portfolioAssetList, findAssets, targetDate, recentExchangeRate);
+        Double initValuation = calculateValuation(portfolioAssetList, findAssets, targetDate, recentExchangeRate);
 
         // 4. 위험률 대비 수익률 : sharpe_ratio
         // userId에 해당하는 포트폴리오가 존재할 경우
@@ -826,7 +826,7 @@ public class PortfolioServiceImpl implements PortfolioService{
             .created_at(userPortfolio.getCreatedAt())
             .curValuation(curValuation)
             .lastValuation(lastValuation)
-            .initValuation(createValuation)
+            .initValuation(initValuation)
             .sharpeRatio(sharpeRatio)
             .krxSharpeRatio(krxRatio)
             .krxETFSharpeRatio(krxETFRatio)
@@ -2033,27 +2033,28 @@ public class PortfolioServiceImpl implements PortfolioService{
 
     }
 
-    private Double calculateValuation(List<PortfolioAsset> pAssets, List<Asset> findAssets, LocalDateTime targetDate, Double recentExchangeRate) {
+    private Double calculateValuation(List<PortfolioAsset> portfolioAssets, List<Asset> findAssets, LocalDateTime targetDate, Double recentExchangeRate) {
         Double valuation = 0.0;
 
         // 특정 날짜의 자산 가격을 가져옴
         List<AssetHistory> assetHistoryList = assetHistoryService.getAssetHistoryList(findAssets, targetDate);
 
         // 포트폴리오 자산과 AssetHistory를 매칭하여 계산
-        for (PortfolioAsset pAsset : pAssets) {
+        for (PortfolioAsset portfolioAsset : portfolioAssets) {
             // AssetHistory에서 Asset을 찾아서 처리
             AssetHistory assetHistory = assetHistoryList.stream()
-                .filter(ah -> ah.getAsset().getId().equals(pAsset.getAssetId()))
+                .filter(ah -> ah.getAsset().getId().equals(portfolioAsset.getAssetId()))
                 .findFirst()
                 .orElse(null);
 
             if (assetHistory != null) {
-                Asset asset = assetRepository.findById(pAsset.getAssetId())
+                Asset asset = assetRepository.findById(portfolioAsset.getAssetId())
                     .orElseThrow(() -> new MutualRiskException(ErrorCode.ASSET_NOT_FOUND));
 
                 Double price = assetHistory.getPrice() ;
                 if (asset.getRegion().equals(Region.US)) price *= recentExchangeRate;
-                valuation += price * pAsset.getTotalPurchaseQuantity();
+                log.warn("price: {}", price);
+                valuation += price * portfolioAsset.getTotalPurchaseQuantity();
             }
         }
 
