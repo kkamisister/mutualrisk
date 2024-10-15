@@ -7,7 +7,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Table(name = "news_test")
+@Table(name = "news_final")
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

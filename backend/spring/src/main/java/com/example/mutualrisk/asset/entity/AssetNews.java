@@ -8,7 +8,7 @@ import com.example.mutualrisk.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Table(name = "asset_news_test")
+@Table(name = "asset_news_final")
 @Entity
 @Getter
 @Builder
