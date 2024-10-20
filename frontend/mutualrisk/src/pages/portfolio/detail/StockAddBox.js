@@ -43,7 +43,7 @@ const StockAddBox = ({ recommendAssets }) => {
 					width: '48px',
 					height: '48px',
 				}}
-				alt="종목 이미지"
+				alt={currentAsset.name}
 				src={`https://j11a607.p.ssafy.io/stockImage/${currentAsset.code}.png`}
 			/>
 			<Typography
@@ -61,13 +61,21 @@ const StockAddBox = ({ recommendAssets }) => {
 				</span>
 				{`을(를) 포트폴리오에 추가하면 예상 수익률이 `}
 				<span style={{ fontWeight: 'bold' }}>
-					{currentAsset.expectedReturn.toFixed(2)}%
+					{currentAsset.expectedReturnChange >= 0 &&
+						`${currentAsset.expectedReturnChange.toFixed(4)}%P 증가`}
+					{currentAsset.expectedReturnChange < 0 &&
+						`${(-1 * currentAsset.expectedReturnChange).toFixed(
+							4
+						)}%P 감소`}
 				</span>
 				{`, 변동성이 `}
 				<span style={{ fontWeight: 'bold' }}>
-					{currentAsset.volatilityChange.toFixed(2)}%
+					{currentAsset.volatilityChange >= 0 &&
+						`${currentAsset.volatilityChange.toFixed(4)}%P 증가`}
+					{currentAsset.volatilityChange < 0 &&
+						`${(-1 * currentAsset.volatilityChange).toFixed(4)}%P 감소`}
 				</span>
-				{` 증가해요.`}
+				{` 해요.`}
 			</Typography>
 			<CustomButton
 				sx={{

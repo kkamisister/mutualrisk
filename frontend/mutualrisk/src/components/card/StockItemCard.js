@@ -52,7 +52,7 @@ const StockItemCard = ({
 					alignItems: 'center',
 					fontSize: '14px',
 				}}>
-				<Avatar alt="종목 이미지" src={image} />
+				<Avatar alt={name} src={image} />
 				<Stack
 					spacing={0.5}
 					sx={{

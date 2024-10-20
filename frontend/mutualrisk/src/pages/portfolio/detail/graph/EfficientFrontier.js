@@ -9,9 +9,10 @@ import {
 	CartesianGrid,
 	Tooltip,
 	ResponsiveContainer,
-	Scatter,
+	ReferenceDot,
 } from 'recharts';
 import { fetchEfficientFrontierByPorfolioId } from 'utils/apis/analyze';
+import { colors } from 'constants/colors';
 
 const EfficientFrontier = ({ portfolioId }) => {
 	const [frontierPoints, setFrontierPoints] = useState([]);
@@ -79,18 +80,19 @@ const EfficientFrontier = ({ portfolioId }) => {
 						dataKey="expectedReturn"
 						stroke="#000000"
 						name="기대 수익률"
-						dot
+						dot={false}
 					/>
 
-					{/* {optimalPerformance && (
-						<Scatter
-							name="최적 성과"
-							data={[optimalPerformance]}
-							fill="#FF0000"
-							shape="star"
-							// dataKey를 제거여 Scatter의 툴팁과 혼동되지 않도록 설정
+					{optimalPerformance && (
+						<ReferenceDot
+							x={optimalPerformance.volatility}
+							y={optimalPerformance.expectedReturn}
+							r={7}
+							fill={colors.main.primary200}
+							stroke="none"
+							label="최적 비율 지점"
 						/>
-					)} */}
+					)}
 				</ComposedChart>
 			</ResponsiveContainer>
 		</WidgetContainer>

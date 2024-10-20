@@ -7,7 +7,7 @@ import Title from 'components/title/Title';
 const StockChangeList = ({ rebalanceData }) => {
 	const changeAssets =
 		rebalanceData?.data?.changeAssetInfoList?.map(asset => ({
-			code: asset.assetId,
+			code: asset.code,
 			name: asset.name,
 			market: asset.market,
 			currentPrice: asset.price, // 현재 주식 가격

@@ -19,7 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 
 const BackTesting = ({
 	portfolioId,
-	timeInterval = 'day',
+	timeInterval = 'week',
 	measure = 'profit',
 }) => {
 	const [mergedData, setMergedData] = useState([]);

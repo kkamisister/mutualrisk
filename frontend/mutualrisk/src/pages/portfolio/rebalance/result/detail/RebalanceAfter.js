@@ -40,49 +40,64 @@ const RebalanceAfter = ({ rebalanceData }) => {
 
 	return (
 		<DetailContainer title={'리밸런싱 후 포트폴리오'}>
-			<div style={{ display: 'flex', justifyContent: 'space-between' }}>
-				<ResponsiveContainer width="60%" height={300}>
-					<BarChart
-						data={sortedNewAssets} // 정렬된 데이터 전달
-						layout="vertical"
-						margin={{
-							top: 5,
-							right: 30,
-							left: 20,
-							bottom: 5,
-						}}
-						barSize={20}
-						onMouseMove={state => {
-							if (state.isTooltipActive) {
-								const index = state.activeTooltipIndex; // 마우스가 위치한 바의 인덱스를 가져옴
-								setHighlightedStockIndex(index);
-							} else {
-								setHighlightedStockIndex(null);
-							}
-						}}>
-						<XAxis type="number" />
-						<YAxis
-							fontSize={12}
-							type="category"
-							dataKey="name"
-							tickFormatter={name => truncateString(name, 5)} // Y축에 표시되는 이름 자르기
-						/>
-						<Tooltip
-							formatter={(value, name) => [
-								`${value}%`,
-								truncateString(name, 20), // 툴팁에서 이름 자르기
-							]}
-						/>
-						<CartesianGrid strokeDasharray="3 3" />
-						<Bar
-							dataKey="value"
-							name="비율"
-							fill={colors.main.primary500}
-							background={{ fill: '#eee' }}
-						/>
-					</BarChart>
-				</ResponsiveContainer>
-
+			<div
+				style={{
+					display: 'flex',
+					justifyContent: 'space-between',
+					overflow: 'auto',
+					'&::-webkit-scrollbar': { display: 'none' }, // 스크롤바 숨기기
+					msOverflowStyle: 'none', // IE 및 Edge에서 스크롤바 숨기기
+					scrollbarWidth: 'none', // Firefox에서 스크롤바 숨기기
+				}}>
+				<div
+					style={{
+						position: 'sticky',
+						width: '50%',
+						top: 0,
+						flexShrink: 0,
+					}}>
+					<ResponsiveContainer height={300}>
+						<BarChart
+							data={sortedNewAssets} // 정렬된 데이터 전달
+							layout="vertical"
+							margin={{
+								top: 5,
+								right: 30,
+								left: 20,
+								bottom: 5,
+							}}
+							barSize={20}
+							onMouseMove={state => {
+								if (state.isTooltipActive) {
+									const index = state.activeTooltipIndex; // 마우스가 위치한 바의 인덱스를 가져옴
+									setHighlightedStockIndex(index);
+								} else {
+									setHighlightedStockIndex(null);
+								}
+							}}>
+							<XAxis type="number" />
+							<YAxis
+								fontSize={12}
+								type="category"
+								dataKey="name"
+								tickFormatter={name => truncateString(name, 5)} // Y축에 표시되는 이름 자르기
+							/>
+							<Tooltip
+								formatter={(value, name) => [
+									`${value}%`,
+									truncateString(name, 20), // 툴팁에서 이름 자르기
+								]}
+							/>
+							<CartesianGrid strokeDasharray="3 3" />
+							<Bar
+								dataKey="value"
+								name="비율"
+								fill={colors.main.primary500}
+								background={{ fill: '#eee' }}
+							/>
+						</BarChart>
+					</ResponsiveContainer>
+				</div>
 				{/* PortfolioAssetList로 UI 대체 */}
 				<PortfolioAssetList
 					assets={sortedNewAssets} // 정렬된 데이터 전달

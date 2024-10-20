@@ -26,7 +26,7 @@ const FundPage = () => {
 			<Stack spacing={1}>
 				<TitleDivider
 					text="상위 20개 투자운용사 목록"
-					caption="(최근 업데이트: 2024/12/31)"
+					// caption="(최근 업데이트: 2024/12/31)"
 				/>
 				<FundManagerList fundList={fundList} />
 			</Stack>
